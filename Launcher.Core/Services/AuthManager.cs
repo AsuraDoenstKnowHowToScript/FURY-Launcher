@@ -30,16 +30,26 @@ public sealed class AuthManager : IAuthManager
     /// <summary>Diagnostic lines from the auth flow (browser open, OAuth errors, ...).</summary>
     public event EventHandler<string>? Log;
 
+    /// <summary>
+    /// Set by the UI: shows a dialog asking the user to paste the redirected URL after
+    /// the system browser sign-in, and returns it (null/empty = cancelled). Required for
+    /// interactive Microsoft login since this app has no embedded browser.
+    /// </summary>
+    public Func<Uri, CancellationToken, Task<string?>>? InteractivePrompt { get; set; }
+
     public AuthManager(LauncherPaths paths)
     {
         _paths = paths;
         _handler = new Lazy<JELoginHandler>(() =>
             new JELoginHandlerBuilder()
-                // Use our own system-browser + loopback web UI for the interactive step;
-                // the default relies on an embedded WebView this app doesn't ship.
+                // Use our own system-browser web UI for the interactive step; the default
+                // relies on an embedded WebView this app doesn't ship.
                 .WithOAuthProvider(new SystemBrowserOAuthProvider(
                     JELoginHandler.DefaultMicrosoftOAuthClientInfo,
-                    msg => { Log?.Invoke(this, msg); CrashLog.Write(msg); }))
+                    msg => { Log?.Invoke(this, msg); CrashLog.Write(msg); },
+                    (uri, ct) => InteractivePrompt is { } prompt
+                        ? prompt(uri, ct)
+                        : Task.FromResult<string?>(null)))
                 .WithAccountManager(_paths.AccountsFile)
                 .Build());
     }

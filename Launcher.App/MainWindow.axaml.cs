@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -131,6 +132,8 @@ public partial class MainWindow : Window
         // --- Core → UI: buffer high-frequency events; a timer flushes them ---
         // Auth diagnostics (browser open, OAuth errors) go to the log panel and crash.log.
         _core.Auth.Log += (_, line) => { AppendLog(line); CrashLog.Write(line); };
+        // Interactive MS login has no embedded browser: prompt the user to paste the URL back.
+        _core.Auth.InteractivePrompt = PromptForAuthCodeAsync;
         _core.Game.ByteProgress += (_, p) => { lock (_uiLock) _pendingProgress = p.Ratio; };
         _core.Game.FileProgress += (_, f) =>
         {
@@ -563,6 +566,70 @@ public partial class MainWindow : Window
             MicrosoftLoginButton.IsEnabled = true;
         }
     });
+
+    /// <summary>
+    /// Called by the auth flow (possibly off the UI thread): shows a dialog asking the
+    /// user to paste the URL the browser landed on after signing in. Returns the pasted
+    /// text, or null if cancelled.
+    /// </summary>
+    private Task<string?> PromptForAuthCodeAsync(Uri authUrl, CancellationToken ct)
+    {
+        var outer = new TaskCompletionSource<string?>();
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try { outer.TrySetResult(await ShowAuthPasteDialogAsync(authUrl)); }
+            catch (Exception ex) { outer.TrySetException(ex); }
+        });
+        return outer.Task;
+    }
+
+    private async Task<string?> ShowAuthPasteDialogAsync(Uri authUrl)
+    {
+        var tcs = new TaskCompletionSource<string?>();
+        var box = new TextBox { Watermark = Loc.T("auth.paste.watermark"), Width = 480 };
+        var ok = new Button { Content = Loc.T("btn.continue") };
+        var cancel = new Button { Content = Loc.T("btn.cancel") };
+        var reopen = new Button { Content = Loc.T("auth.reopen") };
+
+        var dialog = new Window
+        {
+            Title = Loc.T("auth.paste.title"),
+            Width = 560,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Content = new StackPanel
+            {
+                Margin = new Thickness(14),
+                Spacing = 10,
+                Children =
+                {
+                    new TextBlock { Text = Loc.T("auth.paste.body"), TextWrapping = TextWrapping.Wrap },
+                    box,
+                    new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Spacing = 8,
+                        Children = { reopen, ok, cancel }
+                    }
+                }
+            }
+        };
+
+        reopen.Click += (_, _) => OpenUrlSafe(authUrl.ToString());
+        ok.Click += (_, _) => { tcs.TrySetResult(box.Text); dialog.Close(); };
+        cancel.Click += (_, _) => { tcs.TrySetResult(null); dialog.Close(); };
+        dialog.Closed += (_, _) => tcs.TrySetResult(null);
+
+        await dialog.ShowDialog(this);
+        return await tcs.Task;
+    }
+
+    private static void OpenUrlSafe(string url)
+    {
+        try { Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }); }
+        catch (Exception ex) { CrashLog.Write("[auth] reopen browser failed", ex); }
+    }
 
     private async void OnPlay(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
