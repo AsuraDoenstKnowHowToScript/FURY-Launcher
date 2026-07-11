@@ -3,8 +3,27 @@
 A lightweight Minecraft launcher focused on doing the basics well: isolated
 instances, mod management, and a simple offline/Microsoft login. No clutter.
 
-> **Status: beta.** It is stable enough for everyday testing, but it is still a
-> work in progress. If something breaks, please tell us (see Feedback below).
+[![Release](https://img.shields.io/github/v/release/AsuraDoenstKnowHowToScript/FURY-Launcher?include_prereleases&label=release&color=brightgreen)](../../releases)
+[![Downloads](https://img.shields.io/github/downloads/AsuraDoenstKnowHowToScript/FURY-Launcher/total?color=blue)](../../releases)
+[![Status](https://img.shields.io/badge/status-beta-yellow)](../../releases)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6)](#supported-systems)
+[![Languages](https://img.shields.io/badge/languages-5-purple)](#languages)
+[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
+
+> [!IMPORTANT]
+> **Current version: `v0.3.1-beta` (testing).** It is stable enough for everyday
+> testing but still a work in progress. Grab the latest build from the
+> [Releases](../../releases) page and please send feedback.
+
+## Versions
+
+| Channel | Version | Who it's for |
+| --- | --- | --- |
+| **Beta (latest)** | `v0.3.1-beta` | Testers — start here |
+| Beta | `v0.3.0-beta` | Previous build |
+| Pre-alpha | `v0.2.0-pre-alpha` | Early, unstable |
+
+The **release** badge above always points to the newest published build.
 
 ## Download and play
 
@@ -15,9 +34,12 @@ instances, mod management, and a simple offline/Microsoft login. No clutter.
 The build is self contained, so you do not need to install .NET or Java first.
 Java is downloaded automatically the first time you launch a version that needs it.
 
-**Supported systems:** Windows 10 and Windows 11 (64 bit). A Linux version is in
-development, but Windows is the priority for now. A proper MSI installer is planned
-for a later release to make setup and updates smoother.
+### Supported systems
+
+> [!NOTE]
+> Windows 10 and Windows 11 (64-bit). A Linux version is in development, but
+> Windows is the priority for now. A proper MSI installer is planned for a later
+> release to make setup and updates smoother.
 
 ## What it does
 
@@ -42,9 +64,19 @@ The interface is available in English (default), Português, Nederlands,
 
 ## Feedback
 
-Found a bug or have an idea? Open an [Issue](../../issues). Clear steps to
-reproduce help a lot, and if the app crashed, attach the `crash.log` file that
-appears next to the executable.
+Found a bug or have an idea? Open an [Issue](../../issues) using the bug report
+template. Clear steps to reproduce help a lot, and if the app crashed, attach the
+`crash.log` file that appears next to the executable.
+
+> [!WARNING]
+> Found a **security** problem? Do **not** open a public issue. See the
+> [Security Policy](SECURITY.md) for how to report it privately.
+
+## Security
+
+Security issues are handled privately. Please read [SECURITY.md](SECURITY.md) and
+report through GitHub's **Report a vulnerability** button or by emailing
+`furylauncher@gmail.com` with "SECURITY" in the subject.
 
 ## Build from source
 
@@ -58,7 +90,7 @@ builds in Release and starts the app. To produce a distributable build, run
 With the SDK directly:
 
 ```
-dotnet build -c Release
+dotnet build FURY.sln -c Release
 dotnet run --project Launcher.App
 ```
 
