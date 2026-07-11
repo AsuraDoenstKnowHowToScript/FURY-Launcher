@@ -1,0 +1,48 @@
+// FURY Launcher
+// Copyright © 2026 Suny. Todos os direitos reservados.
+// Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
+// autorização por escrito. Consulte o arquivo LICENSE.
+// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+
+using Launcher.Core.Models;
+
+namespace Launcher.Core.Services;
+
+/// <summary>
+/// Resolves all on-disk locations. Root defaults to
+/// <c>%APPDATA%/FURY Launcher</c> (cross-platform: the user's application-data
+/// folder).
+/// </summary>
+public sealed class LauncherPaths
+{
+    public string Root { get; }
+
+    public LauncherPaths(string? root = null)
+    {
+        Root = root ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            AppInfo.DataFolderName);
+        Directory.CreateDirectory(InstancesDir);
+    }
+
+    public string InstancesDir => Path.Combine(Root, "instances");
+    public string InstancesIndex => Path.Combine(Root, "instances.json");
+
+    /// <summary>Microsoft account/session cache used by CmlLib's login handler.</summary>
+    public string AccountsFile => Path.Combine(Root, "accounts.json");
+
+    /// <summary>Selectable offline profiles (name + skin/cape + model).</summary>
+    public string ProfilesFile => Path.Combine(Root, "profiles.json");
+
+    /// <summary>Small dismissible UI preferences.</summary>
+    public string SettingsFile => Path.Combine(Root, "settings.json");
+
+    /// <summary>Stored skin/cape image files.</summary>
+    public string AppearanceDir => Path.Combine(Root, "appearances");
+
+    public string InstanceDir(Instance i) => Path.Combine(InstancesDir, i.FolderName);
+    public string InstanceConfig(Instance i) => Path.Combine(InstanceDir(i), "instance.json");
+    public string InstanceMinecraft(Instance i) => Path.Combine(InstanceDir(i), ".minecraft");
+    public string InstanceModsDir(Instance i) => Path.Combine(InstanceMinecraft(i), "mods");
+    public string InstanceConfigDir(Instance i) => Path.Combine(InstanceMinecraft(i), "config");
+}

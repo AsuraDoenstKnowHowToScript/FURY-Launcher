@@ -1,0 +1,191 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Launcher.App.MainWindow"
+        Width="900" Height="640"
+        Title="FURY Launcher">
+
+    <!-- Deliberately bare: standard controls, StackPanel/Grid, no styling. -->
+    <TabControl x:Name="MainTabs">
+
+        <!-- ============================ INSTÂNCIAS ============================ -->
+        <TabItem Header="Instâncias">
+            <Grid ColumnDefinitions="280,*" Margin="8">
+                <!-- Left: list + list actions -->
+                <DockPanel Grid.Column="0" Margin="0,0,8,0">
+                    <TextBlock DockPanel.Dock="Top" Text="Instâncias:" Margin="0,0,0,4"/>
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,4,0,0">
+                        <Button x:Name="RefreshInstancesButton" Content="Atualizar" Margin="0,0,4,0"/>
+                        <Button x:Name="DeleteInstanceButton" Content="Deletar"/>
+                    </StackPanel>
+                    <ListBox x:Name="InstancesList"/>
+                </DockPanel>
+
+                <!-- Right: create / edit form -->
+                <ScrollViewer Grid.Column="1">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Nome"/>
+                        <TextBox x:Name="NameBox"/>
+                        <TextBlock Text="Versão do Minecraft (ex: 1.20.1)"/>
+                        <TextBox x:Name="McVersionBox"/>
+                        <TextBlock Text="Loader"/>
+                        <ComboBox x:Name="LoaderCombo" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="RAM mínima (MB)"/>
+                        <TextBox x:Name="MinRamBox" Text="512"/>
+                        <TextBlock Text="RAM máxima (MB)"/>
+                        <TextBox x:Name="MaxRamBox" Text="2048"/>
+                        <TextBlock Text="Argumentos JVM (separados por espaço)"/>
+                        <TextBox x:Name="JvmArgsBox"/>
+                        <TextBlock Text="Caminho do Java (vazio = gerenciado)"/>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBox x:Name="JavaPathBox" Width="360"/>
+                            <Button x:Name="BrowseJavaButton" Content="..."/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,8,0,0">
+                            <Button x:Name="NewInstanceButton" Content="Criar nova"/>
+                            <Button x:Name="SaveInstanceButton" Content="Salvar edição"/>
+                        </StackPanel>
+                        <TextBlock Text="Modpack (.frpack)" Margin="0,8,0,0"/>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button x:Name="ExportPackButton" Content="Exportar .frpack"/>
+                            <Button x:Name="ImportPackButton" Content="Importar .frpack"/>
+                        </StackPanel>
+                        <TextBlock x:Name="InstanceStatus" Text="" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </TabItem>
+
+        <!-- ============================== JOGAR ============================== -->
+        <TabItem Header="Jogar">
+            <DockPanel Margin="8">
+                <StackPanel DockPanel.Dock="Top" Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Conta:" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="AccountCombo" Width="140"/>
+                        <TextBlock Text="Perfil (offline):" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="OfflineProfileCombo" Width="160"/>
+                        <Button x:Name="MicrosoftLoginButton" Content="Login Microsoft"/>
+                        <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Instância:" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="PlayInstanceCombo" Width="280"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button x:Name="PlayButton" Content="JOGAR" FontSize="20" Padding="24,8"/>
+                        <Button x:Name="StopButton" Content="Parar" Padding="12,8"/>
+                    </StackPanel>
+                    <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="18"/>
+                    <TextBlock x:Name="PlayStatus" Text="" TextWrapping="Wrap"/>
+                    <TextBlock Text="Log:" Margin="0,4,0,0"/>
+                </StackPanel>
+                <TextBox x:Name="LogBox" AcceptsReturn="True" IsReadOnly="True"
+                         TextWrapping="NoWrap" VerticalContentAlignment="Top"/>
+            </DockPanel>
+        </TabItem>
+
+        <!-- =============================== MODS =============================== -->
+        <TabItem Header="Mods" x:Name="ModsTab">
+            <DockPanel Margin="8">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+                    <TextBlock Text="Instância:" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="ModInstanceCombo" Width="260"/>
+                    <Button x:Name="RefreshModsButton" Content="Atualizar"/>
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*,*">
+                    <!-- Installed mods -->
+                    <DockPanel Grid.Column="0" Margin="0,0,6,0">
+                        <TextBlock DockPanel.Dock="Top" Text="Mods instalados:"/>
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
+                            <Button x:Name="AddModButton" Content="Add jar"/>
+                            <Button x:Name="RemoveModButton" Content="Remover"/>
+                            <Button x:Name="ToggleModButton" Content="Ativar/Desativar"/>
+                        </StackPanel>
+                        <ListBox x:Name="ModsList"/>
+                    </DockPanel>
+
+                    <!-- Modrinth search -->
+                    <DockPanel Grid.Column="1" Margin="6,0,0,0">
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4">
+                            <TextBox x:Name="ModrinthQueryBox" Width="220" Watermark="Buscar no Modrinth..."/>
+                            <Button x:Name="ModrinthSearchButton" Content="Buscar"/>
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
+                            <Button x:Name="ModrinthDownloadButton" Content="Baixar p/ instância"/>
+                        </StackPanel>
+                        <ListBox x:Name="ModrinthList"/>
+                    </DockPanel>
+                </Grid>
+            </DockPanel>
+        </TabItem>
+
+        <!-- =============================== SKIN =============================== -->
+        <TabItem Header="Skin">
+            <ScrollViewer>
+                <StackPanel Margin="8" Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Perfil offline:" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="SkinProfileCombo" Width="200"/>
+                        <Button x:Name="NewProfileButton" Content="Novo"/>
+                        <Button x:Name="DeleteProfileButton" Content="Excluir"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Nome:" VerticalAlignment="Center"/>
+                        <TextBox x:Name="ProfileNameBox" Width="160"/>
+                        <CheckBox x:Name="SlimCheck" Content="Modelo slim (Alex)"/>
+                        <Button x:Name="SaveProfileButton" Content="Salvar perfil"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Button x:Name="ChooseSkinButton" Content="Escolher skin (PNG)"/>
+                        <Button x:Name="ChooseCapeButton" Content="Escolher capa"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Aplicar no jogo (offline) na instância:" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="SkinInstanceCombo" Width="240"/>
+                        <Button x:Name="ApplySkinButton" Content="Aplicar no jogo"/>
+                    </StackPanel>
+
+                    <Border BorderBrush="Gray" BorderThickness="1" Padding="6">
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Skin (PNG cru)"/>
+                                <Image x:Name="SkinImage" Width="128" Height="128"
+                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Rosto (8x8)"/>
+                                <Image x:Name="FaceImage" Width="128" Height="128"
+                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Capa"/>
+                                <Image x:Name="CapeImage" Width="80" Height="128"
+                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock x:Name="SkinStatus" Text="" TextWrapping="Wrap"/>
+                    <TextBlock TextWrapping="Wrap" Foreground="Gray"
+                               Text="A skin e a capa ficam salvas NO PERFIL (persistem mesmo se você trocar o nick). Ao jogar OFFLINE com este perfil, elas são aplicadas automaticamente (o launcher instala o CustomSkinLoader na instância — precisa de loader Forge/Fabric/NeoForge). O botão 'Aplicar no jogo' faz isso na hora, sem esperar o próximo launch. Conta Microsoft: a skin vem do Mojang, não precisa disto."/>
+                    <TextBlock TextWrapping="Wrap" Foreground="Gray"
+                               Text="Capa: o CustomSkinLoader tambem aplica capa local (offline). Alternativamente, capa por OptiFine. So funciona com PNG valido — WebP/JPG renomeado para .png nao carrega."/>
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- =============================== SOBRE ============================== -->
+        <TabItem Header="Sobre">
+            <StackPanel Margin="16" Spacing="6">
+                <TextBlock x:Name="AboutTitle" FontSize="22" Text="FURY Launcher"/>
+                <TextBlock x:Name="AboutVersion" Text="versão"/>
+                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="Gray" Text="copyright"/>
+                <TextBlock TextWrapping="Wrap" Foreground="Gray"
+                           Text="Launcher de Minecraft. Instâncias isoladas, Forge/NeoForge direto do Maven (sem adfoc.us), modpacks .frpack e exibição de skin/capa por conta."/>
+            </StackPanel>
+        </TabItem>
+
+    </TabControl>
+</Window>

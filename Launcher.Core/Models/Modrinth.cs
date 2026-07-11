@@ -1,0 +1,29 @@
+// FURY Launcher
+// Copyright © 2026 Suny. Todos os direitos reservados.
+// Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
+// autorização por escrito. Consulte o arquivo LICENSE.
+// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+
+using System.Text.Json.Serialization;
+
+namespace Launcher.Core.Models;
+
+/// <summary>A search result from the Modrinth API.</summary>
+public sealed record ModrinthHit(
+    [property: JsonPropertyName("project_id")] string ProjectId,
+    [property: JsonPropertyName("slug")] string Slug,
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("description")] string Description,
+    [property: JsonPropertyName("downloads")] long Downloads);
+
+/// <summary>A concrete downloadable version of a Modrinth project.</summary>
+public sealed record ModrinthVersion(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("version_number")] string VersionNumber,
+    [property: JsonPropertyName("files")] List<ModrinthFile> Files);
+
+public sealed record ModrinthFile(
+    [property: JsonPropertyName("url")] string Url,
+    [property: JsonPropertyName("filename")] string Filename,
+    [property: JsonPropertyName("primary")] bool Primary);
