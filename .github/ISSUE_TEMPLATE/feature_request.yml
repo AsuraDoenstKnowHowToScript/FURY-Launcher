@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an idea or improvement for FURY Launcher
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: Describe the feature or improvement.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it useful?
+      description: What problem does it solve, or how would it help?
+    validations:
+      required: false

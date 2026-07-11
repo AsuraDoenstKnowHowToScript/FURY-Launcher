@@ -1,0 +1,7 @@
+# Keep "Open a blank issue" available in addition to the templates above.
+blank_issues_enabled: true
+# To funnel general chat to Discord (while keeping bug reports here), add a link:
+# contact_links:
+#   - name: Community Discord
+#     url: https://discord.gg/your-invite
+#     about: General questions and chat. Please still report bugs as issues here.
