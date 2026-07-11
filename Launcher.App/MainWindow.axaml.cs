@@ -118,7 +118,6 @@ public partial class MainWindow : Window
         ExportPackButton.Click += OnExportPack;
         ImportPackButton.Click += OnImportPack;
         SkinProfileCombo.SelectionChanged += OnSkinProfileSelected;
-        OfflineProfileCombo.SelectionChanged += OnOfflineProfileSelected;
         NewProfileButton.Click += OnNewProfile;
         SaveProfileButton.Click += OnSaveProfile;
         DeleteProfileButton.Click += OnDeleteProfile;
@@ -192,13 +191,14 @@ public partial class MainWindow : Window
         LblJavaPath.Text = Loc.T("field.javapath");
         NewInstanceButton.Content = Loc.T("btn.createnew");
         SaveInstanceButton.Content = Loc.T("btn.saveedit");
+        LblSecGeneral.Text = Loc.T("section.general");
+        LblSecMemory.Text = Loc.T("section.memoryjava");
         LblModpack.Text = Loc.T("label.modpack");
         ExportPackButton.Content = Loc.T("btn.exportpack");
         ImportPackButton.Content = Loc.T("btn.importpack");
 
         // Play tab
         LblProfileOffline.Text = Loc.T("label.profile");
-        LblNick.Text = Loc.T("label.nick");
         RefreshPlayAccountList();
         MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
         MicrosoftLogoutButton.Content = Loc.T("btn.mslogout");
@@ -673,13 +673,6 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Pre-fills the Nick box from the chosen offline profile, so playing "just works".</summary>
-    private void OnOfflineProfileSelected(object? sender, SelectionChangedEventArgs e)
-    {
-        var idx = OfflineProfileCombo.SelectedIndex;
-        if (idx >= 0 && idx < _profiles.Count) NickBox.Text = _profiles[idx].Name;
-    }
-
     // ============================== PLAY ==============================
 
     private async void OnMicrosoftLogin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
@@ -788,11 +781,8 @@ public partial class MainWindow : Window
         {
             var pIdx = OfflineProfileCombo.SelectedIndex;
             offlineProfile = pIdx >= 0 && pIdx < _profiles.Count ? _profiles[pIdx] : null;
-            // The Nick box lets you set the offline name directly; it's pre-filled from the
-            // selected profile, so it "just works" without forcing the default "Player".
-            var nick = (NickBox.Text ?? "").Trim();
-            if (nick.Length == 0) nick = offlineProfile?.Name ?? "Player";
-            session = _core.Auth.CreateOffline(nick);
+            // The selected offline profile's name IS the nick.
+            session = _core.Auth.CreateOffline(offlineProfile?.Name ?? "Player");
         }
 
         _launchCts = new CancellationTokenSource();

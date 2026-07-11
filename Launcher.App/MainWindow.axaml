@@ -1,227 +1,245 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Launcher.App.MainWindow"
-        Width="900" Height="640"
+        Width="1000" Height="700"
+        MinWidth="880" MinHeight="600"
         Title="FURY Launcher">
 
-    <!-- Deliberately bare: standard controls, StackPanel/Grid, no styling.
-         All visible text is set from Launcher.Core.Localization at runtime
+    <!-- Deliberately bare: standard controls, SimpleTheme, no theming — just tidy
+         layout. All visible text is set from Launcher.Core.Localization at runtime
          (see ApplyLanguage in the code-behind); markup text is just a placeholder. -->
     <DockPanel>
 
-    <!-- Auto-update banner: hidden until a newer release is found on GitHub. -->
-    <Border x:Name="UpdateBanner" DockPanel.Dock="Top" IsVisible="False" Background="#1F6FEB" Padding="10,6">
-        <StackPanel Orientation="Horizontal" Spacing="10">
-            <TextBlock x:Name="UpdateBannerText" Foreground="White" VerticalAlignment="Center" TextWrapping="Wrap"/>
-            <Button x:Name="UpdateButton" Content="Update"/>
-            <Button x:Name="UpdateDismissButton" Content="Later"/>
-        </StackPanel>
-    </Border>
+        <!-- Auto-update banner: hidden until a newer release is found on GitHub. -->
+        <Border x:Name="UpdateBanner" DockPanel.Dock="Top" IsVisible="False" Background="#1F6FEB" Padding="12,8">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock x:Name="UpdateBannerText" Foreground="White" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                <Button x:Name="UpdateButton" Content="Update"/>
+                <Button x:Name="UpdateDismissButton" Content="Later"/>
+            </StackPanel>
+        </Border>
 
-    <TabControl x:Name="MainTabs">
+        <TabControl x:Name="MainTabs">
 
-        <!-- ============================ INSTANCES ============================ -->
-        <TabItem x:Name="TabInstances" Header="Instances">
-            <Grid ColumnDefinitions="280,*" Margin="8">
-                <!-- Left: list + list actions -->
-                <DockPanel Grid.Column="0" Margin="0,0,8,0">
-                    <TextBlock x:Name="LblInstances" DockPanel.Dock="Top" Text="Instances:" Margin="0,0,0,4"/>
-                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,4,0,0">
-                        <Button x:Name="RefreshInstancesButton" Content="Refresh" Margin="0,0,4,0"/>
-                        <Button x:Name="DeleteInstanceButton" Content="Delete"/>
-                    </StackPanel>
-                    <Grid>
-                        <ListBox x:Name="InstancesList"/>
-                        <!-- Empty-state: shown when there are no instances yet. -->
-                        <StackPanel x:Name="InstancesEmptyState" IsVisible="False"
-                                    VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
-                            <TextBlock x:Name="EmptyStateText" Text="No instances yet"
-                                       HorizontalAlignment="Center" Foreground="Gray"/>
-                            <Button x:Name="EmptyStateNewButton" Content="＋ New instance"
-                                    HorizontalAlignment="Center" Padding="18,10" FontSize="15"/>
+            <!-- ============================ INSTANCES ============================ -->
+            <TabItem x:Name="TabInstances" Header="Instances">
+                <Grid ColumnDefinitions="300,*" Margin="12">
+                    <!-- Left: list + list actions -->
+                    <DockPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBlock x:Name="LblInstances" DockPanel.Dock="Top" Text="Instances:" Margin="0,0,0,6"/>
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                            <Button x:Name="RefreshInstancesButton" Content="Refresh"/>
+                            <Button x:Name="DeleteInstanceButton" Content="Delete"/>
                         </StackPanel>
+                        <Grid>
+                            <ListBox x:Name="InstancesList"/>
+                            <!-- Empty-state: shown when there are no instances yet. -->
+                            <StackPanel x:Name="InstancesEmptyState" IsVisible="False"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                                <TextBlock x:Name="EmptyStateText" Text="No instances yet"
+                                           HorizontalAlignment="Center" Foreground="Gray"/>
+                                <Button x:Name="EmptyStateNewButton" Content="＋ New instance"
+                                        HorizontalAlignment="Center" Padding="18,10" FontSize="15"/>
+                            </StackPanel>
+                        </Grid>
+                    </DockPanel>
+
+                    <!-- Right: create / edit form, grouped into sections -->
+                    <ScrollViewer Grid.Column="1">
+                        <StackPanel Spacing="14">
+
+                            <TextBlock x:Name="LblSecGeneral" Text="General" FontWeight="Bold"/>
+                            <StackPanel Spacing="6">
+                                <TextBlock x:Name="LblName" Text="Name"/>
+                                <TextBox x:Name="NameBox"/>
+                                <TextBlock x:Name="LblMcVersion" Text="Minecraft version"/>
+                                <ComboBox x:Name="McVersionCombo" HorizontalAlignment="Stretch"/>
+                                <TextBlock x:Name="LblLoader" Text="Loader"/>
+                                <ComboBox x:Name="LoaderCombo" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <TextBlock x:Name="LblSecMemory" Text="Memory &amp; Java" FontWeight="Bold"/>
+                            <StackPanel Spacing="6">
+                                <Grid ColumnDefinitions="*,12,*">
+                                    <StackPanel Grid.Column="0" Spacing="6">
+                                        <TextBlock x:Name="LblMinRam" Text="Min RAM (MB)"/>
+                                        <TextBox x:Name="MinRamBox" Text="512"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="6">
+                                        <TextBlock x:Name="LblMaxRam" Text="Max RAM (MB)"/>
+                                        <TextBox x:Name="MaxRamBox" Text="2048"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock x:Name="LblJvmArgs" Text="JVM arguments (space-separated)"/>
+                                <TextBox x:Name="JvmArgsBox"/>
+                                <TextBlock x:Name="LblJavaPath" Text="Java path (empty = managed)"/>
+                                <DockPanel>
+                                    <Button x:Name="BrowseJavaButton" Content="..." DockPanel.Dock="Right" Margin="6,0,0,0"/>
+                                    <TextBox x:Name="JavaPathBox"/>
+                                </DockPanel>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="NewInstanceButton" Content="Create new"/>
+                                <Button x:Name="SaveInstanceButton" Content="Save changes"/>
+                            </StackPanel>
+
+                            <TextBlock x:Name="LblModpack" Text="Modpack (.frpack)" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="ExportPackButton" Content="Export .frpack"/>
+                                <Button x:Name="ImportPackButton" Content="Import .frpack"/>
+                            </StackPanel>
+
+                            <TextBlock x:Name="InstanceStatus" Text="" TextWrapping="Wrap" Foreground="Gray"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- ============================== PLAY ============================== -->
+            <TabItem x:Name="TabPlay" Header="Play">
+                <DockPanel Margin="12">
+                    <StackPanel DockPanel.Dock="Top" Spacing="8">
+                        <Grid ColumnDefinitions="72,*">
+                            <TextBlock Grid.Column="0" x:Name="LblProfileOffline" Text="Profile:" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                <ComboBox x:Name="OfflineProfileCombo" Width="240"/>
+                                <Button x:Name="MicrosoftLoginButton" Content="Microsoft login"/>
+                                <Button x:Name="MicrosoftLogoutButton" Content="Log out"/>
+                                <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)" Foreground="Gray"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="72,*">
+                            <TextBlock Grid.Column="0" x:Name="LblPlayInstance" Text="Instance:" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="1" x:Name="PlayInstanceCombo" HorizontalAlignment="Stretch"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                            <Button x:Name="PlayButton" Content="PLAY" FontSize="22" Padding="44,10"/>
+                            <Button x:Name="StopButton" Content="Stop" Padding="16,10"/>
+                        </StackPanel>
+                        <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="18"/>
+                        <TextBlock x:Name="PlayStatus" Text="" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="LblLog" Text="Log:" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <TextBox x:Name="LogBox" AcceptsReturn="True" IsReadOnly="True"
+                             TextWrapping="NoWrap" VerticalContentAlignment="Top" Margin="0,4,0,0"/>
+                </DockPanel>
+            </TabItem>
+
+            <!-- =============================== MODS =============================== -->
+            <TabItem Header="Mods" x:Name="ModsTab">
+                <DockPanel Margin="12">
+                    <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
+                        <Grid ColumnDefinitions="72,*">
+                            <TextBlock Grid.Column="0" x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                <ComboBox x:Name="ModInstanceCombo" Width="280"/>
+                                <Button x:Name="RefreshModsButton" Content="Refresh"/>
+                            </StackPanel>
+                        </Grid>
+                        <!-- Shown only when the selected instance is Vanilla (no loader). -->
+                        <StackPanel x:Name="ModsVanillaPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
+                            <TextBlock x:Name="ModsVanillaWarning" Text="" TextWrapping="Wrap"
+                                       Foreground="#D13438" VerticalAlignment="Center" MaxWidth="640"/>
+                            <Button x:Name="NewModdedInstanceButton" Content="Create modded instance"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,12,*">
+                        <!-- Installed mods -->
+                        <DockPanel Grid.Column="0">
+                            <TextBlock x:Name="LblInstalledMods" DockPanel.Dock="Top" Text="Installed mods:" Margin="0,0,0,4"/>
+                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                                <Button x:Name="AddModButton" Content="Add jar"/>
+                                <Button x:Name="RemoveModButton" Content="Remove"/>
+                                <Button x:Name="ToggleModButton" Content="Enable/Disable"/>
+                            </StackPanel>
+                            <ListBox x:Name="ModsList"/>
+                        </DockPanel>
+
+                        <!-- Modrinth search -->
+                        <DockPanel Grid.Column="2">
+                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
+                                <TextBox x:Name="ModrinthQueryBox" Width="240" Watermark="Search Modrinth..."/>
+                                <Button x:Name="ModrinthSearchButton" Content="Search"/>
+                            </StackPanel>
+                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                                <Button x:Name="ModrinthDownloadButton" Content="Download to instance"/>
+                            </StackPanel>
+                            <ListBox x:Name="ModrinthList"/>
+                        </DockPanel>
                     </Grid>
                 </DockPanel>
+            </TabItem>
 
-                <!-- Right: create / edit form -->
-                <ScrollViewer Grid.Column="1">
-                    <StackPanel Spacing="4">
-                        <TextBlock x:Name="LblName" Text="Name"/>
-                        <TextBox x:Name="NameBox"/>
-                        <TextBlock x:Name="LblMcVersion" Text="Minecraft version"/>
-                        <ComboBox x:Name="McVersionCombo" HorizontalAlignment="Stretch"/>
-                        <TextBlock x:Name="LblLoader" Text="Loader"/>
-                        <ComboBox x:Name="LoaderCombo" HorizontalAlignment="Stretch"/>
-                        <TextBlock x:Name="LblMinRam" Text="Min RAM (MB)"/>
-                        <TextBox x:Name="MinRamBox" Text="512"/>
-                        <TextBlock x:Name="LblMaxRam" Text="Max RAM (MB)"/>
-                        <TextBox x:Name="MaxRamBox" Text="2048"/>
-                        <TextBlock x:Name="LblJvmArgs" Text="JVM arguments (space-separated)"/>
-                        <TextBox x:Name="JvmArgsBox"/>
-                        <TextBlock x:Name="LblJavaPath" Text="Java path (empty = managed)"/>
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <TextBox x:Name="JavaPathBox" Width="360"/>
-                            <Button x:Name="BrowseJavaButton" Content="..."/>
+            <!-- =============================== SKIN =============================== -->
+            <TabItem x:Name="TabSkin" Header="Skin">
+                <ScrollViewer>
+                    <StackPanel Margin="12" Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Name="LblSkinProfile" Text="Offline profile:" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="SkinProfileCombo" Width="200"/>
+                            <Button x:Name="NewProfileButton" Content="New"/>
+                            <Button x:Name="DeleteProfileButton" Content="Delete"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,8,0,0">
-                            <Button x:Name="NewInstanceButton" Content="Create new"/>
-                            <Button x:Name="SaveInstanceButton" Content="Save changes"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Name="LblProfileName" Text="Name:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="ProfileNameBox" Width="180"/>
+                            <CheckBox x:Name="SlimCheck" Content="Slim model (Alex)"/>
+                            <Button x:Name="SaveProfileButton" Content="Save profile"/>
                         </StackPanel>
-                        <TextBlock x:Name="LblModpack" Text="Modpack (.frpack)" Margin="0,8,0,0"/>
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <Button x:Name="ExportPackButton" Content="Export .frpack"/>
-                            <Button x:Name="ImportPackButton" Content="Import .frpack"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button x:Name="ChooseSkinButton" Content="Choose skin (PNG)"/>
+                            <Button x:Name="ChooseCapeButton" Content="Choose cape"/>
                         </StackPanel>
-                        <TextBlock x:Name="InstanceStatus" Text="" Margin="0,4,0,0" TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Name="LblApplyInstance" Text="Apply in-game (offline) on instance:" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="SkinInstanceCombo" Width="240"/>
+                            <Button x:Name="ApplySkinButton" Content="Apply in-game"/>
+                        </StackPanel>
+
+                        <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,4,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="20">
+                                <StackPanel Spacing="4">
+                                    <TextBlock x:Name="LblSkinPreview" Text="Skin (raw PNG)"/>
+                                    <Image x:Name="SkinImage" Width="128" Height="128"
+                                           Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock x:Name="LblFacePreview" Text="Face (8x8)"/>
+                                    <Image x:Name="FaceImage" Width="128" Height="128"
+                                           Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock x:Name="LblCapePreview" Text="Cape"/>
+                                    <Image x:Name="CapeImage" Width="80" Height="128"
+                                           Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock x:Name="SkinStatus" Text="" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="LblSkinHelp1" TextWrapping="Wrap" Foreground="Gray" Text=""/>
+                        <TextBlock x:Name="LblSkinHelp2" TextWrapping="Wrap" Foreground="Gray" Text=""/>
                     </StackPanel>
                 </ScrollViewer>
-            </Grid>
-        </TabItem>
+            </TabItem>
 
-        <!-- ============================== PLAY ============================== -->
-        <TabItem x:Name="TabPlay" Header="Play">
-            <DockPanel Margin="8">
-                <StackPanel DockPanel.Dock="Top" Spacing="4">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="LblProfileOffline" Text="Profile:" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="OfflineProfileCombo" Width="220"/>
-                        <Button x:Name="MicrosoftLoginButton" Content="Microsoft login"/>
-                        <Button x:Name="MicrosoftLogoutButton" Content="Log out"/>
-                        <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="LblNick" Text="Nick:" VerticalAlignment="Center"/>
-                        <TextBox x:Name="NickBox" Width="160"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="LblPlayInstance" Text="Instance:" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="PlayInstanceCombo" Width="280"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Button x:Name="PlayButton" Content="PLAY" FontSize="20" Padding="24,8"/>
-                        <Button x:Name="StopButton" Content="Stop" Padding="12,8"/>
-                    </StackPanel>
-                    <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="18"/>
-                    <TextBlock x:Name="PlayStatus" Text="" TextWrapping="Wrap"/>
-                    <TextBlock x:Name="LblLog" Text="Log:" Margin="0,4,0,0"/>
-                </StackPanel>
-                <TextBox x:Name="LogBox" AcceptsReturn="True" IsReadOnly="True"
-                         TextWrapping="NoWrap" VerticalContentAlignment="Top"/>
-            </DockPanel>
-        </TabItem>
-
-        <!-- =============================== MODS =============================== -->
-        <TabItem Header="Mods" x:Name="ModsTab">
-            <DockPanel Margin="8">
-                <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,6">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="ModInstanceCombo" Width="260"/>
-                        <Button x:Name="RefreshModsButton" Content="Refresh"/>
-                    </StackPanel>
-                    <!-- Shown only when the selected instance is Vanilla (no loader). -->
-                    <StackPanel x:Name="ModsVanillaPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
-                        <TextBlock x:Name="ModsVanillaWarning" Text="" TextWrapping="Wrap"
-                                   Foreground="#B00020" VerticalAlignment="Center" MaxWidth="600"/>
-                        <Button x:Name="NewModdedInstanceButton" Content="Create modded instance"/>
+            <!-- =============================== ABOUT ============================== -->
+            <TabItem x:Name="TabAbout" Header="About">
+                <StackPanel Margin="16" Spacing="8">
+                    <TextBlock x:Name="AboutTitle" FontSize="24" FontWeight="Bold" Text="FURY Launcher"/>
+                    <TextBlock x:Name="AboutVersion" Text="version" Foreground="Gray"/>
+                    <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="Gray" Text="" Margin="0,6,0,0"/>
+                    <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="Gray" Text=""/>
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
+                        <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="LanguageCombo" Width="180"/>
                     </StackPanel>
                 </StackPanel>
+            </TabItem>
 
-                <Grid ColumnDefinitions="*,*">
-                    <!-- Installed mods -->
-                    <DockPanel Grid.Column="0" Margin="0,0,6,0">
-                        <TextBlock x:Name="LblInstalledMods" DockPanel.Dock="Top" Text="Installed mods:"/>
-                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
-                            <Button x:Name="AddModButton" Content="Add jar"/>
-                            <Button x:Name="RemoveModButton" Content="Remove"/>
-                            <Button x:Name="ToggleModButton" Content="Enable/Disable"/>
-                        </StackPanel>
-                        <ListBox x:Name="ModsList"/>
-                    </DockPanel>
-
-                    <!-- Modrinth search -->
-                    <DockPanel Grid.Column="1" Margin="6,0,0,0">
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4">
-                            <TextBox x:Name="ModrinthQueryBox" Width="220" Watermark="Search Modrinth..."/>
-                            <Button x:Name="ModrinthSearchButton" Content="Search"/>
-                        </StackPanel>
-                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
-                            <Button x:Name="ModrinthDownloadButton" Content="Download to instance"/>
-                        </StackPanel>
-                        <ListBox x:Name="ModrinthList"/>
-                    </DockPanel>
-                </Grid>
-            </DockPanel>
-        </TabItem>
-
-        <!-- =============================== SKIN =============================== -->
-        <TabItem x:Name="TabSkin" Header="Skin">
-            <ScrollViewer>
-                <StackPanel Margin="8" Spacing="6">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="LblSkinProfile" Text="Offline profile:" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="SkinProfileCombo" Width="200"/>
-                        <Button x:Name="NewProfileButton" Content="New"/>
-                        <Button x:Name="DeleteProfileButton" Content="Delete"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="LblProfileName" Text="Name:" VerticalAlignment="Center"/>
-                        <TextBox x:Name="ProfileNameBox" Width="160"/>
-                        <CheckBox x:Name="SlimCheck" Content="Slim model (Alex)"/>
-                        <Button x:Name="SaveProfileButton" Content="Save profile"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Button x:Name="ChooseSkinButton" Content="Choose skin (PNG)"/>
-                        <Button x:Name="ChooseCapeButton" Content="Choose cape"/>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="LblApplyInstance" Text="Apply in-game (offline) on instance:" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="SkinInstanceCombo" Width="240"/>
-                        <Button x:Name="ApplySkinButton" Content="Apply in-game"/>
-                    </StackPanel>
-
-                    <Border BorderBrush="Gray" BorderThickness="1" Padding="6">
-                        <StackPanel Orientation="Horizontal" Spacing="16">
-                            <StackPanel Spacing="2">
-                                <TextBlock x:Name="LblSkinPreview" Text="Skin (raw PNG)"/>
-                                <Image x:Name="SkinImage" Width="128" Height="128"
-                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
-                            </StackPanel>
-                            <StackPanel Spacing="2">
-                                <TextBlock x:Name="LblFacePreview" Text="Face (8x8)"/>
-                                <Image x:Name="FaceImage" Width="128" Height="128"
-                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
-                            </StackPanel>
-                            <StackPanel Spacing="2">
-                                <TextBlock x:Name="LblCapePreview" Text="Cape"/>
-                                <Image x:Name="CapeImage" Width="80" Height="128"
-                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock x:Name="SkinStatus" Text="" TextWrapping="Wrap"/>
-                    <TextBlock x:Name="LblSkinHelp1" TextWrapping="Wrap" Foreground="Gray" Text=""/>
-                    <TextBlock x:Name="LblSkinHelp2" TextWrapping="Wrap" Foreground="Gray" Text=""/>
-                </StackPanel>
-            </ScrollViewer>
-        </TabItem>
-
-        <!-- =============================== ABOUT ============================== -->
-        <TabItem x:Name="TabAbout" Header="About">
-            <StackPanel Margin="16" Spacing="6">
-                <TextBlock x:Name="AboutTitle" FontSize="22" Text="FURY Launcher"/>
-                <TextBlock x:Name="AboutVersion" Text="version"/>
-                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="Gray" Text=""/>
-                <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="Gray" Text=""/>
-                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,10,0,0">
-                    <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="LanguageCombo" Width="180"/>
-                </StackPanel>
-            </StackPanel>
-        </TabItem>
-
-    </TabControl>
+        </TabControl>
     </DockPanel>
 </Window>
