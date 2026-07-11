@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- Windows target: the embedded Microsoft login uses WinForms + WebView2. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
@@ -10,11 +12,22 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>FURY Launcher</AssemblyName>
     <AssemblyTitle>FURY Launcher</AssemblyTitle>
-    <Copyright>Copyright © 2026 Suny. Todos os direitos reservados.</Copyright>
+    <Copyright>Copyright © 2026 Suny. All rights reserved.</Copyright>
     <Authors>Suny</Authors>
     <Product>FURY Launcher</Product>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <!-- The WebView2 package ships an unused WPF wrapper that trips a benign WindowsBase
+         version-conflict warning; we only use the WinForms host, so downgrade it. -->
+    <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
+
+  <!-- UseWindowsForms adds System.Windows.Forms/System.Drawing as global usings, which
+       collide with Avalonia's Button/TextBox/etc. Keep them out of the global namespace;
+       the embedded-login file imports WinForms explicitly. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Launcher.Core\Launcher.Core.csproj" />
@@ -24,6 +37,10 @@
     <PackageReference Include="Avalonia" Version="11.2.3" />
     <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.3" />
+    <!-- Embedded Microsoft login window. -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <!-- IWebUI type we implement for the OAuth flow (also comes via Core). -->
+    <PackageReference Include="XboxAuthNet" Version="3.0.4" />
   </ItemGroup>
 
 </Project>

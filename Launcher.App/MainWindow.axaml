@@ -7,6 +7,17 @@
     <!-- Deliberately bare: standard controls, StackPanel/Grid, no styling.
          All visible text is set from Launcher.Core.Localization at runtime
          (see ApplyLanguage in the code-behind); markup text is just a placeholder. -->
+    <DockPanel>
+
+    <!-- Auto-update banner: hidden until a newer release is found on GitHub. -->
+    <Border x:Name="UpdateBanner" DockPanel.Dock="Top" IsVisible="False" Background="#1F6FEB" Padding="10,6">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock x:Name="UpdateBannerText" Foreground="White" VerticalAlignment="Center" TextWrapping="Wrap"/>
+            <Button x:Name="UpdateButton" Content="Update"/>
+            <Button x:Name="UpdateDismissButton" Content="Later"/>
+        </StackPanel>
+    </Border>
+
     <TabControl x:Name="MainTabs">
 
         <!-- ============================ INSTANCES ============================ -->
@@ -72,10 +83,8 @@
             <DockPanel Margin="8">
                 <StackPanel DockPanel.Dock="Top" Spacing="4">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="LblAccount" Text="Account:" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="AccountCombo" Width="140"/>
-                        <TextBlock x:Name="LblProfileOffline" Text="Profile (offline):" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="OfflineProfileCombo" Width="160"/>
+                        <TextBlock x:Name="LblProfileOffline" Text="Profile:" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="OfflineProfileCombo" Width="220"/>
                         <Button x:Name="MicrosoftLoginButton" Content="Microsoft login"/>
                         <Button x:Name="MicrosoftLogoutButton" Content="Log out"/>
                         <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)"/>
@@ -214,4 +223,5 @@
         </TabItem>
 
     </TabControl>
+    </DockPanel>
 </Window>

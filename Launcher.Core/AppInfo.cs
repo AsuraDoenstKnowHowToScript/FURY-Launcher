@@ -14,11 +14,15 @@ namespace Launcher.Core;
 public static class AppInfo
 {
     public const string Name = "FURY Launcher";
-    public const string Version = "0.3.3-beta";
+    public const string Version = "0.3.4-beta";
 
     /// <summary>Copyright/licença exibida no título/Sobre. Software proprietário.</summary>
     public const string Copyright = "© 2026 Suny. Todos os direitos reservados. Software proprietário — ver LICENSE.";
 
     /// <summary>Folder name under %APPDATA% where all launcher data lives.</summary>
     public const string DataFolderName = "FURY Launcher";
+
+    /// <summary>GitHub repository the auto-updater checks for new releases.</summary>
+    public const string RepoOwner = "AsuraDoenstKnowHowToScript";
+    public const string RepoName = "FURY-Launcher";
 }

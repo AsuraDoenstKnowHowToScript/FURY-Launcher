@@ -6,6 +6,7 @@
 
 using CmlLib.Core.Auth;
 using CmlLib.Core.Auth.Microsoft;
+using XboxAuthNet.OAuth.CodeFlow;
 
 namespace Launcher.Core.Services;
 
@@ -32,25 +33,31 @@ public sealed class AuthManager : IAuthManager
     public event EventHandler<string>? Log;
 
     /// <summary>
-    /// Set by the UI: shows a dialog asking the user to paste the redirected URL after
-    /// the system browser sign-in, and returns it (null/empty = cancelled). Required for
-    /// interactive Microsoft login since this app has no embedded browser.
+    /// Set by the app: builds the embedded WebView login window used for the interactive
+    /// Microsoft sign-in. When null (or it returns null), we fall back to the paste flow
+    /// (<see cref="InteractivePrompt"/>).
+    /// </summary>
+    public Func<IWebUI?>? WebUiFactory { get; set; }
+
+    /// <summary>
+    /// Paste fallback used only when no embedded WebView is available: shows a dialog
+    /// asking the user to paste the redirected URL, returning it (null/empty = cancelled).
     /// </summary>
     public Func<Uri, CancellationToken, Task<string?>>? InteractivePrompt { get; set; }
 
     public AuthManager(LauncherPaths paths)
     {
         _paths = paths;
+        void LogLine(string msg) { Log?.Invoke(this, msg); CrashLog.Write(msg); }
         _handler = new Lazy<JELoginHandler>(() =>
             new JELoginHandlerBuilder()
-                // Use our own system-browser web UI for the interactive step; the default
-                // relies on an embedded WebView this app doesn't ship.
+                // Interactive step uses the app's embedded WebView; the CmlLib default
+                // needs an embedded browser we wire up ourselves. Paste is the fallback.
                 .WithOAuthProvider(new SystemBrowserOAuthProvider(
                     JELoginHandler.DefaultMicrosoftOAuthClientInfo,
-                    msg => { Log?.Invoke(this, msg); CrashLog.Write(msg); },
-                    (uri, ct) => InteractivePrompt is { } prompt
-                        ? prompt(uri, ct)
-                        : Task.FromResult<string?>(null)))
+                    () => WebUiFactory?.Invoke()
+                          ?? new SystemBrowserWebUi(LogLine, (uri, ct) =>
+                              InteractivePrompt is { } prompt ? prompt(uri, ct) : Task.FromResult<string?>(null))))
                 .WithAccountManager(_paths.AccountsFile)
                 .Build());
     }

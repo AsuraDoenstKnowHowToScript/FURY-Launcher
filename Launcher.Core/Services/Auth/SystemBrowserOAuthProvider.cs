@@ -7,13 +7,14 @@
 using XboxAuthNet.Game;
 using XboxAuthNet.Game.Authenticators;
 using XboxAuthNet.Game.OAuth;
+using XboxAuthNet.OAuth.CodeFlow;
 
 namespace Launcher.Core.Services;
 
 /// <summary>
-/// OAuth provider for CmlLib's <c>JELoginHandler</c> whose interactive step opens the
-/// system browser and asks the user to paste the resulting URL back (see
-/// <see cref="SystemBrowserWebUi"/>). We keep the default registered redirect
+/// OAuth provider for CmlLib's <c>JELoginHandler</c> whose interactive step uses a
+/// caller-supplied <see cref="IWebUI"/> (an embedded WebView login window provided by
+/// the app, or a paste fallback). We keep the default registered redirect
 /// (<c>oauth20_desktop.srf</c>) because the Minecraft MSA client rejects any other
 /// redirect. Silent/sign-out/validation are delegated to the stock provider so token
 /// caching behaves exactly like the default.
@@ -22,18 +23,13 @@ public sealed class SystemBrowserOAuthProvider : IAuthenticationProvider
 {
     private readonly MicrosoftOAuthClientInfo _clientInfo;
     private readonly MicrosoftOAuthCodeFlowProvider _inner;
-    private readonly Action<string> _log;
-    private readonly Func<Uri, CancellationToken, Task<string?>> _promptForResponse;
+    private readonly Func<IWebUI> _webUiFactory;
 
-    public SystemBrowserOAuthProvider(
-        MicrosoftOAuthClientInfo clientInfo,
-        Action<string> log,
-        Func<Uri, CancellationToken, Task<string?>> promptForResponse)
+    public SystemBrowserOAuthProvider(MicrosoftOAuthClientInfo clientInfo, Func<IWebUI> webUiFactory)
     {
         _clientInfo = clientInfo;
         _inner = new MicrosoftOAuthCodeFlowProvider(clientInfo);
-        _log = log;
-        _promptForResponse = promptForResponse;
+        _webUiFactory = webUiFactory;
     }
 
     public IAuthenticator Authenticate() => _inner.Authenticate();
@@ -44,9 +40,9 @@ public sealed class SystemBrowserOAuthProvider : IAuthenticationProvider
 
     public IAuthenticator AuthenticateInteractively()
     {
-        var webUi = new SystemBrowserWebUi(_log, _promptForResponse);
-        // No custom redirect: the single-arg overload keeps the default desktop redirect,
-        // which is the only one registered for the Minecraft MSA client.
+        var webUi = _webUiFactory();
+        // Single-arg overload keeps the default desktop redirect, the only one
+        // registered for the Minecraft MSA client.
         return new MicrosoftOAuthBuilder(_clientInfo).Interactive(codeFlow => codeFlow.WithWebUI(webUi));
     }
 }

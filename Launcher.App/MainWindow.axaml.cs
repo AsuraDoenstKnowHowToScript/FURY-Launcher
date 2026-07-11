@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -49,6 +50,7 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _launchCts;
     private bool _suppressLangEvent; // guards the language dropdown during programmatic set
     private List<string> _versions = new(); // Minecraft versions shown in the create/edit dropdown
+    private UpdateInfo? _pendingUpdate;     // newer release found on GitHub, if any
 
     // Coalesced UI updates. The game/installer raise log + progress events far too
     // fast to touch the UI once per event (doing so froze the window into "not
@@ -71,8 +73,6 @@ public partial class MainWindow : Window
 
         LoaderCombo.ItemsSource = _loaders.Select(l => l.ToString()).ToList();
         LoaderCombo.SelectedIndex = 0;
-        AccountCombo.ItemsSource = new[] { "Offline", "Microsoft" };
-        AccountCombo.SelectedIndex = 0;
         StopButton.IsEnabled = false;
 
         // Language selector (About tab). Endonyms don't change with the UI language.
@@ -130,10 +130,21 @@ public partial class MainWindow : Window
         EmptyStateNewButton.Click += OnEmptyStateNew;
         NewModdedInstanceButton.Click += OnCreateModdedInstance;
 
+        // --- auto-update banner ---
+        UpdateButton.Click += OnUpdateClick;
+        UpdateDismissButton.Click += (_, _) => UpdateBanner.IsVisible = false;
+
         // --- Core → UI: buffer high-frequency events; a timer flushes them ---
         // Auth diagnostics (browser open, OAuth errors) go to the log panel and crash.log.
         _core.Auth.Log += (_, line) => { AppendLog(line); CrashLog.Write(line); };
-        // Interactive MS login has no embedded browser: prompt the user to paste the URL back.
+        // Interactive MS login: prefer the embedded WebView2 window (automatic, no paste);
+        // fall back to the paste dialog only when the WebView2 runtime is unavailable.
+        _core.Auth.WebUiFactory = () => WebView2LoginWebUi.IsRuntimeAvailable()
+            ? new WebView2LoginWebUi(
+                line => { AppendLog(line); CrashLog.Write(line); },
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                             AppInfo.DataFolderName, "webview2"))
+            : null;
         _core.Auth.InteractivePrompt = PromptForAuthCodeAsync;
         _core.Game.ByteProgress += (_, p) => { lock (_uiLock) _pendingProgress = p.Ratio; };
         _core.Game.FileProgress += (_, f) =>
@@ -186,13 +197,9 @@ public partial class MainWindow : Window
         ImportPackButton.Content = Loc.T("btn.importpack");
 
         // Play tab
-        LblAccount.Text = Loc.T("label.account");
-        // Rebuild the account choices localized, preserving the current selection.
-        var accountSel = AccountCombo.SelectedIndex;
-        AccountCombo.ItemsSource = new[] { Loc.T("account.offline"), "Microsoft" };
-        AccountCombo.SelectedIndex = accountSel < 0 ? 0 : accountSel;
-        LblProfileOffline.Text = Loc.T("label.profileoffline");
+        LblProfileOffline.Text = Loc.T("label.profile");
         LblNick.Text = Loc.T("label.nick");
+        RefreshPlayAccountList();
         MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
         MicrosoftLogoutButton.Content = Loc.T("btn.mslogout");
         LblPlayInstance.Text = Loc.T("label.instance");
@@ -245,6 +252,7 @@ public partial class MainWindow : Window
 
         // Re-evaluate Vanilla-dependent enable/disable + tooltips with the (new) language.
         UpdateModsAvailability();
+        RefreshUpdateBanner();
     }
 
     private void OnLanguageChanged(object? sender, SelectionChangedEventArgs e)
@@ -310,7 +318,109 @@ public partial class MainWindow : Window
         // Restore a cached Microsoft session silently, if any.
         _msSession = await _core.Auth.TryResumeMicrosoftAsync();
         if (_msSession != null)
+        {
             AccountStatus.Text = Loc.T("account.ms", _msSession.Username);
+            RefreshPlayAccountList();   // show the resumed Microsoft account in the profile list
+        }
+
+        await CheckForUpdatesAsync();
+    }
+
+    // ============================ AUTO-UPDATE ============================
+
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            _pendingUpdate = await _core.Updates.CheckAsync(
+                AppInfo.RepoOwner, AppInfo.RepoName, AppInfo.Version, includeBeta: true);
+            RefreshUpdateBanner();
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[update] check failed", ex);
+        }
+    }
+
+    /// <summary>Shows/hides the top banner and localizes its text for the found release.</summary>
+    private void RefreshUpdateBanner()
+    {
+        if (_pendingUpdate == null) { UpdateBanner.IsVisible = false; return; }
+
+        UpdateBanner.IsVisible = true;
+        UpdateBannerText.Text = Loc.T(_pendingUpdate.IsBeta ? "update.beta" : "update.stable", _pendingUpdate.Tag);
+        UpdateButton.Content = Loc.T(_pendingUpdate.IsBeta ? "btn.installbeta" : "btn.update");
+        UpdateDismissButton.Content = Loc.T("btn.later");
+    }
+
+    private async void OnUpdateClick(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    {
+        var info = _pendingUpdate;
+        if (info == null) return;
+
+        // Stable installs straight away; a beta asks first (it may be unstable).
+        if (info.IsBeta)
+        {
+            var ok = await ConfirmAsync(Loc.T("update.betawarn.title"), Loc.T("update.betawarn.body", info.Tag));
+            if (!ok) return;
+        }
+
+        UpdateButton.IsEnabled = false;
+        try
+        {
+            var progress = new Progress<double>(p => Dispatcher.UIThread.Post(
+                () => UpdateBannerText.Text = Loc.T("update.downloading", (int)(p * 100))));
+            var staging = await _core.Updates.DownloadAndExtractAsync(info, progress);
+
+            const string exeName = "FURY Launcher.exe";
+            if (!File.Exists(Path.Combine(staging, exeName)))
+                throw new InvalidOperationException($"The downloaded update is missing {exeName}.");
+
+            UpdateBannerText.Text = Loc.T("update.installing");
+            ApplyUpdateAndRestart(staging, exeName);
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[update] install failed", ex);
+            UpdateBannerText.Text = Loc.T("update.failed", ex.Message);
+            UpdateButton.IsEnabled = true;
+        }
+    });
+
+    /// <summary>
+    /// Writes a tiny batch script that waits for this process to exit, copies the staged
+    /// files over the install folder, relaunches, and deletes itself — then shuts down.
+    /// </summary>
+    private void ApplyUpdateAndRestart(string stagingDir, string exeName)
+    {
+        var appDir = AppContext.BaseDirectory.TrimEnd('\\', '/');
+        var exePath = Path.Combine(appDir, exeName);
+        var pid = Environment.ProcessId;
+        var bat = Path.Combine(Path.GetTempPath(), "fury-update.bat");
+
+        var script =
+            "@echo off\r\n" +
+            "timeout /t 1 /nobreak >nul\r\n" +
+            ":wait\r\n" +
+            $"tasklist /fi \"PID eq {pid}\" | find \"{pid}\" >nul && (timeout /t 1 /nobreak >nul & goto wait)\r\n" +
+            $"robocopy \"{stagingDir}\" \"{appDir}\" /E /IS /IT /NFL /NDL /NJH /NJS /R:3 /W:2 >nul\r\n" +
+            $"start \"\" \"{exePath}\"\r\n" +
+            $"rmdir /s /q \"{stagingDir}\" >nul 2>&1\r\n" +
+            "del \"%~f0\" >nul 2>&1\r\n";
+        File.WriteAllText(bat, script);
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "cmd.exe",
+            Arguments = $"/c \"{bat}\"",
+            UseShellExecute = false,
+            CreateNoWindow = true
+        });
+
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            desktop.Shutdown();
+        else
+            Environment.Exit(0);
     }
 
     // ============================ PROFILES (offline) ============================
@@ -320,17 +430,36 @@ public partial class MainWindow : Window
         _profiles = (await _core.Profiles.ListEnsuredAsync()).ToList();
         var names = _profiles.Select(p => p.Name + (p.Slim ? $"  ({Loc.T("model.slim")})" : "")).ToList();
 
+        // Skin tab lists offline profiles only.
         var skinSel = SkinProfileCombo.SelectedIndex;
-        var playSel = OfflineProfileCombo.SelectedIndex;
         SkinProfileCombo.ItemsSource = names.ToList();
-        OfflineProfileCombo.ItemsSource = names.ToList();
-
         if (_profiles.Count > 0)
-        {
             SkinProfileCombo.SelectedIndex = skinSel >= 0 && skinSel < _profiles.Count ? skinSel : 0;
-            OfflineProfileCombo.SelectedIndex = playSel >= 0 && playSel < _profiles.Count ? playSel : 0;
-        }
+
+        // Play tab lists offline profiles + the signed-in Microsoft account.
+        RefreshPlayAccountList();
     }
+
+    /// <summary>
+    /// Fills the Play "Profile" dropdown with the offline profiles and, when signed in,
+    /// the Microsoft account (accounts are profiles too). The Microsoft entry is always
+    /// last, at index <c>_profiles.Count</c>.
+    /// </summary>
+    private void RefreshPlayAccountList()
+    {
+        var items = _profiles.Select(p => p.Name + (p.Slim ? $"  ({Loc.T("model.slim")})" : "")).ToList();
+        if (_msSession != null)
+            items.Add($"{_msSession.Username}  (Microsoft)");
+
+        var sel = OfflineProfileCombo.SelectedIndex;
+        OfflineProfileCombo.ItemsSource = items;
+        if (items.Count > 0)
+            OfflineProfileCombo.SelectedIndex = sel >= 0 && sel < items.Count ? sel : 0;
+    }
+
+    /// <summary>True when the Play dropdown has the Microsoft account entry selected.</summary>
+    private bool IsMicrosoftProfileSelected()
+        => _msSession != null && OfflineProfileCombo.SelectedIndex == _profiles.Count;
 
     private OfflineProfile? SelectedSkinProfile()
     {
@@ -561,7 +690,8 @@ public partial class MainWindow : Window
         {
             _msSession = await _core.Auth.LoginMicrosoftAsync();
             AccountStatus.Text = Loc.T("account.ms", _msSession.Username);
-            AccountCombo.SelectedIndex = 1;
+            RefreshPlayAccountList();
+            OfflineProfileCombo.SelectedIndex = _profiles.Count; // select the Microsoft entry
         }
         finally
         {
@@ -573,7 +703,8 @@ public partial class MainWindow : Window
     {
         await _core.Auth.SignOutMicrosoftAsync();
         _msSession = null;
-        AccountCombo.SelectedIndex = 0;                 // back to Offline
+        RefreshPlayAccountList();
+        OfflineProfileCombo.SelectedIndex = _profiles.Count > 0 ? 0 : -1;   // back to an offline profile
         AccountStatus.Text = Loc.T("status.offlineparen");
     });
 
@@ -649,10 +780,9 @@ public partial class MainWindow : Window
 
         MSession session;
         OfflineProfile? offlineProfile = null;
-        if (AccountCombo.SelectedIndex == 1)
+        if (IsMicrosoftProfileSelected())
         {
-            if (_msSession == null) { PlayStatus.Text = Loc.T("play.msloginfirst"); return; }
-            session = _msSession;
+            session = _msSession!;   // the Microsoft account profile is selected
         }
         else
         {

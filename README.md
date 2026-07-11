@@ -11,7 +11,7 @@ instances, mod management, and a simple offline/Microsoft login. No clutter.
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
 > [!IMPORTANT]
-> **Current version: `v0.3.3-beta` (testing).** It is stable enough for everyday
+> **Current version: `v0.3.4-beta` (testing).** It is stable enough for everyday
 > testing but still a work in progress. Grab the latest build from the
 > [Releases](../../releases) page and please send feedback.
 
@@ -19,8 +19,8 @@ instances, mod management, and a simple offline/Microsoft login. No clutter.
 
 | Channel | Version | Who it's for |
 | --- | --- | --- |
-| **Beta (latest)** | `v0.3.3-beta` | Testers — start here |
-| Beta | `v0.3.2-beta` | Previous build |
+| **Beta (latest)** | `v0.3.4-beta` | Testers — start here |
+| Beta | `v0.3.3-beta` | Previous build |
 | Pre-alpha | `v0.2.0-pre-alpha` | Early, unstable |
 
 The **release** badge above always points to the newest published build.
@@ -46,9 +46,12 @@ Java is downloaded automatically the first time you launch a version that needs 
 - **Instances.** Create as many as you want, each with its own isolated
   `.minecraft`. Pick the Minecraft version from a dropdown, choose a loader
   (Vanilla, Fabric, Forge or NeoForge), and set RAM and JVM arguments per instance.
-- **Play.** Log in with a Microsoft account or play offline. For offline you just
-  type a nick and it is used right away. The launcher installs anything that is
+- **Play.** Log in with a Microsoft account (in an embedded window, no browser tab
+  or copy/paste) or play offline. Your accounts and offline profiles share one
+  picker. For offline you just type a nick. The launcher installs anything that is
   missing (libraries, assets, Java) and shows live progress and a game log.
+- **Auto-updates.** The launcher checks GitHub on startup and offers to update in
+  place. Stable builds install right away; beta builds ask first.
 - **Mods.** Add, remove and toggle mod jars per instance, or search Modrinth and
   download the version that matches your instance.
 - **Forge and NeoForge** are installed straight from Maven, so there is no ad link
