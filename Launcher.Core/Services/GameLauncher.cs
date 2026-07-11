@@ -60,18 +60,7 @@ public sealed class GameLauncher
         var mcPath = new MinecraftPath(minecraftDir);
         var launcher = new MinecraftLauncher(mcPath);
 
-        // 1) Install the mod loader on first launch and remember its version id.
-        if (instance.Loader != LoaderType.Vanilla && string.IsNullOrEmpty(instance.LoaderVersion))
-        {
-            Log?.Invoke(this, $"[loader] Installing {instance.Loader} for {instance.McVersion}...");
-            var loaderLog = new Progress<string>(line => Log?.Invoke(this, line));
-            instance.LoaderVersion = await _loaderInstaller
-                .InstallAsync(instance, launcher, minecraftDir, loaderLog, ct).ConfigureAwait(false);
-            await _instances.UpdateAsync(instance, ct).ConfigureAwait(false);
-            Log?.Invoke(this, $"[loader] Installed: {instance.LoaderVersion}");
-        }
-
-        // 2) Install/verify game files (manifests, libraries, assets, java runtime).
+        // Progress relays, shared by the base-file install and the game-file install.
         var fileProgress = new Progress<InstallerProgressChangedEventArgs>(e =>
             FileProgress?.Invoke(this, new FileProgressInfo(
                 e.Name ?? "", e.EventType.ToString(), e.TotalTasks, e.ProgressedTasks)));
@@ -80,6 +69,28 @@ public sealed class GameLauncher
             ByteProgress?.Invoke(this, new ByteProgressInfo(
                 e.TotalBytes, e.ProgressedBytes, e.TotalBytes > 0 ? e.ToRatio() : 0)));
 
+        // 1) Install the mod loader on first launch and remember its version id.
+        if (instance.Loader != LoaderType.Vanilla && string.IsNullOrEmpty(instance.LoaderVersion))
+        {
+            // Fetch the base game files first — this also downloads a Java runtime — so the
+            // Forge/NeoForge installer can run on machines with no system JDK installed.
+            Log?.Invoke(this, $"[install] Preparing base files for {instance.McVersion} (also fetches Java)...");
+            await launcher.InstallAsync(instance.McVersion, fileProgress, byteProgress, ct).ConfigureAwait(false);
+
+            // Prefer the instance's Java, else the runtime we just downloaded (system JDK last).
+            var installerJava = !string.IsNullOrWhiteSpace(instance.JavaPath)
+                ? instance.JavaPath
+                : JavaLocator.FindBundledJava(minecraftDir);
+
+            Log?.Invoke(this, $"[loader] Installing {instance.Loader} for {instance.McVersion}...");
+            var loaderLog = new Progress<string>(line => Log?.Invoke(this, line));
+            instance.LoaderVersion = await _loaderInstaller
+                .InstallAsync(instance, launcher, minecraftDir, loaderLog, ct, installerJava).ConfigureAwait(false);
+            await _instances.UpdateAsync(instance, ct).ConfigureAwait(false);
+            Log?.Invoke(this, $"[loader] Installed: {instance.LoaderVersion}");
+        }
+
+        // 2) Install/verify game files (manifests, libraries, assets, java runtime).
         var versionId = instance.LaunchVersionId;
         Log?.Invoke(this, $"[install] Verifying files for {versionId}...");
         await launcher.InstallAsync(versionId, fileProgress, byteProgress, ct).ConfigureAwait(false);

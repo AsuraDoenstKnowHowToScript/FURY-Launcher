@@ -30,10 +30,16 @@ public sealed class LoaderInstaller
         _forge = new ForgeDirectInstaller(http);
     }
 
+    /// <param name="javaPathOverride">
+    /// Java to run the Forge/NeoForge installer with. When null the instance's own
+    /// Java path (or a discovered JDK) is used. The caller passes the bundled runtime
+    /// here so installs work on machines without a system JDK.
+    /// </param>
     public async Task<string> InstallAsync(
         Instance instance, MinecraftLauncher launcher, string minecraftDir,
-        IProgress<string>? log = null, CancellationToken ct = default)
+        IProgress<string>? log = null, CancellationToken ct = default, string? javaPathOverride = null)
     {
+        var installerJava = string.IsNullOrWhiteSpace(javaPathOverride) ? instance.JavaPath : javaPathOverride;
         switch (instance.Loader)
         {
             case LoaderType.Fabric:
@@ -44,11 +50,11 @@ public sealed class LoaderInstaller
             }
             case LoaderType.Forge:
                 return await _forge.InstallForgeAsync(
-                    instance.McVersion, minecraftDir, instance.JavaPath, log, ct).ConfigureAwait(false);
+                    instance.McVersion, minecraftDir, installerJava, log, ct).ConfigureAwait(false);
 
             case LoaderType.NeoForge:
                 return await _forge.InstallNeoForgeAsync(
-                    instance.McVersion, minecraftDir, instance.JavaPath, log, ct).ConfigureAwait(false);
+                    instance.McVersion, minecraftDir, installerJava, log, ct).ConfigureAwait(false);
 
             default:
                 return instance.McVersion; // Vanilla: nothing to install.

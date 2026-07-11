@@ -11,6 +11,10 @@
     <PackageReference Include="CmlLib.Core.Auth.Microsoft" Version="3.3.1" />
     <PackageReference Include="CmlLib.Core.Installer.Forge" Version="1.1.1" />
     <PackageReference Include="CmlLib.Core.Installer.NeoForge" Version="4.0.0" />
+    <!-- Referenced explicitly so we can plug our own system-browser WebUI into the
+         Microsoft OAuth flow (these come in transitively via CmlLib.Core.Auth.Microsoft). -->
+    <PackageReference Include="XboxAuthNet" Version="3.0.4" />
+    <PackageReference Include="XboxAuthNet.Game" Version="1.4.1" />
   </ItemGroup>
 
 </Project>

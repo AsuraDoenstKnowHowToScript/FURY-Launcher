@@ -27,11 +27,19 @@ public sealed class AuthManager : IAuthManager
     private readonly LauncherPaths _paths;
     private readonly Lazy<JELoginHandler> _handler;
 
+    /// <summary>Diagnostic lines from the auth flow (browser open, OAuth errors, ...).</summary>
+    public event EventHandler<string>? Log;
+
     public AuthManager(LauncherPaths paths)
     {
         _paths = paths;
         _handler = new Lazy<JELoginHandler>(() =>
             new JELoginHandlerBuilder()
+                // Use our own system-browser + loopback web UI for the interactive step;
+                // the default relies on an embedded WebView this app doesn't ship.
+                .WithOAuthProvider(new SystemBrowserOAuthProvider(
+                    JELoginHandler.DefaultMicrosoftOAuthClientInfo,
+                    msg => { Log?.Invoke(this, msg); CrashLog.Write(msg); }))
                 .WithAccountManager(_paths.AccountsFile)
                 .Build());
     }
@@ -56,12 +64,14 @@ public sealed class AuthManager : IAuthManager
     {
         try
         {
-            return await _handler.Value.AuthenticateSilently().ConfigureAwait(false);
+            return await _handler.Value.AuthenticateSilently(ct).ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
-            // No valid cached session — do the interactive flow.
-            return await _handler.Value.AuthenticateInteractively().ConfigureAwait(false);
+            // No valid cached session — do the interactive flow. Never silent: log why.
+            Log?.Invoke(this, $"[auth] No cached session ({ex.Message}); starting interactive sign-in.");
+            CrashLog.Write("[auth] silent login failed", ex);
+            return await _handler.Value.AuthenticateInteractively(ct).ConfigureAwait(false);
         }
     }
 
@@ -70,10 +80,12 @@ public sealed class AuthManager : IAuthManager
     {
         try
         {
-            return await _handler.Value.AuthenticateSilently().ConfigureAwait(false);
+            return await _handler.Value.AuthenticateSilently(ct).ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
+            // Expected when there is no cached session; log at low volume, don't surface.
+            CrashLog.Write("[auth] resume (silent) found no session", ex);
             return null;
         }
     }

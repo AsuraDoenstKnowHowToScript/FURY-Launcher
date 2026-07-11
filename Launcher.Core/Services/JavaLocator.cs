@@ -5,6 +5,7 @@
 // "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System.Text.RegularExpressions;
+using Launcher.Core.Localization;
 
 namespace Launcher.Core.Services;
 
@@ -45,9 +46,32 @@ public static class JavaLocator
         var onPath = FromEnv();
         if (onPath != null) return onPath;
 
-        throw new InvalidOperationException(
-            "Nenhum Java encontrado para rodar o instalador do loader. Instale um JDK " +
-            "(ex.: Adoptium/Temurin) ou defina o caminho do Java na instância.");
+        throw new InvalidOperationException(Loc.T("java.notfound"));
+    }
+
+    /// <summary>
+    /// Finds a Java runtime that CmlLib downloaded for an instance (under
+    /// <c>.minecraft/runtime</c>). Lets the Forge/NeoForge installer run on machines
+    /// with no system JDK, once the base game files have been fetched. Returns null
+    /// if none is present yet.
+    /// </summary>
+    public static string? FindBundledJava(string minecraftDir)
+    {
+        var runtime = Path.Combine(minecraftDir, "runtime");
+        if (!Directory.Exists(runtime)) return null;
+        try
+        {
+            // Prefer java.exe (Windows); fall back to a bare "java" (other platforms).
+            foreach (var exe in Directory.EnumerateFiles(runtime, "java.exe", SearchOption.AllDirectories))
+                return exe;
+            foreach (var exe in Directory.EnumerateFiles(runtime, "java", SearchOption.AllDirectories))
+                return exe;
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[java] scanning bundled runtime failed", ex);
+        }
+        return null;
     }
 
     private static int DesiredMajor(string mcVersion)

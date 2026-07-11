@@ -24,6 +24,7 @@ using CmlLib.Core.Auth;
 using Launcher.Core;
 using Launcher.Core.Localization;
 using Launcher.Core.Models;
+using Launcher.Core.Services;
 
 namespace Launcher.App;
 
@@ -66,7 +67,6 @@ public partial class MainWindow : Window
 
         Title = $"{AppInfo.Name} v{AppInfo.Version}";
         AboutTitle.Text = AppInfo.Name;
-        AboutCopyright.Text = AppInfo.Copyright;
 
         LoaderCombo.ItemsSource = _loaders.Select(l => l.ToString()).ToList();
         LoaderCombo.SelectedIndex = 0;
@@ -124,7 +124,13 @@ public partial class MainWindow : Window
         ChooseCapeButton.Click += OnChooseCape;
         ApplySkinButton.Click += OnApplySkin;
 
+        // --- empty-state + Vanilla-mods shortcuts ---
+        EmptyStateNewButton.Click += OnEmptyStateNew;
+        NewModdedInstanceButton.Click += OnCreateModdedInstance;
+
         // --- Core → UI: buffer high-frequency events; a timer flushes them ---
+        // Auth diagnostics (browser open, OAuth errors) go to the log panel and crash.log.
+        _core.Auth.Log += (_, line) => { AppendLog(line); CrashLog.Write(line); };
         _core.Game.ByteProgress += (_, p) => { lock (_uiLock) _pendingProgress = p.Ratio; };
         _core.Game.FileProgress += (_, f) =>
         {
@@ -177,6 +183,10 @@ public partial class MainWindow : Window
 
         // Play tab
         LblAccount.Text = Loc.T("label.account");
+        // Rebuild the account choices localized, preserving the current selection.
+        var accountSel = AccountCombo.SelectedIndex;
+        AccountCombo.ItemsSource = new[] { Loc.T("account.offline"), "Microsoft" };
+        AccountCombo.SelectedIndex = accountSel < 0 ? 0 : accountSel;
         LblProfileOffline.Text = Loc.T("label.profileoffline");
         LblNick.Text = Loc.T("label.nick");
         MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
@@ -218,8 +228,18 @@ public partial class MainWindow : Window
 
         // About tab
         AboutVersion.Text = Loc.T("about.version", AppInfo.Version);
-        AboutDescription.Text = Loc.T("about.description");
+        AboutCopyright.Text = Loc.T("about.license");
+        AboutContact.Text = Loc.T("about.contact");
         LblLanguage.Text = Loc.T("label.language");
+
+        // Empty-state + Vanilla-mods notices
+        EmptyStateText.Text = Loc.T("empty.noinstances");
+        EmptyStateNewButton.Content = Loc.T("empty.newinstance");
+        ModsVanillaWarning.Text = Loc.T("mods.vanillawarn");
+        NewModdedInstanceButton.Content = Loc.T("mods.createmodded");
+
+        // Re-evaluate Vanilla-dependent enable/disable + tooltips with the (new) language.
+        UpdateModsAvailability();
     }
 
     private void OnLanguageChanged(object? sender, SelectionChangedEventArgs e)
@@ -293,7 +313,7 @@ public partial class MainWindow : Window
     private async Task RefreshProfilesAsync()
     {
         _profiles = (await _core.Profiles.ListEnsuredAsync()).ToList();
-        var names = _profiles.Select(p => p.Name + (p.Slim ? "  (slim)" : "")).ToList();
+        var names = _profiles.Select(p => p.Name + (p.Slim ? $"  ({Loc.T("model.slim")})" : "")).ToList();
 
         var skinSel = SkinProfileCombo.SelectedIndex;
         var playSel = OfflineProfileCombo.SelectedIndex;
@@ -405,6 +425,9 @@ public partial class MainWindow : Window
             if (ModInstanceCombo.SelectedIndex < 0) ModInstanceCombo.SelectedIndex = 0;
             if (SkinInstanceCombo.SelectedIndex < 0) SkinInstanceCombo.SelectedIndex = 0;
         }
+
+        // Empty-state overlay: prominent "create" call-to-action when there's nothing yet.
+        InstancesEmptyState.IsVisible = _instances.Count == 0;
     }
 
     private void OnInstanceSelected(object? sender, SelectionChangedEventArgs e)
@@ -596,6 +619,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
+            CrashLog.Write("[play] launch failed", ex);
             AppendLog(Loc.T("log.error") + ex.Message);
             PlayStatus.Text = Loc.T("status.error", ex.Message);
             PlayButton.IsEnabled = true;
@@ -618,6 +642,8 @@ public partial class MainWindow : Window
 
     private void RefreshMods()
     {
+        UpdateModsAvailability();
+
         var inst = SelectedModInstance();
         if (inst == null) { _mods = new(); ModsList.ItemsSource = null; return; }
 
@@ -625,6 +651,42 @@ public partial class MainWindow : Window
         ModsList.ItemsSource = _mods
             .Select(m => (m.Enabled ? "[on]  " : "[off] ") + m.DisplayName)
             .ToList();
+    }
+
+    /// <summary>
+    /// Mods can't go into a Vanilla instance. Rather than let the install fail into the
+    /// log (where users missed it), we disable the install controls, show a clear inline
+    /// notice, and offer a shortcut to create a modded instance.
+    /// </summary>
+    private void UpdateModsAvailability()
+    {
+        var inst = SelectedModInstance();
+        var isVanilla = inst != null && inst.Loader == LoaderType.Vanilla;
+
+        ModsVanillaPanel.IsVisible = isVanilla;
+        AddModButton.IsEnabled = !isVanilla;
+        ModrinthDownloadButton.IsEnabled = !isVanilla;
+
+        var tip = isVanilla ? Loc.T("mods.vanillatip") : null;
+        ToolTip.SetTip(AddModButton, tip);
+        ToolTip.SetTip(ModrinthDownloadButton, tip);
+    }
+
+    /// <summary>Empty-state / Vanilla shortcut: jump to the Instances tab ready to create one.</summary>
+    private void OnEmptyStateNew(object? sender, RoutedEventArgs e) => StartNewInstanceFlow();
+
+    private void OnCreateModdedInstance(object? sender, RoutedEventArgs e) => StartNewInstanceFlow();
+
+    private void StartNewInstanceFlow()
+    {
+        MainTabs.SelectedItem = TabInstances;
+        _editing = null;
+        NameBox.Text = "";
+        // Default the loader to a modded one so "create" is immediately mod-capable.
+        if (LoaderCombo.SelectedIndex <= 0 && _loaders.Length > 1)
+            LoaderCombo.SelectedIndex = Array.IndexOf(_loaders, LoaderType.Fabric);
+        NameBox.Focus();
+        InstanceStatus.Text = "";
     }
 
     private async void OnAddMod(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
@@ -927,6 +989,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
+            CrashLog.Write("[ui] unhandled action error", ex);
             Dispatcher.UIThread.Post(() =>
             {
                 AppendLog(Loc.T("log.error") + ex.Message);

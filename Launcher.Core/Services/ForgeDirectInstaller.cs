@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Launcher.Core.Localization;
 
 namespace Launcher.Core.Services;
 
@@ -318,7 +319,7 @@ public sealed class ForgeDirectInstaller
         proc.ErrorDataReceived += (_, e) => { if (e.Data != null) log?.Report("  " + e.Data); };
 
         if (!proc.Start())
-            throw new InvalidOperationException("Falha ao iniciar o processo do Java para o instalador.");
+            throw new InvalidOperationException(Loc.T("forge.startfail"));
         proc.BeginOutputReadLine();
         proc.BeginErrorReadLine();
 
@@ -328,8 +329,7 @@ public sealed class ForgeDirectInstaller
         }
 
         if (proc.ExitCode != 0)
-            throw new InvalidOperationException(
-                $"Instalador do loader falhou (codigo {proc.ExitCode}). Veja o log acima.");
+            throw new InvalidOperationException(Loc.T("forge.installfail", proc.ExitCode));
     }
 
     private static HashSet<string> SnapshotVersions(string versionsDir)

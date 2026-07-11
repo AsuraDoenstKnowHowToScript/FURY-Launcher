@@ -19,7 +19,17 @@
                         <Button x:Name="RefreshInstancesButton" Content="Refresh" Margin="0,0,4,0"/>
                         <Button x:Name="DeleteInstanceButton" Content="Delete"/>
                     </StackPanel>
-                    <ListBox x:Name="InstancesList"/>
+                    <Grid>
+                        <ListBox x:Name="InstancesList"/>
+                        <!-- Empty-state: shown when there are no instances yet. -->
+                        <StackPanel x:Name="InstancesEmptyState" IsVisible="False"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+                            <TextBlock x:Name="EmptyStateText" Text="No instances yet"
+                                       HorizontalAlignment="Center" Foreground="Gray"/>
+                            <Button x:Name="EmptyStateNewButton" Content="＋ New instance"
+                                    HorizontalAlignment="Center" Padding="18,10" FontSize="15"/>
+                        </StackPanel>
+                    </Grid>
                 </DockPanel>
 
                 <!-- Right: create / edit form -->
@@ -93,10 +103,18 @@
         <!-- =============================== MODS =============================== -->
         <TabItem Header="Mods" x:Name="ModsTab">
             <DockPanel Margin="8">
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
-                    <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="ModInstanceCombo" Width="260"/>
-                    <Button x:Name="RefreshModsButton" Content="Refresh"/>
+                <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="ModInstanceCombo" Width="260"/>
+                        <Button x:Name="RefreshModsButton" Content="Refresh"/>
+                    </StackPanel>
+                    <!-- Shown only when the selected instance is Vanilla (no loader). -->
+                    <StackPanel x:Name="ModsVanillaPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
+                        <TextBlock x:Name="ModsVanillaWarning" Text="" TextWrapping="Wrap"
+                                   Foreground="#B00020" VerticalAlignment="Center" MaxWidth="600"/>
+                        <Button x:Name="NewModdedInstanceButton" Content="Create modded instance"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <Grid ColumnDefinitions="*,*">
@@ -185,8 +203,8 @@
             <StackPanel Margin="16" Spacing="6">
                 <TextBlock x:Name="AboutTitle" FontSize="22" Text="FURY Launcher"/>
                 <TextBlock x:Name="AboutVersion" Text="version"/>
-                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="Gray" Text="copyright"/>
-                <TextBlock x:Name="AboutDescription" TextWrapping="Wrap" Foreground="Gray" Text=""/>
+                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="Gray" Text=""/>
+                <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="Gray" Text=""/>
                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,10,0,0">
                     <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
                     <ComboBox x:Name="LanguageCombo" Width="180"/>
