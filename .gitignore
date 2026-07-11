@@ -1,8 +1,15 @@
 bin/
 obj/
 *.user
+*.suo
 .vs/
+.vscode/
 .idea/
 crash.log
+*.log
 dist/
 HANDOFF.md
+
+# OS junk
+Thumbs.db
+.DS_Store

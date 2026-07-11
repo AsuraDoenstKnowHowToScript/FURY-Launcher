@@ -19,14 +19,14 @@ if errorlevel 1 goto :end
 
 rem ---------- 2) Restaurar pacotes (NuGet: Avalonia, CmlLib, ...) ----------
 echo [1/3] Restaurando dependencias (NuGet)...
-dotnet restore --nologo
+dotnet restore "FURY.sln" --nologo
 if errorlevel 1 goto :build_fail
 
 if /i "%MODE%"=="publish" goto :publish
 
 rem ---------- 3) Compilar ----------
 echo [2/3] Compilando (Release)...
-dotnet build -c Release --nologo
+dotnet build "FURY.sln" -c Release --nologo
 if errorlevel 1 goto :build_fail
 
 rem ---------- 4) Rodar ----------
