@@ -20,6 +20,7 @@ public interface IAuthManager
     MSession CreateOffline(string username);
     Task<MSession> LoginMicrosoftAsync(CancellationToken ct = default);
     Task<MSession?> TryResumeMicrosoftAsync(CancellationToken ct = default);
+    Task SignOutMicrosoftAsync(CancellationToken ct = default);
 }
 
 public sealed class AuthManager : IAuthManager
@@ -97,6 +98,34 @@ public sealed class AuthManager : IAuthManager
             // Expected when there is no cached session; log at low volume, don't surface.
             CrashLog.Write("[auth] resume (silent) found no session", ex);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Signs out of the cached Microsoft account (clears the local tokens so the next
+    /// login starts fresh). Best-effort: if the handler has no account, we still wipe
+    /// the accounts cache file so nothing is left behind.
+    /// </summary>
+    public async Task SignOutMicrosoftAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            await _handler.Value.Signout(ct).ConfigureAwait(false);
+            Log?.Invoke(this, "[auth] Signed out of the Microsoft account.");
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[auth] signout via handler failed; wiping accounts cache", ex);
+            try
+            {
+                if (File.Exists(_paths.AccountsFile)) File.Delete(_paths.AccountsFile);
+                Log?.Invoke(this, "[auth] Signed out (cleared local account cache).");
+            }
+            catch (Exception ex2)
+            {
+                Log?.Invoke(this, "[auth] Could not fully sign out: " + ex2.Message);
+                CrashLog.Write("[auth] deleting accounts cache failed", ex2);
+            }
         }
     }
 }

@@ -91,6 +91,7 @@ public partial class MainWindow : Window
         BrowseJavaButton.Click += OnBrowseJava;
 
         MicrosoftLoginButton.Click += OnMicrosoftLogin;
+        MicrosoftLogoutButton.Click += OnMicrosoftLogout;
         PlayButton.Click += OnPlay;
         StopButton.Click += (_, _) => { _launchCts?.Cancel(); _core.Game.Stop(); };
 
@@ -193,6 +194,7 @@ public partial class MainWindow : Window
         LblProfileOffline.Text = Loc.T("label.profileoffline");
         LblNick.Text = Loc.T("label.nick");
         MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
+        MicrosoftLogoutButton.Content = Loc.T("btn.mslogout");
         LblPlayInstance.Text = Loc.T("label.instance");
         PlayButton.Content = Loc.T("btn.play");
         StopButton.Content = Loc.T("btn.stop");
@@ -565,6 +567,14 @@ public partial class MainWindow : Window
         {
             MicrosoftLoginButton.IsEnabled = true;
         }
+    });
+
+    private async void OnMicrosoftLogout(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    {
+        await _core.Auth.SignOutMicrosoftAsync();
+        _msSession = null;
+        AccountCombo.SelectedIndex = 0;                 // back to Offline
+        AccountStatus.Text = Loc.T("status.offlineparen");
     });
 
     /// <summary>
