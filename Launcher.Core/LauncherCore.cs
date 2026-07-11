@@ -25,6 +25,7 @@ public sealed class LauncherCore : IDisposable
     public ProfileService Profiles { get; }
     public SkinApplyService Skins { get; }
     public SettingsService Settings { get; }
+    public VersionListService Versions { get; }
 
     /// <param name="root">Data root; defaults to <c>%APPDATA%/FURY Launcher</c>.</param>
     public LauncherCore(string? root = null)
@@ -40,6 +41,7 @@ public sealed class LauncherCore : IDisposable
         Profiles = new ProfileService(Paths);
         Skins = new SkinApplyService(Paths, Mods);
         Settings = new SettingsService(Paths);
+        Versions = new VersionListService(_http);
     }
 
     public void Dispose() => _http.Dispose();

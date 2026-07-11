@@ -1,80 +1,90 @@
 # FURY Launcher
 
-A lightweight, no-nonsense Minecraft launcher. Isolated instances, Forge/NeoForge
-installed straight from Maven (no ad-link redirects), self-contained `.frpack`
-modpacks, and per-profile skin/cape display.
+A lightweight Minecraft launcher focused on doing the basics well: isolated
+instances, mod management, and a simple offline/Microsoft login. No clutter.
 
-> ⚠️ **Pre-alpha — unstable, in active development.** Expect rough edges and
-> breaking changes. It is published so testers can try it and send feedback.
+> **Status: beta.** It is stable enough for everyday testing, but it is still a
+> work in progress. If something breaks, please tell us (see Feedback below).
 
-## Download & test
+## Download and play
 
-1. Go to the [**Releases**](../../releases) page and grab the latest build.
-2. Unzip it anywhere.
-3. Run **`FURY Launcher.exe`**. The build is self-contained — you do **not** need
-   the .NET runtime installed.
+1. Open the [Releases](../../releases) page and download the latest build.
+2. Unzip it wherever you like.
+3. Run `FURY Launcher.exe`.
 
-Found a bug or have a suggestion? Please open an
-[**Issue**](../../issues) — clear steps to reproduce and your `crash.log` (created
-next to the executable on a crash) help a lot.
+The build is self contained, so you do not need to install .NET or Java first.
+Java is downloaded automatically the first time you launch a version that needs it.
 
-## What works today (end to end)
+**Supported systems:** Windows 10 and Windows 11 (64 bit). A Linux version is in
+development, but Windows is the priority for now. A proper MSI installer is planned
+for a later release to make setup and updates smoother.
 
-- **Instances**: create (name, version, loader), list, edit (min/max RAM, JVM
-  args, Java path), delete. Each instance has its own isolated `.minecraft`.
-- **Play**: offline account (deterministic UUID from the name) or Microsoft
-  (OAuth). Installs whatever is missing (manifests, libraries, assets, Java
-  runtime), with a live download progress bar and game log. Stop button included.
-- **Mods** (per instance): installs the loader (Fabric/Forge/NeoForge) on first
-  launch; add/remove/enable-disable jars; search Modrinth and download the version
-  matching the instance's Minecraft version + loader.
-- **Forge/NeoForge** resolved and downloaded directly from Maven — no ad-link
-  redirects, no browser step.
-- **.frpack**: export/import a self-contained modpack (manifest + real mod jars).
-- **Skin/cape** display per offline profile (via CustomSkinLoader).
+## What it does
 
-## Build from source (developers)
+- **Instances.** Create as many as you want, each with its own isolated
+  `.minecraft`. Pick the Minecraft version from a dropdown, choose a loader
+  (Vanilla, Fabric, Forge or NeoForge), and set RAM and JVM arguments per instance.
+- **Play.** Log in with a Microsoft account or play offline. For offline you just
+  type a nick and it is used right away. The launcher installs anything that is
+  missing (libraries, assets, Java) and shows live progress and a game log.
+- **Mods.** Add, remove and toggle mod jars per instance, or search Modrinth and
+  download the version that matches your instance.
+- **Forge and NeoForge** are installed straight from Maven, so there is no ad link
+  or browser step.
+- **Modpacks.** Export and import a self contained `.frpack` (manifest plus the
+  real mod jars).
+- **Skins and capes** per offline profile, shown in game through CustomSkinLoader.
 
-Requires the **.NET 8 SDK**.
+## Languages
 
-On Windows, just run **`run.bat`** — it checks for the .NET SDK (offering to install
-it via winget if missing), restores dependencies, builds in Release and launches
-the app. To produce a distributable build:
+The interface is available in English (default), Português, Nederlands,
+繁體中文 and Русский. You can switch language at any time from the About tab.
 
-```
-run.bat publish
-```
+## Feedback
 
-Or with the SDK directly:
+Found a bug or have an idea? Open an [Issue](../../issues). Clear steps to
+reproduce help a lot, and if the app crashed, attach the `crash.log` file that
+appears next to the executable.
+
+## Build from source
+
+You need the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+
+On Windows the easiest way is to run `run.bat`. It checks for the .NET SDK (and
+offers to install it through winget if it is missing), restores dependencies,
+builds in Release and starts the app. To produce a distributable build, run
+`run.bat publish`.
+
+With the SDK directly:
 
 ```
 dotnet build -c Release
 dotnet run --project Launcher.App
 ```
 
-### Architecture
+### How it is organized
 
-All logic lives in `Launcher.Core` (a plain library with **zero** UI dependency);
-`Launcher.App` is a minimal Avalonia UI that only subscribes to Core events and
-shows results. Everything in the launcher is usable without the UI through the
-`LauncherCore` facade.
+All the logic lives in `Launcher.Core`, a plain library with no UI dependency.
+`Launcher.App` is a small Avalonia interface that just subscribes to Core events
+and shows the result. Everything the launcher does can be driven without the UI
+through the `LauncherCore` class.
 
-## Data location
-
-`%APPDATA%/FURY Launcher/` (created on first run): instances index, accounts,
+Data is kept in `%APPDATA%/FURY Launcher/`: the instances index, accounts,
 profiles, settings, and one isolated `.minecraft` per instance. No credentials are
 stored in the code.
 
-## Not affiliated with Mojang / Microsoft
+## Not affiliated with Mojang or Microsoft
 
-FURY Launcher is an independent project and is **not** affiliated with, associated
-with, authorized, or endorsed by Mojang AB or Microsoft. "Minecraft" is a trademark
-of Mojang AB. This software does not include or distribute any proprietary Minecraft
-code or assets.
+FURY Launcher is an independent project. It is not affiliated with, associated
+with, authorized, or endorsed by Mojang AB or Microsoft. "Minecraft" is a
+trademark of Mojang AB. This software does not include or distribute any
+proprietary Minecraft code or assets.
 
 ## License
 
-FURY Launcher is **proprietary software** — **all rights reserved**. No permission
-to use, copy, modify, or distribute is granted without prior written authorization
-from the copyright holder. See the [LICENSE](LICENSE) file. **"FURY"** is a
-trademark of the holder and is not licensed by this project.
+FURY Launcher is proprietary software and all rights are reserved. You may not
+use, copy, modify or distribute it without prior written permission from the
+copyright holder. See the [LICENSE](LICENSE) file for the full terms. "FURY" is a
+trademark of the holder.
+
+Contact: furylauncher@gmail.com

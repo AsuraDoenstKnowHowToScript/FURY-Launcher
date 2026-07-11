@@ -22,6 +22,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CmlLib.Core.Auth;
 using Launcher.Core;
+using Launcher.Core.Localization;
 using Launcher.Core.Models;
 
 namespace Launcher.App;
@@ -29,6 +30,7 @@ namespace Launcher.App;
 /// <summary>
 /// The entire (bare) UI. All real work is delegated to <see cref="LauncherCore"/>;
 /// this file only reads/writes controls and marshals Core events to the UI thread.
+/// All visible text comes from <see cref="Loc"/> via <see cref="ApplyLanguage"/>.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -40,9 +42,11 @@ public partial class MainWindow : Window
     private List<OfflineProfile> _profiles = new();
     private IReadOnlyList<ModrinthHit> _hits = new List<ModrinthHit>();
 
-    private Instance? _editing;      // instance selected for editing (Instâncias tab)
+    private Instance? _editing;      // instance selected for editing (Instances tab)
     private MSession? _msSession;    // cached Microsoft session after login
     private CancellationTokenSource? _launchCts;
+    private bool _suppressLangEvent; // guards the language dropdown during programmatic set
+    private List<string> _versions = new(); // Minecraft versions shown in the create/edit dropdown
 
     // Coalesced UI updates. The game/installer raise log + progress events far too
     // fast to touch the UI once per event (doing so froze the window into "not
@@ -62,7 +66,6 @@ public partial class MainWindow : Window
 
         Title = $"{AppInfo.Name} v{AppInfo.Version}";
         AboutTitle.Text = AppInfo.Name;
-        AboutVersion.Text = $"versão {AppInfo.Version}";
         AboutCopyright.Text = AppInfo.Copyright;
 
         LoaderCombo.ItemsSource = _loaders.Select(l => l.ToString()).ToList();
@@ -70,6 +73,13 @@ public partial class MainWindow : Window
         AccountCombo.ItemsSource = new[] { "Offline", "Microsoft" };
         AccountCombo.SelectedIndex = 0;
         StopButton.IsEnabled = false;
+
+        // Language selector (About tab). Endonyms don't change with the UI language.
+        LanguageCombo.ItemsSource = LanguageInfo.All.Select(LanguageInfo.NativeName).ToList();
+        LanguageCombo.SelectedIndex = Array.IndexOf(LanguageInfo.All, Loc.Current);
+        LanguageCombo.SelectionChanged += OnLanguageChanged;
+        Loc.Changed += () => Dispatcher.UIThread.Post(ApplyLanguage);
+        ApplyLanguage();
 
         // --- wire events ---
         InstancesList.SelectionChanged += OnInstanceSelected;
@@ -106,6 +116,7 @@ public partial class MainWindow : Window
         ExportPackButton.Click += OnExportPack;
         ImportPackButton.Click += OnImportPack;
         SkinProfileCombo.SelectionChanged += OnSkinProfileSelected;
+        OfflineProfileCombo.SelectionChanged += OnOfflineProfileSelected;
         NewProfileButton.Click += OnNewProfile;
         SaveProfileButton.Click += OnSaveProfile;
         DeleteProfileButton.Click += OnDeleteProfile;
@@ -125,7 +136,7 @@ public partial class MainWindow : Window
         {
             StopButton.IsEnabled = running;
             PlayButton.IsEnabled = !running;
-            PlayStatus.Text = running ? "Rodando..." : "Encerrado.";
+            PlayStatus.Text = running ? Loc.T("status.running") : Loc.T("status.ended");
         });
 
         _uiTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
@@ -133,6 +144,107 @@ public partial class MainWindow : Window
         _uiTimer.Start();
 
         _ = SafeAsync(InitAsync);
+    }
+
+    // ============================ LOCALIZATION ============================
+
+    /// <summary>Applies every static UI string from <see cref="Loc"/> for the current language.</summary>
+    private void ApplyLanguage()
+    {
+        // Tabs
+        TabInstances.Header = Loc.T("tab.instances");
+        TabPlay.Header = Loc.T("tab.play");
+        ModsTab.Header = Loc.T("tab.mods");
+        TabSkin.Header = Loc.T("tab.skin");
+        TabAbout.Header = Loc.T("tab.about");
+
+        // Instances tab
+        LblInstances.Text = Loc.T("instances.list");
+        RefreshInstancesButton.Content = Loc.T("btn.refresh");
+        DeleteInstanceButton.Content = Loc.T("btn.delete");
+        LblName.Text = Loc.T("field.name");
+        LblMcVersion.Text = Loc.T("field.mcversion");
+        LblLoader.Text = Loc.T("field.loader");
+        LblMinRam.Text = Loc.T("field.minram");
+        LblMaxRam.Text = Loc.T("field.maxram");
+        LblJvmArgs.Text = Loc.T("field.jvmargs");
+        LblJavaPath.Text = Loc.T("field.javapath");
+        NewInstanceButton.Content = Loc.T("btn.createnew");
+        SaveInstanceButton.Content = Loc.T("btn.saveedit");
+        LblModpack.Text = Loc.T("label.modpack");
+        ExportPackButton.Content = Loc.T("btn.exportpack");
+        ImportPackButton.Content = Loc.T("btn.importpack");
+
+        // Play tab
+        LblAccount.Text = Loc.T("label.account");
+        LblProfileOffline.Text = Loc.T("label.profileoffline");
+        LblNick.Text = Loc.T("label.nick");
+        MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
+        LblPlayInstance.Text = Loc.T("label.instance");
+        PlayButton.Content = Loc.T("btn.play");
+        StopButton.Content = Loc.T("btn.stop");
+        LblLog.Text = Loc.T("label.log");
+        AccountStatus.Text = _msSession != null
+            ? Loc.T("account.ms", _msSession.Username)
+            : Loc.T("status.offlineparen");
+
+        // Mods tab
+        LblModInstance.Text = Loc.T("label.instance");
+        RefreshModsButton.Content = Loc.T("btn.refresh");
+        LblInstalledMods.Text = Loc.T("label.installedmods");
+        AddModButton.Content = Loc.T("btn.addjar");
+        RemoveModButton.Content = Loc.T("btn.remove");
+        ToggleModButton.Content = Loc.T("btn.toggle");
+        ModrinthQueryBox.Watermark = Loc.T("watermark.modrinth");
+        ModrinthSearchButton.Content = Loc.T("btn.search");
+        ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
+
+        // Skin tab
+        LblSkinProfile.Text = Loc.T("label.offlineprofile");
+        NewProfileButton.Content = Loc.T("btn.new");
+        DeleteProfileButton.Content = Loc.T("btn.deleteprofile");
+        LblProfileName.Text = Loc.T("label.name");
+        SlimCheck.Content = Loc.T("check.slim");
+        SaveProfileButton.Content = Loc.T("btn.saveprofile");
+        ChooseSkinButton.Content = Loc.T("btn.chooseskin");
+        ChooseCapeButton.Content = Loc.T("btn.choosecape");
+        LblApplyInstance.Text = Loc.T("label.applyinstance");
+        ApplySkinButton.Content = Loc.T("btn.applyingame");
+        LblSkinPreview.Text = Loc.T("label.skinpreview");
+        LblFacePreview.Text = Loc.T("label.facepreview");
+        LblCapePreview.Text = Loc.T("label.capepreview");
+        LblSkinHelp1.Text = Loc.T("skin.help1");
+        LblSkinHelp2.Text = Loc.T("skin.help2");
+
+        // About tab
+        AboutVersion.Text = Loc.T("about.version", AppInfo.Version);
+        AboutDescription.Text = Loc.T("about.description");
+        LblLanguage.Text = Loc.T("label.language");
+    }
+
+    private void OnLanguageChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressLangEvent) return;
+        var idx = LanguageCombo.SelectedIndex;
+        if (idx < 0 || idx >= LanguageInfo.All.Length) return;
+
+        var lang = LanguageInfo.All[idx];
+        Loc.SetLanguage(lang); // fires Loc.Changed -> ApplyLanguage
+        _ = SafeAsync(async () =>
+        {
+            var s = await _core.Settings.LoadAsync();
+            s.Language = LanguageInfo.Code(lang);
+            await _core.Settings.SaveAsync(s);
+        });
+    }
+
+    private void ApplySavedLanguage(string code)
+    {
+        var lang = LanguageInfo.FromCode(code);
+        _suppressLangEvent = true;
+        LanguageCombo.SelectedIndex = Array.IndexOf(LanguageInfo.All, lang);
+        _suppressLangEvent = false;
+        Loc.SetLanguage(lang); // no-op (+ no re-apply) if already the current language
     }
 
     /// <summary>Flushes buffered log lines and progress to the UI, on the UI thread.</summary>
@@ -163,15 +275,20 @@ public partial class MainWindow : Window
 
     private async Task InitAsync()
     {
+        // Restore the saved UI language before anything else so first paint is localized.
+        var settings = await _core.Settings.LoadAsync();
+        ApplySavedLanguage(settings.Language);
+
+        await LoadVersionsAsync();
         await RefreshInstancesAsync();
         await RefreshProfilesAsync();
         // Restore a cached Microsoft session silently, if any.
         _msSession = await _core.Auth.TryResumeMicrosoftAsync();
         if (_msSession != null)
-            AccountStatus.Text = "MS: " + _msSession.Username;
+            AccountStatus.Text = Loc.T("account.ms", _msSession.Username);
     }
 
-    // ============================ PERFIS (offline) ============================
+    // ============================ PROFILES (offline) ============================
 
     private async Task RefreshProfilesAsync()
     {
@@ -210,24 +327,25 @@ public partial class MainWindow : Window
         SlimCheck.IsChecked = p.Slim;
         SetSkinImages(p.SkinPath);
         SetCapeImage(p.CapePath);
-        SkinStatus.Text = $"Perfil '{p.Name}': " +
-            (p.SkinPath != null ? "skin" : "sem skin") + " · " +
-            (p.CapePath != null ? "capa" : "sem capa") + $" · modelo {(p.Slim ? "slim" : "clássico")}";
+        SkinStatus.Text = Loc.T("skin.profileinfo", p.Name,
+            Loc.T(p.SkinPath != null ? "skin.hasskin" : "skin.noskin"),
+            Loc.T(p.CapePath != null ? "skin.hascape" : "skin.nocape"),
+            Loc.T(p.Slim ? "model.slim" : "model.classic"));
     }
 
     private async void OnNewProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        var name = string.IsNullOrWhiteSpace(ProfileNameBox.Text) ? "Novo perfil" : ProfileNameBox.Text!.Trim();
+        var name = string.IsNullOrWhiteSpace(ProfileNameBox.Text) ? Loc.T("profile.newname") : ProfileNameBox.Text!.Trim();
         var p = await _core.Profiles.CreateAsync(name, SlimCheck.IsChecked ?? false);
         await RefreshProfilesAsync();
         SelectProfileById(p.Id);
-        SkinStatus.Text = $"Perfil criado: {p.Name}";
+        SkinStatus.Text = Loc.T("skin.profilecreated", p.Name);
     });
 
     private async void OnSaveProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = "Selecione ou crie um perfil."; return; }
+        if (p == null) { SkinStatus.Text = Loc.T("skin.selectorcreate"); return; }
 
         var newName = string.IsNullOrWhiteSpace(ProfileNameBox.Text) ? p.Name : ProfileNameBox.Text!.Trim();
         var nameChanged = !string.Equals(newName, p.Name, StringComparison.Ordinal);
@@ -240,18 +358,10 @@ public partial class MainWindow : Window
             if (!settings.SuppressNickChangeWarning)
             {
                 var (proceed, dontShow) = await WarnAckAsync(
-                    "Trocar o nick da conta offline",
-                    $"Você vai renomear '{p.Name}' para '{newName}'.\n\n" +
-                    "Conta OFFLINE não é uma conta Microsoft: ela é identificada por um UUID gerado " +
-                    "a partir do NOME. Ou seja, o nick É a identidade.\n\n" +
-                    "Se você tem progresso em servidores que aceitam conta offline/cracked " +
-                    "(ex.: MushMC) — rank, dinheiro, casas, stats — tudo isso está preso ao UUID " +
-                    "do nick ATUAL. Ao mudar o nick, o servidor te vê como um jogador NOVO e você " +
-                    "perde o acesso a esse progresso (numa conta Microsoft isso não aconteceria, " +
-                    "porque o UUID é fixo e persistente).\n\n" +
-                    "A skin e a capa do perfil continuam salvas aqui no launcher — não se perdem.",
-                    "Estou ciente");
-                if (!proceed) { SkinStatus.Text = "Troca de nick cancelada."; return; }
+                    Loc.T("warn.nicktitle"),
+                    Loc.T("warn.nickmsg", p.Name, newName),
+                    Loc.T("warn.nickack"));
+                if (!proceed) { SkinStatus.Text = Loc.T("skin.nickcancelled"); return; }
                 if (dontShow)
                 {
                     settings.SuppressNickChangeWarning = true;
@@ -265,7 +375,7 @@ public partial class MainWindow : Window
         await _core.Profiles.UpdateAsync(p);
         await RefreshProfilesAsync();
         SelectProfileById(p.Id);
-        SkinStatus.Text = $"Perfil salvo: {p.Name} (modelo {(p.Slim ? "slim" : "clássico")})";
+        SkinStatus.Text = Loc.T("skin.profilesaved", p.Name, Loc.T(p.Slim ? "model.slim" : "model.classic"));
     });
 
     private async void OnDeleteProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
@@ -274,10 +384,10 @@ public partial class MainWindow : Window
         if (p == null) return;
         await _core.Profiles.DeleteAsync(p.Id);
         await RefreshProfilesAsync();
-        SkinStatus.Text = $"Perfil excluído: {p.Name}";
+        SkinStatus.Text = Loc.T("skin.profiledeleted", p.Name);
     });
 
-    // ============================ INSTÂNCIAS ============================
+    // ============================ INSTANCES ============================
 
     private async Task RefreshInstancesAsync()
     {
@@ -304,29 +414,29 @@ public partial class MainWindow : Window
 
         _editing = _instances[idx];
         NameBox.Text = _editing.Name;
-        McVersionBox.Text = _editing.McVersion;
+        SelectVersion(_editing.McVersion);
         LoaderCombo.SelectedIndex = Array.IndexOf(_loaders, _editing.Loader);
         MinRamBox.Text = _editing.MinRamMb.ToString();
         MaxRamBox.Text = _editing.MaxRamMb.ToString();
         JvmArgsBox.Text = _editing.JvmArgs;
         JavaPathBox.Text = _editing.JavaPath ?? "";
-        InstanceStatus.Text = $"Editando: {_editing.Name}";
+        InstanceStatus.Text = Loc.T("inst.editing", _editing.Name);
     }
 
     private async void OnCreateInstance(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var inst = await _core.Instances.CreateAsync(
-            NameBox.Text ?? "", McVersionBox.Text ?? "", SelectedLoader());
+            NameBox.Text ?? "", SelectedVersion(), SelectedLoader());
         await RefreshInstancesAsync();
-        InstanceStatus.Text = $"Criada: {inst.Name} (pasta {inst.FolderName})";
+        InstanceStatus.Text = Loc.T("inst.created", inst.Name, inst.FolderName);
     });
 
     private async void OnSaveInstance(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        if (_editing == null) { InstanceStatus.Text = "Selecione uma instância para editar."; return; }
+        if (_editing == null) { InstanceStatus.Text = Loc.T("inst.selecttoedit"); return; }
 
         _editing.Name = (NameBox.Text ?? "").Trim();
-        _editing.McVersion = (McVersionBox.Text ?? "").Trim();
+        _editing.McVersion = SelectedVersion();
         _editing.Loader = SelectedLoader();
         _editing.MinRamMb = ParseInt(MinRamBox.Text, 512);
         _editing.MaxRamMb = ParseInt(MaxRamBox.Text, 2048);
@@ -335,26 +445,26 @@ public partial class MainWindow : Window
 
         await _core.Instances.UpdateAsync(_editing);
         await RefreshInstancesAsync();
-        InstanceStatus.Text = $"Salva: {_editing.Name}";
+        InstanceStatus.Text = Loc.T("inst.saved", _editing.Name);
     });
 
     private async void OnDeleteInstance(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var idx = InstancesList.SelectedIndex;
-        if (idx < 0 || idx >= _instances.Count) { InstanceStatus.Text = "Nada selecionado."; return; }
+        if (idx < 0 || idx >= _instances.Count) { InstanceStatus.Text = Loc.T("inst.nothingselected"); return; }
 
         var inst = _instances[idx];
         await _core.Instances.DeleteAsync(inst.Id);
         _editing = null;
         await RefreshInstancesAsync();
-        InstanceStatus.Text = $"Deletada: {inst.Name}";
+        InstanceStatus.Text = Loc.T("inst.deleted", inst.Name);
     });
 
     private async void OnBrowseJava(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Selecione o executável do Java",
+            Title = Loc.T("picker.java"),
             AllowMultiple = false
         });
         var path = files.FirstOrDefault()?.TryGetLocalPath();
@@ -367,16 +477,62 @@ public partial class MainWindow : Window
         return i >= 0 && i < _loaders.Length ? _loaders[i] : LoaderType.Vanilla;
     }
 
-    // ============================== JOGAR ==============================
+    private string SelectedVersion() => (McVersionCombo.SelectedItem as string ?? "").Trim();
+
+    /// <summary>Selects a version in the dropdown, adding it first if it isn't in the list
+    /// (e.g. a snapshot or an old version an existing instance was created with).</summary>
+    private void SelectVersion(string version)
+    {
+        if (string.IsNullOrWhiteSpace(version)) return;
+        if (!_versions.Contains(version))
+        {
+            _versions.Insert(0, version);
+            McVersionCombo.ItemsSource = null;
+            McVersionCombo.ItemsSource = _versions;
+        }
+        McVersionCombo.SelectedItem = version;
+    }
+
+    /// <summary>Fills the version dropdown from Mojang's manifest, with an offline fallback.</summary>
+    private async Task LoadVersionsAsync()
+    {
+        // Seed a small fallback list so the dropdown works even with no network.
+        _versions = new List<string> { "1.21.1", "1.20.1", "1.19.4", "1.18.2", "1.16.5", "1.12.2", "1.8.9" };
+        McVersionCombo.ItemsSource = _versions;
+        McVersionCombo.SelectedIndex = 0;
+        try
+        {
+            var releases = await _core.Versions.GetReleasesAsync();
+            if (releases.Count > 0)
+            {
+                _versions = releases.ToList();
+                McVersionCombo.ItemsSource = _versions;
+                McVersionCombo.SelectedIndex = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            AppendLog(Loc.T("log.error") + ex.Message);
+        }
+    }
+
+    /// <summary>Pre-fills the Nick box from the chosen offline profile, so playing "just works".</summary>
+    private void OnOfflineProfileSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        var idx = OfflineProfileCombo.SelectedIndex;
+        if (idx >= 0 && idx < _profiles.Count) NickBox.Text = _profiles[idx].Name;
+    }
+
+    // ============================== PLAY ==============================
 
     private async void OnMicrosoftLogin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         MicrosoftLoginButton.IsEnabled = false;
-        AccountStatus.Text = "Abrindo login da Microsoft...";
+        AccountStatus.Text = Loc.T("ms.opening");
         try
         {
             _msSession = await _core.Auth.LoginMicrosoftAsync();
-            AccountStatus.Text = "MS: " + _msSession.Username;
+            AccountStatus.Text = Loc.T("account.ms", _msSession.Username);
             AccountCombo.SelectedIndex = 1;
         }
         finally
@@ -388,27 +544,31 @@ public partial class MainWindow : Window
     private async void OnPlay(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var idx = PlayInstanceCombo.SelectedIndex;
-        if (idx < 0 || idx >= _instances.Count) { PlayStatus.Text = "Selecione uma instância."; return; }
+        if (idx < 0 || idx >= _instances.Count) { PlayStatus.Text = Loc.T("common.selectinstance"); return; }
         var inst = _instances[idx];
 
         MSession session;
         OfflineProfile? offlineProfile = null;
         if (AccountCombo.SelectedIndex == 1)
         {
-            if (_msSession == null) { PlayStatus.Text = "Faça login Microsoft primeiro."; return; }
+            if (_msSession == null) { PlayStatus.Text = Loc.T("play.msloginfirst"); return; }
             session = _msSession;
         }
         else
         {
             var pIdx = OfflineProfileCombo.SelectedIndex;
             offlineProfile = pIdx >= 0 && pIdx < _profiles.Count ? _profiles[pIdx] : null;
-            session = _core.Auth.CreateOffline(offlineProfile?.Name ?? "Player");
+            // The Nick box lets you set the offline name directly; it's pre-filled from the
+            // selected profile, so it "just works" without forcing the default "Player".
+            var nick = (NickBox.Text ?? "").Trim();
+            if (nick.Length == 0) nick = offlineProfile?.Name ?? "Player";
+            session = _core.Auth.CreateOffline(nick);
         }
 
         _launchCts = new CancellationTokenSource();
         PlayButton.IsEnabled = false;
         DownloadProgress.Value = 0;
-        PlayStatus.Text = "Preparando...";
+        PlayStatus.Text = Loc.T("play.preparing");
         try
         {
             // Auto-apply the active profile's skin/cape (offline) so the user never has to
@@ -423,7 +583,7 @@ public partial class MainWindow : Window
                 }
                 catch (Exception ex)
                 {
-                    AppendLog("[skin] Skin nao aplicada automaticamente: " + ex.Message);
+                    AppendLog(Loc.T("log.skinnotapplied") + ex.Message);
                 }
             }
 
@@ -431,13 +591,13 @@ public partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
-            PlayStatus.Text = "Cancelado.";
+            PlayStatus.Text = Loc.T("status.cancelled");
             PlayButton.IsEnabled = true;
         }
         catch (Exception ex)
         {
-            AppendLog("[erro] " + ex.Message);
-            PlayStatus.Text = "Erro: " + ex.Message;
+            AppendLog(Loc.T("log.error") + ex.Message);
+            PlayStatus.Text = Loc.T("status.error", ex.Message);
             PlayButton.IsEnabled = true;
         }
     });
@@ -470,31 +630,31 @@ public partial class MainWindow : Window
     private async void OnAddMod(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var inst = SelectedModInstance();
-        if (inst == null) { Notify("Selecione uma instância na aba Mods."); return; }
+        if (inst == null) { Notify(Loc.T("mods.selectinstancetab")); return; }
 
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Selecione um mod (.jar)",
+            Title = Loc.T("picker.mod"),
             AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType("Jar") { Patterns = new[] { "*.jar" } } }
+            FileTypeFilter = new[] { new FilePickerFileType(Loc.T("filetype.jar")) { Patterns = new[] { "*.jar" } } }
         });
         var path = files.FirstOrDefault()?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
 
         await _core.Mods.AddModAsync(inst, path);
         RefreshMods();
-        Notify($"Mod adicionado: {System.IO.Path.GetFileName(path)}");
+        Notify(Loc.T("mods.added", System.IO.Path.GetFileName(path)));
     });
 
     private async void OnRemoveMod(object? sender, RoutedEventArgs e) => await SafeAsync(() =>
     {
         var inst = SelectedModInstance();
         var idx = ModsList.SelectedIndex;
-        if (inst == null || idx < 0 || idx >= _mods.Count) { Notify("Selecione um mod."); return Task.CompletedTask; }
+        if (inst == null || idx < 0 || idx >= _mods.Count) { Notify(Loc.T("mods.selectmod")); return Task.CompletedTask; }
 
         _core.Mods.RemoveMod(inst, _mods[idx].FileName);
         RefreshMods();
-        Notify("Mod removido.");
+        Notify(Loc.T("mods.removed"));
         return Task.CompletedTask;
     });
 
@@ -502,7 +662,7 @@ public partial class MainWindow : Window
     {
         var inst = SelectedModInstance();
         var idx = ModsList.SelectedIndex;
-        if (inst == null || idx < 0 || idx >= _mods.Count) { Notify("Selecione um mod."); return Task.CompletedTask; }
+        if (inst == null || idx < 0 || idx >= _mods.Count) { Notify(Loc.T("mods.selectmod")); return Task.CompletedTask; }
 
         _core.Mods.ToggleMod(inst, _mods[idx].FileName);
         RefreshMods();
@@ -512,27 +672,27 @@ public partial class MainWindow : Window
     private async void OnModrinthSearch(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var inst = SelectedModInstance();
-        if (inst == null) { Notify("Selecione uma instância."); return; }
+        if (inst == null) { Notify(Loc.T("common.selectinstance")); return; }
 
-        Notify("Buscando no Modrinth...");
+        Notify(Loc.T("mods.searching"));
         _hits = await _core.Mods.SearchModrinthAsync(inst, ModrinthQueryBox.Text ?? "");
         ModrinthList.ItemsSource = _hits
             .Select(h => $"{h.Title}  —  {Truncate(h.Description, 60)}")
             .ToList();
-        Notify($"{_hits.Count} resultado(s).");
+        Notify(Loc.T("mods.results", _hits.Count));
     });
 
     private async void OnModrinthDownload(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var inst = SelectedModInstance();
         var idx = ModrinthList.SelectedIndex;
-        if (inst == null || idx < 0 || idx >= _hits.Count) { Notify("Selecione um resultado."); return; }
+        if (inst == null || idx < 0 || idx >= _hits.Count) { Notify(Loc.T("mods.selectresult")); return; }
 
         var hit = _hits[idx];
-        Notify($"Baixando {hit.Title}...");
+        Notify(Loc.T("mods.downloading", hit.Title));
         var path = await _core.Mods.InstallFromModrinthAsync(inst, hit.ProjectId);
         RefreshMods();
-        Notify($"Baixado: {System.IO.Path.GetFileName(path)}");
+        Notify(Loc.T("mods.downloaded", System.IO.Path.GetFileName(path)));
     });
 
     // ============================ MODPACK (.frpack) ============================
@@ -540,31 +700,31 @@ public partial class MainWindow : Window
     private async void OnExportPack(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var idx = InstancesList.SelectedIndex;
-        if (idx < 0 || idx >= _instances.Count) { InstanceStatus.Text = "Selecione uma instância para exportar."; return; }
+        if (idx < 0 || idx >= _instances.Count) { InstanceStatus.Text = Loc.T("pack.selecttoexport"); return; }
         var inst = _instances[idx];
 
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Exportar .frpack",
+            Title = Loc.T("pack.exporttitle"),
             SuggestedFileName = inst.Name + ".frpack",
             DefaultExtension = "frpack",
-            FileTypeChoices = new[] { new FilePickerFileType("FURY Package") { Patterns = new[] { "*.frpack" } } }
+            FileTypeChoices = new[] { new FilePickerFileType(Loc.T("filetype.frpack")) { Patterns = new[] { "*.frpack" } } }
         });
         var path = file?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
 
-        InstanceStatus.Text = "Exportando .frpack...";
+        InstanceStatus.Text = Loc.T("pack.exporting");
         await _core.Packs.ExportAsync(inst, path);
-        InstanceStatus.Text = $"Exportado: {path}";
+        InstanceStatus.Text = Loc.T("pack.exported", path);
     });
 
     private async void OnImportPack(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Importar .frpack",
+            Title = Loc.T("pack.importtitle"),
             AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType("FURY Package") { Patterns = new[] { "*.frpack" } } }
+            FileTypeFilter = new[] { new FilePickerFileType(Loc.T("filetype.frpack")) { Patterns = new[] { "*.frpack" } } }
         });
         var path = files.FirstOrDefault()?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
@@ -573,25 +733,25 @@ public partial class MainWindow : Window
         var preview = await _core.Packs.ReadManifestAsync(path);
         if (preview.Warnings.Count > 0)
         {
-            var ok = await ConfirmAsync("Avisos ao importar o pacote",
+            var ok = await ConfirmAsync(Loc.T("pack.warntitle"),
                 string.Join(Environment.NewLine, preview.Warnings) +
-                Environment.NewLine + Environment.NewLine + "Importar mesmo assim?");
-            if (!ok) { InstanceStatus.Text = "Importação cancelada."; return; }
+                Environment.NewLine + Environment.NewLine + Loc.T("pack.warnsuffix"));
+            if (!ok) { InstanceStatus.Text = Loc.T("pack.importcancelled"); return; }
         }
 
-        InstanceStatus.Text = "Importando .frpack...";
+        InstanceStatus.Text = Loc.T("pack.importing");
         var inst = await _core.Packs.ImportAsync(path);
         await RefreshInstancesAsync();
-        InstanceStatus.Text = $"Importado: {inst.Name} [{inst.McVersion} / {inst.Loader}]";
+        InstanceStatus.Text = Loc.T("pack.imported", inst.Name, inst.McVersion, inst.Loader);
     });
 
-    // =============================== SKIN / CAPA ===============================
+    // =============================== SKIN / CAPE ===============================
 
     private async void OnChooseSkin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = "Crie/selecione um perfil primeiro."; return; }
-        var path = await PickImageAsync("Selecione a skin (PNG)");
+        if (p == null) { SkinStatus.Text = Loc.T("skin.createselectfirst"); return; }
+        var path = await PickImageAsync(Loc.T("picker.skin"));
         if (path == null) return;
         await _core.Profiles.SetSkinAsync(p, path);
         await RefreshProfilesAsync();
@@ -601,8 +761,8 @@ public partial class MainWindow : Window
     private async void OnChooseCape(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = "Crie/selecione um perfil primeiro."; return; }
-        var path = await PickImageAsync("Selecione a capa (PNG)");
+        if (p == null) { SkinStatus.Text = Loc.T("skin.createselectfirst"); return; }
+        var path = await PickImageAsync(Loc.T("picker.cape"));
         if (path == null) return;
         await _core.Profiles.SetCapeAsync(p, path);
         await RefreshProfilesAsync();
@@ -612,19 +772,18 @@ public partial class MainWindow : Window
     private async void OnApplySkin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = "Crie/selecione um perfil."; return; }
+        if (p == null) { SkinStatus.Text = Loc.T("skin.createselect"); return; }
         var idx = SkinInstanceCombo.SelectedIndex;
-        if (idx < 0 || idx >= _instances.Count) { SkinStatus.Text = "Selecione uma instância para aplicar."; return; }
+        if (idx < 0 || idx >= _instances.Count) { SkinStatus.Text = Loc.T("skin.selectinstanceapply"); return; }
         var inst = _instances[idx];
 
         ApplySkinButton.IsEnabled = false;
-        SkinStatus.Text = "Aplicando (instala o CustomSkinLoader se necessário)...";
+        SkinStatus.Text = Loc.T("skin.applying");
         try
         {
             var log = new Progress<string>(AppendLog);
             await _core.Skins.ApplyOfflineAsync(inst, p, log);
-            SkinStatus.Text = $"Skin do perfil '{p.Name}' aplicada em '{inst.Name}'. " +
-                              "Jogue com esse perfil (aba Jogar) e (re)inicie a instância.";
+            SkinStatus.Text = Loc.T("skin.applied", p.Name, inst.Name);
         }
         finally
         {
@@ -638,7 +797,7 @@ public partial class MainWindow : Window
         {
             Title = title,
             AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType("Imagem PNG") { Patterns = new[] { "*.png" } } }
+            FileTypeFilter = new[] { new FilePickerFileType(Loc.T("filetype.png")) { Patterns = new[] { "*.png" } } }
         });
         var path = files.FirstOrDefault()?.TryGetLocalPath();
         return string.IsNullOrEmpty(path) ? null : path;
@@ -673,8 +832,8 @@ public partial class MainWindow : Window
     private async Task<bool> ConfirmAsync(string title, string message)
     {
         var tcs = new TaskCompletionSource<bool>();
-        var yes = new Button { Content = "Continuar" };
-        var no = new Button { Content = "Cancelar" };
+        var yes = new Button { Content = Loc.T("btn.continue") };
+        var no = new Button { Content = Loc.T("btn.cancel") };
 
         var dialog = new Window
         {
@@ -715,9 +874,9 @@ public partial class MainWindow : Window
     private async Task<(bool proceed, bool dontShowAgain)> WarnAckAsync(string title, string message, string ackButton)
     {
         var tcs = new TaskCompletionSource<bool>();
-        var dontShow = new CheckBox { Content = "Não mostrar novamente" };
+        var dontShow = new CheckBox { Content = Loc.T("warn.dontshow") };
         var ack = new Button { Content = ackButton };
-        var cancel = new Button { Content = "Cancelar" };
+        var cancel = new Button { Content = Loc.T("btn.cancel") };
 
         var dialog = new Window
         {
@@ -756,7 +915,7 @@ public partial class MainWindow : Window
     private void Notify(string message)
     {
         PlayStatus.Text = message;
-        AppendLog("[info] " + message);
+        AppendLog(Loc.T("log.info") + message);
     }
 
     /// <summary>Runs an async handler, surfacing any error to the log (never swallowed).</summary>
@@ -770,8 +929,8 @@ public partial class MainWindow : Window
         {
             Dispatcher.UIThread.Post(() =>
             {
-                AppendLog("[erro] " + ex.Message);
-                PlayStatus.Text = "Erro: " + ex.Message;
+                AppendLog(Loc.T("log.error") + ex.Message);
+                PlayStatus.Text = Loc.T("status.error", ex.Message);
             });
         }
     }

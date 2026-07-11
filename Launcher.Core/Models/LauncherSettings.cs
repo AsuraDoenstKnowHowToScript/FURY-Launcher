@@ -11,4 +11,7 @@ public sealed class LauncherSettings
 {
     /// <summary>User ticked "não mostrar novamente" on the offline nick-change warning.</summary>
     public bool SuppressNickChangeWarning { get; set; }
+
+    /// <summary>UI language code (BCP-47-ish): en, pt, nl, zh-Hant, ru. Default English.</summary>
+    public string Language { get; set; } = "en";
 }
