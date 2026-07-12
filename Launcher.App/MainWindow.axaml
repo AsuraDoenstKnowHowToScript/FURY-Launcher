@@ -1,6 +1,7 @@
 <ui:AppWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Windowing"
+        xmlns:icon="using:IconPacks.Avalonia.Lucide"
         x:Class="Launcher.App.MainWindow"
         Width="1000" Height="700"
         MinWidth="900" MinHeight="600"
@@ -45,6 +46,8 @@
                             <!-- Empty-state: shown when there are no instances yet. -->
                             <StackPanel x:Name="InstancesEmptyState" IsVisible="False"
                                         VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                                <icon:PackIconLucide Kind="LayoutGrid" Width="32" Height="32"
+                                                     HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
                                 <TextBlock x:Name="EmptyStateText" Text="No instances yet"
                                            HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
                                 <Button x:Name="EmptyStateNewButton" Classes="primary" Content="＋ New instance"

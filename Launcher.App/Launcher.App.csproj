@@ -39,6 +39,8 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.2.5" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.5" />
     <PackageReference Include="FluentAvaloniaUI" Version="2.4.1" />
+    <!-- Lucide icons (geometry-based; colour inherits from Foreground). Needs Avalonia >= 11.0.13. -->
+    <PackageReference Include="IconPacks.Avalonia.Lucide" Version="2.0.0" />
     <!-- MVVM + DI foundation (Phase 1 scaffolding). -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
