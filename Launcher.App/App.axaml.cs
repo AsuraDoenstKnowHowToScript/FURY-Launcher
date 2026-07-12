@@ -8,6 +8,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Launcher.App.Services;
 using Launcher.App.ViewModels;
 using Launcher.Core;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +25,8 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<LauncherCore>();       // Core facade (resolved lazily; not built yet)
+        services.AddSingleton<LauncherCore>();            // Core facade (resolved lazily)
+        services.AddSingleton<SelectedInstanceService>(); // shared "selected instance" state
         services.AddTransient<MainWindowViewModel>();
         Services = services.BuildServiceProvider();
 
