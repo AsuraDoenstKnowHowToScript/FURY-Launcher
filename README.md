@@ -11,7 +11,7 @@ instances, mod management, and a simple offline/Microsoft login. No clutter.
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
 > [!IMPORTANT]
-> **Current version: `v0.3.5.1-beta` (testing).** It is stable enough for everyday
+> **Current version: `v0.3.5.2-beta` (testing).** It is stable enough for everyday
 > testing but still a work in progress. Grab the latest build from the
 > [Releases](../../releases) page and please send feedback.
 
@@ -19,8 +19,8 @@ instances, mod management, and a simple offline/Microsoft login. No clutter.
 
 | Channel | Version | Who it's for |
 | --- | --- | --- |
-| **Beta (latest)** | `v0.3.5.1-beta` | Testers — start here |
-| Beta | `v0.3.5-beta` | Previous build |
+| **Beta (latest)** | `v0.3.5.2-beta` | Testers — start here |
+| Beta | `v0.3.5.1-beta` | Previous build |
 | Pre-alpha | `v0.2.0-pre-alpha` | Early, unstable |
 
 The **release** badge above always points to the newest published build.

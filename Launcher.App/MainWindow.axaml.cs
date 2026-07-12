@@ -132,6 +132,7 @@ public partial class MainWindow : Window
         // --- auto-update banner ---
         UpdateButton.Click += OnUpdateClick;
         UpdateDismissButton.Click += (_, _) => UpdateBanner.IsVisible = false;
+        CheckUpdatesButton.Click += OnCheckUpdates;
 
         // --- Core → UI: buffer high-frequency events; a timer flushes them ---
         // Auth diagnostics (browser open, OAuth errors) go to the log panel and crash.log.
@@ -243,6 +244,7 @@ public partial class MainWindow : Window
         AboutCopyright.Text = Loc.T("about.license");
         AboutContact.Text = Loc.T("about.contact");
         LblLanguage.Text = Loc.T("label.language");
+        CheckUpdatesButton.Content = Loc.T("btn.checkupdates");
 
         // Empty-state + Vanilla-mods notices
         EmptyStateText.Text = Loc.T("empty.noinstances");
@@ -341,6 +343,31 @@ public partial class MainWindow : Window
             CrashLog.Write("[update] check failed", ex);
         }
     }
+
+    /// <summary>Manual "Check for updates" (About tab): same check, but with visible feedback.</summary>
+    private async void OnCheckUpdates(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    {
+        CheckUpdatesButton.IsEnabled = false;
+        UpdateCheckStatus.Text = Loc.T("update.checking");
+        try
+        {
+            _pendingUpdate = await _core.Updates.CheckAsync(
+                AppInfo.RepoOwner, AppInfo.RepoName, AppInfo.Version, includeBeta: true);
+            RefreshUpdateBanner();
+            UpdateCheckStatus.Text = _pendingUpdate == null
+                ? Loc.T("update.uptodate")
+                : Loc.T(_pendingUpdate.IsBeta ? "update.beta" : "update.stable", _pendingUpdate.Tag);
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[update] manual check failed", ex);
+            UpdateCheckStatus.Text = Loc.T("update.checkerror");
+        }
+        finally
+        {
+            CheckUpdatesButton.IsEnabled = true;
+        }
+    });
 
     /// <summary>Shows/hides the top banner and localizes its text for the found release.</summary>
     private void RefreshUpdateBanner()

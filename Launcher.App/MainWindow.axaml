@@ -11,12 +11,20 @@
     <DockPanel>
 
         <!-- Auto-update banner: hidden until a newer release is found on GitHub. -->
-        <Border x:Name="UpdateBanner" DockPanel.Dock="Top" IsVisible="False" Background="#1F6FEB" Padding="12,8">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-                <TextBlock x:Name="UpdateBannerText" Foreground="White" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                <Button x:Name="UpdateButton" Content="Update"/>
-                <Button x:Name="UpdateDismissButton" Content="Later"/>
-            </StackPanel>
+        <Border x:Name="UpdateBanner" DockPanel.Dock="Top" IsVisible="False"
+                Background="#2563EB" Padding="16,11" BoxShadow="0 2 10 0 #33000000">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="⬆" FontSize="18" FontWeight="Bold"
+                           Foreground="White" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBlock x:Name="UpdateBannerText" Grid.Column="1" Foreground="White"
+                           FontSize="14" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                <Button x:Name="UpdateButton" Grid.Column="2" Content="Update"
+                        Background="White" Foreground="#1D4ED8" FontWeight="Bold"
+                        CornerRadius="6" Padding="16,7" Margin="12,0,8,0"/>
+                <Button x:Name="UpdateDismissButton" Grid.Column="3" Content="Later"
+                        Background="Transparent" Foreground="White"
+                        BorderBrush="#66FFFFFF" BorderThickness="1" CornerRadius="6" Padding="12,7"/>
+            </Grid>
         </Border>
 
         <TabControl x:Name="MainTabs">
@@ -236,6 +244,10 @@
                     <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
                         <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
                         <ComboBox x:Name="LanguageCombo" Width="180"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
+                        <Button x:Name="CheckUpdatesButton" Content="Check for updates"/>
+                        <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="Gray" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </StackPanel>
                 </StackPanel>
             </TabItem>
