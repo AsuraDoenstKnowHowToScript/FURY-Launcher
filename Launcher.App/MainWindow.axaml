@@ -5,10 +5,10 @@
         Width="1000" Height="700"
         MinWidth="900" MinHeight="600"
         Background="{DynamicResource BgBase}"
+        Foreground="{DynamicResource TextPrimary}"
         Title="FURY Launcher">
 
-    <!-- Deliberately bare: standard controls, SimpleTheme, no theming — just tidy
-         layout. All visible text is set from Launcher.Core.Localization at runtime
+    <!-- Visible text is set from Launcher.Core.Localization at runtime
          (see ApplyLanguage in the code-behind); markup text is just a placeholder. -->
     <DockPanel>
 
@@ -18,7 +18,7 @@
                 BorderThickness="0,0,0,1" Padding="16,11">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                 <TextBlock Grid.Column="0" Text="⬆" FontSize="18" FontWeight="Bold"
-                           Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                           Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <TextBlock x:Name="UpdateBannerText" Grid.Column="1" Foreground="{DynamicResource TextPrimary}"
                            FontSize="14" VerticalAlignment="Center" TextWrapping="Wrap"/>
                 <Button x:Name="UpdateButton" Grid.Column="2" Classes="primary" Content="Update"
@@ -38,7 +38,7 @@
                         <TextBlock x:Name="LblInstances" DockPanel.Dock="Top" Text="Instances:" Margin="0,0,0,6"/>
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
                             <Button x:Name="RefreshInstancesButton" Content="Refresh"/>
-                            <Button x:Name="DeleteInstanceButton" Classes="danger" Content="Delete"/>
+                            <Button x:Name="DeleteInstanceButton" Classes="secondary" Content="Delete"/>
                         </StackPanel>
                         <Grid>
                             <ListBox x:Name="InstancesList"/>
@@ -161,7 +161,7 @@
                             <TextBlock x:Name="LblInstalledMods" DockPanel.Dock="Top" Text="Installed mods:" Margin="0,0,0,4"/>
                             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
                                 <Button x:Name="AddModButton" Content="Add jar"/>
-                                <Button x:Name="RemoveModButton" Classes="danger" Content="Remove"/>
+                                <Button x:Name="RemoveModButton" Classes="secondary" Content="Remove"/>
                                 <Button x:Name="ToggleModButton" Content="Enable/Disable"/>
                             </StackPanel>
                             <ListBox x:Name="ModsList"/>

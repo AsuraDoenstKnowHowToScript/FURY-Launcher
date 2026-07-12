@@ -1,9 +1,11 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Global text defaults -->
+    <!-- Global text defaults. Text is NEVER the accent colour — always a grey.
+         (Unstyled text was falling back to a tinted brush; pin it to TextPrimary.) -->
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
 
     <!-- ============================ BUTTONS ============================ -->
