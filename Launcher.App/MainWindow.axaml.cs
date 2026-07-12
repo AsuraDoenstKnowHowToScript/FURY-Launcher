@@ -221,11 +221,11 @@ public partial class MainWindow : Window
         ModrinthSearchButton.Content = Loc.T("btn.search");
         ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
 
-        // Skin tab
-        LblSkinProfile.Text = Loc.T("label.offlineprofile");
+        // Skin tab — same profile/nick wording as the Play tab.
+        LblSkinProfile.Text = Loc.T("label.profile");
         NewProfileButton.Content = Loc.T("btn.new");
         DeleteProfileButton.Content = Loc.T("btn.deleteprofile");
-        LblProfileName.Text = Loc.T("label.name");
+        LblProfileName.Text = Loc.T("label.nick");
         SlimCheck.Content = Loc.T("check.slim");
         SaveProfileButton.Content = Loc.T("btn.saveprofile");
         ChooseSkinButton.Content = Loc.T("btn.chooseskin");

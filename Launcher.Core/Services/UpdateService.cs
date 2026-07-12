@@ -131,11 +131,13 @@ public sealed class UpdateService
 
     // --- version comparison (numeric core, then "no pre-release" > "has pre-release") ---
 
+    private const int CoreParts = 4; // major.minor.patch.build (supports x.y.z and x.y.z.w)
+
     private static int Compare(string a, string b)
     {
         var (ca, pa) = SplitVersion(a);
         var (cb, pb) = SplitVersion(b);
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < CoreParts; i++)
         {
             var r = ca[i].CompareTo(cb[i]);
             if (r != 0) return r;
@@ -151,8 +153,8 @@ public sealed class UpdateService
         var core = dash >= 0 ? v[..dash] : v;
         var pre = dash >= 0 ? v[(dash + 1)..] : "";
         var parts = core.Split('.');
-        var nums = new int[3];
-        for (var i = 0; i < 3 && i < parts.Length; i++)
+        var nums = new int[CoreParts];
+        for (var i = 0; i < CoreParts && i < parts.Length; i++)
             int.TryParse(parts[i], out nums[i]);
         return (nums, pre);
     }
