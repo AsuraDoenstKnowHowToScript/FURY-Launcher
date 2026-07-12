@@ -1,16 +1,16 @@
 <ui:AppWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Windowing"
+        xmlns:uic="using:FluentAvalonia.UI.Controls"
         xmlns:icon="using:IconPacks.Avalonia.Lucide"
         x:Class="Launcher.App.MainWindow"
-        Width="1000" Height="700"
+        Width="1040" Height="720"
         MinWidth="900" MinHeight="600"
         Background="{DynamicResource BgBase}"
         Foreground="{DynamicResource TextPrimary}"
         Title="FURY Launcher">
 
-    <!-- Visible text is set from Launcher.Core.Localization at runtime
-         (see ApplyLanguage in the code-behind); markup text is just a placeholder. -->
+    <!-- Visible text is set from Launcher.Core.Localization at runtime (ApplyLanguage). -->
     <DockPanel>
 
         <!-- Auto-update banner: hidden until a newer release is found on GitHub. -->
@@ -29,13 +29,50 @@
             </Grid>
         </Border>
 
-        <TabControl x:Name="MainTabs">
+        <uic:NavigationView x:Name="NavView" PaneDisplayMode="Left" OpenPaneLength="220"
+                            IsSettingsVisible="False" IsBackButtonVisible="False">
 
-            <!-- ============================ INSTANCES ============================ -->
-            <TabItem x:Name="TabInstances" Header="Instances">
-                <Grid ColumnDefinitions="300,*" Margin="12">
-                    <!-- Left: list + list actions -->
-                    <DockPanel Grid.Column="0" Margin="0,0,12,0">
+            <uic:NavigationView.PaneHeader>
+                <StackPanel Margin="8,10,8,14" Spacing="0">
+                    <TextBlock Text="FURY" FontFamily="{DynamicResource FontUi}" FontSize="24"
+                               FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                    <TextBlock x:Name="NavVersion" Classes="Mono" Text="" FontSize="12"
+                               Foreground="{DynamicResource TextMuted}"/>
+                </StackPanel>
+            </uic:NavigationView.PaneHeader>
+
+            <uic:NavigationView.MenuItems>
+                <uic:NavigationViewItem x:Name="NavHome" Content="Home">
+                    <uic:NavigationViewItem.IconSource>
+                        <uic:ImageIconSource Source="{icon:LucideImage Kind=LayoutGrid, Brush={StaticResource TextSecondary}}"/>
+                    </uic:NavigationViewItem.IconSource>
+                </uic:NavigationViewItem>
+                <uic:NavigationViewItem x:Name="NavMods" Content="Mods">
+                    <uic:NavigationViewItem.IconSource>
+                        <uic:ImageIconSource Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextSecondary}}"/>
+                    </uic:NavigationViewItem.IconSource>
+                </uic:NavigationViewItem>
+                <uic:NavigationViewItem x:Name="NavAccounts" Content="Accounts">
+                    <uic:NavigationViewItem.IconSource>
+                        <uic:ImageIconSource Source="{icon:LucideImage Kind=User, Brush={StaticResource TextSecondary}}"/>
+                    </uic:NavigationViewItem.IconSource>
+                </uic:NavigationViewItem>
+            </uic:NavigationView.MenuItems>
+
+            <uic:NavigationView.FooterMenuItems>
+                <uic:NavigationViewItem x:Name="NavSettings" Content="Settings">
+                    <uic:NavigationViewItem.IconSource>
+                        <uic:ImageIconSource Source="{icon:LucideImage Kind=Settings, Brush={StaticResource TextSecondary}}"/>
+                    </uic:NavigationViewItem.IconSource>
+                </uic:NavigationViewItem>
+            </uic:NavigationView.FooterMenuItems>
+
+            <!-- One content host; sections toggle visibility from NavView.SelectionChanged. -->
+            <Grid Margin="0">
+
+                <!-- ============================ HOME (instances + play) ============================ -->
+                <Grid x:Name="HomePanel" ColumnDefinitions="300,*" Margin="16">
+                    <DockPanel Grid.Column="0" Margin="0,0,16,0">
                         <TextBlock x:Name="LblInstances" DockPanel.Dock="Top" Text="Instances:" Margin="0,0,0,6"/>
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
                             <Button x:Name="RefreshInstancesButton" Content="Refresh"/>
@@ -43,7 +80,6 @@
                         </StackPanel>
                         <Grid>
                             <ListBox x:Name="InstancesList"/>
-                            <!-- Empty-state: shown when there are no instances yet. -->
                             <StackPanel x:Name="InstancesEmptyState" IsVisible="False"
                                         VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
                                 <icon:PackIconLucide Kind="LayoutGrid" Width="32" Height="32"
@@ -56,101 +92,85 @@
                         </Grid>
                     </DockPanel>
 
-                    <!-- Right: create / edit form, grouped into sections -->
-                    <ScrollViewer Grid.Column="1">
-                        <StackPanel Spacing="14">
-
-                            <TextBlock x:Name="LblSecGeneral" Text="General" FontWeight="Bold"/>
-                            <StackPanel Spacing="6">
-                                <TextBlock x:Name="LblName" Text="Name"/>
-                                <TextBox x:Name="NameBox"/>
-                                <TextBlock x:Name="LblMcVersion" Text="Minecraft version"/>
-                                <ComboBox x:Name="McVersionCombo" HorizontalAlignment="Stretch"/>
-                                <TextBlock x:Name="LblLoader" Text="Loader"/>
-                                <ComboBox x:Name="LoaderCombo" HorizontalAlignment="Stretch"/>
+                    <DockPanel Grid.Column="1">
+                        <!-- Play + log docked at the bottom; the edit form fills the rest. -->
+                        <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock x:Name="LblProfileOffline" Text="Profile:" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="OfflineProfileCombo" Width="220"/>
+                                <Button x:Name="PlayButton" Classes="primary" Content="PLAY" FontSize="18" Padding="30,8"/>
+                                <Button x:Name="StopButton" Classes="secondary" Content="Stop" Padding="14,8"/>
+                                <!-- Hidden: kept in sync with the instance list so play logic is unchanged. -->
+                                <ComboBox x:Name="PlayInstanceCombo" IsVisible="False" Width="0"/>
                             </StackPanel>
-
-                            <TextBlock x:Name="LblSecMemory" Text="Memory &amp; Java" FontWeight="Bold"/>
-                            <StackPanel Spacing="6">
-                                <Grid ColumnDefinitions="*,12,*">
-                                    <StackPanel Grid.Column="0" Spacing="6">
-                                        <TextBlock x:Name="LblMinRam" Text="Min RAM (MB)"/>
-                                        <TextBox x:Name="MinRamBox" Text="512"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2" Spacing="6">
-                                        <TextBlock x:Name="LblMaxRam" Text="Max RAM (MB)"/>
-                                        <TextBox x:Name="MaxRamBox" Text="2048"/>
-                                    </StackPanel>
-                                </Grid>
-                                <TextBlock x:Name="LblJvmArgs" Text="JVM arguments (space-separated)"/>
-                                <TextBox x:Name="JvmArgsBox" Classes="Mono"/>
-                                <TextBlock x:Name="LblJavaPath" Text="Java path (empty = managed)"/>
-                                <DockPanel>
-                                    <Button x:Name="BrowseJavaButton" Content="..." DockPanel.Dock="Right" Margin="6,0,0,0"/>
-                                    <TextBox x:Name="JavaPathBox" Classes="Mono"/>
-                                </DockPanel>
-                            </StackPanel>
-
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Button x:Name="NewInstanceButton" Classes="primary" Content="Create new"/>
-                                <Button x:Name="SaveInstanceButton" Classes="secondary" Content="Save changes"/>
-                            </StackPanel>
-
-                            <TextBlock x:Name="LblModpack" Text="Modpack (.frpack)" FontWeight="Bold"/>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Button x:Name="ExportPackButton" Content="Export .frpack"/>
-                                <Button x:Name="ImportPackButton" Content="Import .frpack"/>
-                                <Button x:Name="ImportMrpackButton" Content="Import .mrpack"/>
-                            </StackPanel>
-
-                            <TextBlock x:Name="InstanceStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+                            <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="14"/>
+                            <TextBlock x:Name="PlayStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+                            <TextBlock x:Name="LblLog" Text="Log:"/>
+                            <TextBox x:Name="LogBox" Classes="Mono" Height="150" AcceptsReturn="True" IsReadOnly="True"
+                                     TextWrapping="NoWrap" VerticalContentAlignment="Top"/>
                         </StackPanel>
-                    </ScrollViewer>
+
+                        <ScrollViewer>
+                            <StackPanel Spacing="14">
+                                <TextBlock x:Name="LblSecGeneral" Classes="Title" Text="General"/>
+                                <StackPanel Spacing="6">
+                                    <TextBlock x:Name="LblName" Text="Name" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBox x:Name="NameBox"/>
+                                    <TextBlock x:Name="LblMcVersion" Text="Minecraft version" Foreground="{DynamicResource TextSecondary}"/>
+                                    <ComboBox x:Name="McVersionCombo" HorizontalAlignment="Stretch"/>
+                                    <TextBlock x:Name="LblLoader" Text="Loader" Foreground="{DynamicResource TextSecondary}"/>
+                                    <ComboBox x:Name="LoaderCombo" HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+
+                                <TextBlock x:Name="LblSecMemory" Classes="Title" Text="Memory &amp; Java"/>
+                                <StackPanel Spacing="6">
+                                    <Grid ColumnDefinitions="*,12,*">
+                                        <StackPanel Grid.Column="0" Spacing="6">
+                                            <TextBlock x:Name="LblMinRam" Text="Min RAM (MB)" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBox x:Name="MinRamBox" Text="512"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Spacing="6">
+                                            <TextBlock x:Name="LblMaxRam" Text="Max RAM (MB)" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBox x:Name="MaxRamBox" Text="2048"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock x:Name="LblJvmArgs" Text="JVM arguments (space-separated)" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBox x:Name="JvmArgsBox" Classes="Mono"/>
+                                    <TextBlock x:Name="LblJavaPath" Text="Java path (empty = managed)" Foreground="{DynamicResource TextSecondary}"/>
+                                    <DockPanel>
+                                        <Button x:Name="BrowseJavaButton" Content="..." DockPanel.Dock="Right" Margin="6,0,0,0"/>
+                                        <TextBox x:Name="JavaPathBox" Classes="Mono"/>
+                                    </DockPanel>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button x:Name="NewInstanceButton" Classes="primary" Content="Create new"/>
+                                    <Button x:Name="SaveInstanceButton" Classes="secondary" Content="Save changes"/>
+                                </StackPanel>
+
+                                <TextBlock x:Name="LblModpack" Classes="Title" Text="Modpack (.frpack)"/>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button x:Name="ExportPackButton" Content="Export .frpack"/>
+                                    <Button x:Name="ImportPackButton" Content="Import .frpack"/>
+                                    <Button x:Name="ImportMrpackButton" Content="Import .mrpack"/>
+                                </StackPanel>
+
+                                <TextBlock x:Name="InstanceStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </DockPanel>
                 </Grid>
-            </TabItem>
 
-            <!-- ============================== PLAY ============================== -->
-            <TabItem x:Name="TabPlay" Header="Play">
-                <DockPanel Margin="12">
-                    <StackPanel DockPanel.Dock="Top" Spacing="8">
-                        <Grid ColumnDefinitions="72,*">
-                            <TextBlock Grid.Column="0" x:Name="LblProfileOffline" Text="Profile:" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                <ComboBox x:Name="OfflineProfileCombo" Width="240"/>
-                                <Button x:Name="MicrosoftLoginButton" Content="Microsoft login"/>
-                                <Button x:Name="MicrosoftLogoutButton" Content="Log out"/>
-                                <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)" Foreground="{DynamicResource TextSecondary}"/>
-                            </StackPanel>
-                        </Grid>
-                        <Grid ColumnDefinitions="72,*">
-                            <TextBlock Grid.Column="0" x:Name="LblPlayInstance" Text="Instance:" VerticalAlignment="Center"/>
-                            <ComboBox Grid.Column="1" x:Name="PlayInstanceCombo" HorizontalAlignment="Stretch"/>
-                        </Grid>
-                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
-                            <Button x:Name="PlayButton" Classes="primary" Content="PLAY" FontSize="22" Padding="44,10"/>
-                            <Button x:Name="StopButton" Content="Stop" Padding="16,10"/>
+                <!-- =============================== MODS =============================== -->
+                <DockPanel x:Name="ModsPanel" IsVisible="False" Margin="16">
+                    <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ModsInstanceName" Text="—" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondary}"/>
+                            <Button x:Name="RefreshModsButton" Content="Refresh"/>
+                            <ComboBox x:Name="ModInstanceCombo" IsVisible="False" Width="0"/>
                         </StackPanel>
-                        <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="18"/>
-                        <TextBlock x:Name="PlayStatus" Text="" TextWrapping="Wrap"/>
-                        <TextBlock x:Name="LblLog" Text="Log:" Margin="0,4,0,0"/>
-                    </StackPanel>
-                    <TextBox x:Name="LogBox" Classes="Mono" AcceptsReturn="True" IsReadOnly="True"
-                             TextWrapping="NoWrap" VerticalContentAlignment="Top" Margin="0,4,0,0"/>
-                </DockPanel>
-            </TabItem>
-
-            <!-- =============================== MODS =============================== -->
-            <TabItem Header="Mods" x:Name="ModsTab">
-                <DockPanel Margin="12">
-                    <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,8">
-                        <Grid ColumnDefinitions="72,*">
-                            <TextBlock Grid.Column="0" x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                <ComboBox x:Name="ModInstanceCombo" Width="280"/>
-                                <Button x:Name="RefreshModsButton" Content="Refresh"/>
-                            </StackPanel>
-                        </Grid>
-                        <!-- Shown only when the selected instance is Vanilla (no loader). -->
                         <StackPanel x:Name="ModsVanillaPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
                             <TextBlock x:Name="ModsVanillaWarning" Text="" TextWrapping="Wrap"
                                        Foreground="{DynamicResource Danger}" VerticalAlignment="Center" MaxWidth="640"/>
@@ -159,7 +179,6 @@
                     </StackPanel>
 
                     <Grid ColumnDefinitions="*,12,*">
-                        <!-- Installed mods -->
                         <DockPanel Grid.Column="0">
                             <TextBlock x:Name="LblInstalledMods" DockPanel.Dock="Top" Text="Installed mods:" Margin="0,0,0,4"/>
                             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
@@ -170,7 +189,6 @@
                             <ListBox x:Name="ModsList"/>
                         </DockPanel>
 
-                        <!-- Modrinth search -->
                         <DockPanel Grid.Column="2">
                             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
                                 <TextBox x:Name="ModrinthQueryBox" Width="240" Watermark="Search Modrinth..."/>
@@ -187,20 +205,25 @@
                         </DockPanel>
                     </Grid>
                 </DockPanel>
-            </TabItem>
 
-            <!-- =============================== SKIN =============================== -->
-            <TabItem x:Name="TabSkin" Header="Skin">
-                <ScrollViewer>
-                    <StackPanel Margin="12" Spacing="8">
+                <!-- =============================== ACCOUNTS (login + skin) =============================== -->
+                <ScrollViewer x:Name="AccountsPanel" IsVisible="False">
+                    <StackPanel Margin="16" Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="MicrosoftLoginButton" Classes="primary" Content="Microsoft login"/>
+                            <Button x:Name="MicrosoftLogoutButton" Classes="secondary" Content="Log out"/>
+                            <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)"
+                                       Foreground="{DynamicResource TextSecondary}"/>
+                        </StackPanel>
+
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Name="LblSkinProfile" Text="Offline profile:" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="LblSkinProfile" Text="Profile:" VerticalAlignment="Center"/>
                             <ComboBox x:Name="SkinProfileCombo" Width="200"/>
                             <Button x:Name="NewProfileButton" Content="New"/>
-                            <Button x:Name="DeleteProfileButton" Content="Delete"/>
+                            <Button x:Name="DeleteProfileButton" Classes="secondary" Content="Delete"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Name="LblProfileName" Text="Name:" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="LblProfileName" Text="Nick:" VerticalAlignment="Center"/>
                             <TextBox x:Name="ProfileNameBox" Width="180"/>
                             <CheckBox x:Name="SlimCheck" Content="Slim model (Alex)"/>
                             <Button x:Name="SaveProfileButton" Content="Save profile"/>
@@ -241,26 +264,26 @@
                         <TextBlock x:Name="LblSkinHelp2" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text=""/>
                     </StackPanel>
                 </ScrollViewer>
-            </TabItem>
 
-            <!-- =============================== ABOUT ============================== -->
-            <TabItem x:Name="TabAbout" Header="About">
-                <StackPanel Margin="16" Spacing="8">
-                    <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"/>
-                    <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version" Foreground="{DynamicResource TextSecondary}"/>
-                    <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text="" Margin="0,6,0,0"/>
-                    <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Text=""/>
-                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
-                        <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="LanguageCombo" Width="180"/>
+                <!-- =============================== SETTINGS (about + prefs) =============================== -->
+                <ScrollViewer x:Name="SettingsPanel" IsVisible="False">
+                    <StackPanel Margin="16" Spacing="8">
+                        <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"/>
+                        <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version" Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text="" Margin="0,6,0,0"/>
+                        <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Text=""/>
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
+                            <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="LanguageCombo" Width="180"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
+                            <Button x:Name="CheckUpdatesButton" Content="Check for updates"/>
+                            <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
-                        <Button x:Name="CheckUpdatesButton" Content="Check for updates"/>
-                        <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                    </StackPanel>
-                </StackPanel>
-            </TabItem>
+                </ScrollViewer>
 
-        </TabControl>
+            </Grid>
+        </uic:NavigationView>
     </DockPanel>
 </ui:AppWindow>

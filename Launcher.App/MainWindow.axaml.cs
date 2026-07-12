@@ -23,11 +23,14 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CmlLib.Core.Auth;
+using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Windowing;
+using Launcher.App.Services;
 using Launcher.Core;
 using Launcher.Core.Localization;
 using Launcher.Core.Models;
 using Launcher.Core.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Launcher.App;
 
@@ -53,6 +56,7 @@ public partial class MainWindow : AppWindow
     private bool _suppressLangEvent; // guards the language dropdown during programmatic set
     private List<string> _versions = new(); // Minecraft versions shown in the create/edit dropdown
     private UpdateInfo? _pendingUpdate;     // newer release found on GitHub, if any
+    private readonly SelectedInstanceService _selected = App.Services.GetRequiredService<SelectedInstanceService>();
 
     // Coalesced UI updates. The game/installer raise log + progress events far too
     // fast to touch the UI once per event (doing so froze the window into "not
@@ -110,12 +114,10 @@ public partial class MainWindow : AppWindow
         {
             if (e.Key == Key.Enter) { e.Handled = true; OnModrinthSearch(s, e); }
         };
-        // Auto-load the installed mods list when the Mods tab is opened.
-        MainTabs.SelectionChanged += (_, e) =>
-        {
-            if (ReferenceEquals(e.Source, MainTabs) && ReferenceEquals(MainTabs.SelectedItem, ModsTab))
-                RefreshMods();
-        };
+        // Left navigation: swap the visible section; refresh mods when opening Mods.
+        NavView.SelectionChanged += OnNavSelectionChanged;
+        NavVersion.Text = "v" + AppInfo.Version;
+        NavView.SelectedItem = NavHome;
 
         // --- modpack (.frpack) + skin profiles ---
         ExportPackButton.Click += OnExportPack;
@@ -177,11 +179,10 @@ public partial class MainWindow : AppWindow
     private void ApplyLanguage()
     {
         // Tabs
-        TabInstances.Header = Loc.T("tab.instances");
-        TabPlay.Header = Loc.T("tab.play");
-        ModsTab.Header = Loc.T("tab.mods");
-        TabSkin.Header = Loc.T("tab.skin");
-        TabAbout.Header = Loc.T("tab.about");
+        NavHome.Content = Loc.T("nav.home");
+        NavMods.Content = Loc.T("nav.mods");
+        NavAccounts.Content = Loc.T("nav.accounts");
+        NavSettings.Content = Loc.T("nav.settings");
 
         // Instances tab
         LblInstances.Text = Loc.T("instances.list");
@@ -208,7 +209,6 @@ public partial class MainWindow : AppWindow
         RefreshPlayAccountList();
         MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
         MicrosoftLogoutButton.Content = Loc.T("btn.mslogout");
-        LblPlayInstance.Text = Loc.T("label.instance");
         PlayButton.Content = Loc.T("btn.play");
         StopButton.Content = Loc.T("btn.stop");
         LblLog.Text = Loc.T("label.log");
@@ -261,6 +261,18 @@ public partial class MainWindow : AppWindow
         // Re-evaluate Vanilla-dependent enable/disable + tooltips with the (new) language.
         UpdateModsAvailability();
         RefreshUpdateBanner();
+    }
+
+    /// <summary>Left-nav navigation: show the chosen section, hide the rest.</summary>
+    private void OnNavSelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
+    {
+        var item = e.SelectedItem as NavigationViewItem;
+        HomePanel.IsVisible = ReferenceEquals(item, NavHome);
+        ModsPanel.IsVisible = ReferenceEquals(item, NavMods);
+        AccountsPanel.IsVisible = ReferenceEquals(item, NavAccounts);
+        SettingsPanel.IsVisible = ReferenceEquals(item, NavSettings);
+
+        if (ReferenceEquals(item, NavMods)) RefreshMods();
     }
 
     private void OnLanguageChanged(object? sender, SelectionChangedEventArgs e)
@@ -591,6 +603,8 @@ public partial class MainWindow : AppWindow
             if (PlayInstanceCombo.SelectedIndex < 0) PlayInstanceCombo.SelectedIndex = 0;
             if (ModInstanceCombo.SelectedIndex < 0) ModInstanceCombo.SelectedIndex = 0;
             if (SkinInstanceCombo.SelectedIndex < 0) SkinInstanceCombo.SelectedIndex = 0;
+            // The Home list is the single selector: default to the first instance.
+            if (InstancesList.SelectedIndex < 0) InstancesList.SelectedIndex = 0;
         }
 
         // Empty-state overlay: prominent "create" call-to-action when there's nothing yet.
@@ -611,6 +625,22 @@ public partial class MainWindow : AppWindow
         JvmArgsBox.Text = _editing.JvmArgs;
         JavaPathBox.Text = _editing.JavaPath ?? "";
         InstanceStatus.Text = Loc.T("inst.editing", _editing.Name);
+
+        // The instance list is the single selector: keep the (now hidden) per-screen
+        // instance combos in sync so play/mods logic is unchanged, and reflect it on Mods.
+        SyncSelectedInstance(idx);
+    }
+
+    /// <summary>Propagates the instance chosen in the Home list to the shared state + hidden combos.</summary>
+    private void SyncSelectedInstance(int idx)
+    {
+        if (PlayInstanceCombo.ItemsSource != null) PlayInstanceCombo.SelectedIndex = idx;
+        if (ModInstanceCombo.ItemsSource != null) ModInstanceCombo.SelectedIndex = idx;
+
+        var inst = idx >= 0 && idx < _instances.Count ? _instances[idx] : null;
+        _selected.Current = inst;
+        ModsInstanceName.Text = inst?.Name ?? "—";
+        UpdateModsAvailability();
     }
 
     private async void OnCreateInstance(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
@@ -875,6 +905,7 @@ public partial class MainWindow : AppWindow
         UpdateModsAvailability();
 
         var inst = SelectedModInstance();
+        ModsInstanceName.Text = inst?.Name ?? "—";
         if (inst == null) { _mods = new(); ModsList.ItemsSource = null; return; }
 
         _mods = _core.Mods.ListMods(inst).ToList();
@@ -909,7 +940,7 @@ public partial class MainWindow : AppWindow
 
     private void StartNewInstanceFlow()
     {
-        MainTabs.SelectedItem = TabInstances;
+        NavView.SelectedItem = NavHome;
         _editing = null;
         NameBox.Text = "";
         // Default the loader to a modded one so "create" is immediately mod-capable.
