@@ -1,8 +1,10 @@
-<Window xmlns="https://github.com/avaloniaui"
+<ui:AppWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Windowing"
         x:Class="Launcher.App.MainWindow"
         Width="1000" Height="700"
-        MinWidth="880" MinHeight="600"
+        MinWidth="900" MinHeight="600"
+        Background="{DynamicResource BgBase}"
         Title="FURY Launcher">
 
     <!-- Deliberately bare: standard controls, SimpleTheme, no theming — just tidy
@@ -12,18 +14,17 @@
 
         <!-- Auto-update banner: hidden until a newer release is found on GitHub. -->
         <Border x:Name="UpdateBanner" DockPanel.Dock="Top" IsVisible="False"
-                Background="#2563EB" Padding="16,11" BoxShadow="0 2 10 0 #33000000">
+                Background="{DynamicResource BgElevated}" BorderBrush="{DynamicResource BorderSubtle}"
+                BorderThickness="0,0,0,1" Padding="16,11">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                 <TextBlock Grid.Column="0" Text="⬆" FontSize="18" FontWeight="Bold"
-                           Foreground="White" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                <TextBlock x:Name="UpdateBannerText" Grid.Column="1" Foreground="White"
+                           Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBlock x:Name="UpdateBannerText" Grid.Column="1" Foreground="{DynamicResource TextPrimary}"
                            FontSize="14" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                <Button x:Name="UpdateButton" Grid.Column="2" Content="Update"
-                        Background="White" Foreground="#1D4ED8" FontWeight="Bold"
-                        CornerRadius="6" Padding="16,7" Margin="12,0,8,0"/>
-                <Button x:Name="UpdateDismissButton" Grid.Column="3" Content="Later"
-                        Background="Transparent" Foreground="White"
-                        BorderBrush="#66FFFFFF" BorderThickness="1" CornerRadius="6" Padding="12,7"/>
+                <Button x:Name="UpdateButton" Grid.Column="2" Classes="primary" Content="Update"
+                        Padding="16,7" Margin="12,0,8,0"/>
+                <Button x:Name="UpdateDismissButton" Grid.Column="3" Classes="ghost" Content="Later"
+                        Padding="12,7"/>
             </Grid>
         </Border>
 
@@ -37,7 +38,7 @@
                         <TextBlock x:Name="LblInstances" DockPanel.Dock="Top" Text="Instances:" Margin="0,0,0,6"/>
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
                             <Button x:Name="RefreshInstancesButton" Content="Refresh"/>
-                            <Button x:Name="DeleteInstanceButton" Content="Delete"/>
+                            <Button x:Name="DeleteInstanceButton" Classes="danger" Content="Delete"/>
                         </StackPanel>
                         <Grid>
                             <ListBox x:Name="InstancesList"/>
@@ -45,8 +46,8 @@
                             <StackPanel x:Name="InstancesEmptyState" IsVisible="False"
                                         VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
                                 <TextBlock x:Name="EmptyStateText" Text="No instances yet"
-                                           HorizontalAlignment="Center" Foreground="Gray"/>
-                                <Button x:Name="EmptyStateNewButton" Content="＋ New instance"
+                                           HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
+                                <Button x:Name="EmptyStateNewButton" Classes="primary" Content="＋ New instance"
                                         HorizontalAlignment="Center" Padding="18,10" FontSize="15"/>
                             </StackPanel>
                         </Grid>
@@ -79,17 +80,17 @@
                                     </StackPanel>
                                 </Grid>
                                 <TextBlock x:Name="LblJvmArgs" Text="JVM arguments (space-separated)"/>
-                                <TextBox x:Name="JvmArgsBox"/>
+                                <TextBox x:Name="JvmArgsBox" Classes="Mono"/>
                                 <TextBlock x:Name="LblJavaPath" Text="Java path (empty = managed)"/>
                                 <DockPanel>
                                     <Button x:Name="BrowseJavaButton" Content="..." DockPanel.Dock="Right" Margin="6,0,0,0"/>
-                                    <TextBox x:Name="JavaPathBox"/>
+                                    <TextBox x:Name="JavaPathBox" Classes="Mono"/>
                                 </DockPanel>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <Button x:Name="NewInstanceButton" Content="Create new"/>
-                                <Button x:Name="SaveInstanceButton" Content="Save changes"/>
+                                <Button x:Name="NewInstanceButton" Classes="primary" Content="Create new"/>
+                                <Button x:Name="SaveInstanceButton" Classes="secondary" Content="Save changes"/>
                             </StackPanel>
 
                             <TextBlock x:Name="LblModpack" Text="Modpack (.frpack)" FontWeight="Bold"/>
@@ -99,7 +100,7 @@
                                 <Button x:Name="ImportMrpackButton" Content="Import .mrpack"/>
                             </StackPanel>
 
-                            <TextBlock x:Name="InstanceStatus" Text="" TextWrapping="Wrap" Foreground="Gray"/>
+                            <TextBlock x:Name="InstanceStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
@@ -115,7 +116,7 @@
                                 <ComboBox x:Name="OfflineProfileCombo" Width="240"/>
                                 <Button x:Name="MicrosoftLoginButton" Content="Microsoft login"/>
                                 <Button x:Name="MicrosoftLogoutButton" Content="Log out"/>
-                                <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)" Foreground="Gray"/>
+                                <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)" Foreground="{DynamicResource TextSecondary}"/>
                             </StackPanel>
                         </Grid>
                         <Grid ColumnDefinitions="72,*">
@@ -123,14 +124,14 @@
                             <ComboBox Grid.Column="1" x:Name="PlayInstanceCombo" HorizontalAlignment="Stretch"/>
                         </Grid>
                         <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
-                            <Button x:Name="PlayButton" Content="PLAY" FontSize="22" Padding="44,10"/>
+                            <Button x:Name="PlayButton" Classes="primary" Content="PLAY" FontSize="22" Padding="44,10"/>
                             <Button x:Name="StopButton" Content="Stop" Padding="16,10"/>
                         </StackPanel>
                         <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="18"/>
                         <TextBlock x:Name="PlayStatus" Text="" TextWrapping="Wrap"/>
                         <TextBlock x:Name="LblLog" Text="Log:" Margin="0,4,0,0"/>
                     </StackPanel>
-                    <TextBox x:Name="LogBox" AcceptsReturn="True" IsReadOnly="True"
+                    <TextBox x:Name="LogBox" Classes="Mono" AcceptsReturn="True" IsReadOnly="True"
                              TextWrapping="NoWrap" VerticalContentAlignment="Top" Margin="0,4,0,0"/>
                 </DockPanel>
             </TabItem>
@@ -149,8 +150,8 @@
                         <!-- Shown only when the selected instance is Vanilla (no loader). -->
                         <StackPanel x:Name="ModsVanillaPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
                             <TextBlock x:Name="ModsVanillaWarning" Text="" TextWrapping="Wrap"
-                                       Foreground="#D13438" VerticalAlignment="Center" MaxWidth="640"/>
-                            <Button x:Name="NewModdedInstanceButton" Content="Create modded instance"/>
+                                       Foreground="{DynamicResource Danger}" VerticalAlignment="Center" MaxWidth="640"/>
+                            <Button x:Name="NewModdedInstanceButton" Classes="primary" Content="Create modded instance"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -160,7 +161,7 @@
                             <TextBlock x:Name="LblInstalledMods" DockPanel.Dock="Top" Text="Installed mods:" Margin="0,0,0,4"/>
                             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
                                 <Button x:Name="AddModButton" Content="Add jar"/>
-                                <Button x:Name="RemoveModButton" Content="Remove"/>
+                                <Button x:Name="RemoveModButton" Classes="danger" Content="Remove"/>
                                 <Button x:Name="ToggleModButton" Content="Enable/Disable"/>
                             </StackPanel>
                             <ListBox x:Name="ModsList"/>
@@ -212,7 +213,7 @@
                             <Button x:Name="ApplySkinButton" Content="Apply in-game"/>
                         </StackPanel>
 
-                        <Border BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="0,4,0,0">
+                        <Border Classes="card" Margin="0,4,0,0">
                             <StackPanel Orientation="Horizontal" Spacing="20">
                                 <StackPanel Spacing="4">
                                     <TextBlock x:Name="LblSkinPreview" Text="Skin (raw PNG)"/>
@@ -233,8 +234,8 @@
                         </Border>
 
                         <TextBlock x:Name="SkinStatus" Text="" TextWrapping="Wrap"/>
-                        <TextBlock x:Name="LblSkinHelp1" TextWrapping="Wrap" Foreground="Gray" Text=""/>
-                        <TextBlock x:Name="LblSkinHelp2" TextWrapping="Wrap" Foreground="Gray" Text=""/>
+                        <TextBlock x:Name="LblSkinHelp1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text=""/>
+                        <TextBlock x:Name="LblSkinHelp2" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text=""/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -242,21 +243,21 @@
             <!-- =============================== ABOUT ============================== -->
             <TabItem x:Name="TabAbout" Header="About">
                 <StackPanel Margin="16" Spacing="8">
-                    <TextBlock x:Name="AboutTitle" FontSize="24" FontWeight="Bold" Text="FURY Launcher"/>
-                    <TextBlock x:Name="AboutVersion" Text="version" Foreground="Gray"/>
-                    <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="Gray" Text="" Margin="0,6,0,0"/>
-                    <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="Gray" Text=""/>
+                    <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"/>
+                    <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version" Foreground="{DynamicResource TextSecondary}"/>
+                    <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text="" Margin="0,6,0,0"/>
+                    <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Text=""/>
                     <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
                         <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
                         <ComboBox x:Name="LanguageCombo" Width="180"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
                         <Button x:Name="CheckUpdatesButton" Content="Check for updates"/>
-                        <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="Gray" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </StackPanel>
                 </StackPanel>
             </TabItem>
 
         </TabControl>
     </DockPanel>
-</Window>
+</ui:AppWindow>

@@ -34,13 +34,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.2.3" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
-    <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.3" />
+    <!-- Avalonia 11.2.5 to satisfy FluentAvaloniaUI 2.4.x (needs >= 11.2.5). -->
+    <PackageReference Include="Avalonia" Version="11.2.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.5" />
+    <PackageReference Include="FluentAvaloniaUI" Version="2.4.1" />
+    <!-- MVVM + DI foundation (Phase 1 scaffolding). -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <!-- DevTools (F12) in Debug only. -->
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.2.5" Condition="'$(Configuration)' == 'Debug'" />
     <!-- Embedded Microsoft login window. -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
     <!-- IWebUI type we implement for the OAuth flow (also comes via Core). -->
     <PackageReference Include="XboxAuthNet" Version="3.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Fonts embedded as assembly resources (no system install required). -->
+    <AvaloniaResource Include="Assets/Fonts/*.ttf" />
   </ItemGroup>
 
 </Project>

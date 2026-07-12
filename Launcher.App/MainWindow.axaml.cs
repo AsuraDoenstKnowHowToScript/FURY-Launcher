@@ -23,6 +23,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CmlLib.Core.Auth;
+using FluentAvalonia.UI.Windowing;
 using Launcher.Core;
 using Launcher.Core.Localization;
 using Launcher.Core.Models;
@@ -35,7 +36,7 @@ namespace Launcher.App;
 /// this file only reads/writes controls and marshals Core events to the UI thread.
 /// All visible text comes from <see cref="Loc"/> via <see cref="ApplyLanguage"/>.
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : AppWindow
 {
     private readonly LauncherCore _core = new();
     private readonly LoaderType[] _loaders = Enum.GetValues<LoaderType>();

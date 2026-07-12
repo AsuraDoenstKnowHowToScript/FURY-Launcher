@@ -1,0 +1,66 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="using:System">
+
+    <!-- ============================================================
+         DESIGN TOKENS — the single source of truth for colour, radius,
+         spacing and type. Views must reference these via {DynamicResource};
+         no hard-coded colours anywhere. Aesthetic: dark purple on soft black.
+         ============================================================ -->
+
+    <!-- Fonts (embedded; no system install needed) -->
+    <FontFamily x:Key="FontUi">avares://FURY Launcher/Assets/Fonts/Outfit.ttf#Outfit</FontFamily>
+    <FontFamily x:Key="FontMono">avares://FURY Launcher/Assets/Fonts/JetBrainsMono-Regular.ttf#JetBrains Mono</FontFamily>
+
+    <!-- Colours (raw) -->
+    <Color x:Key="BgBaseColor">#0F0E13</Color>
+    <Color x:Key="BgSurfaceColor">#17151E</Color>
+    <Color x:Key="BgElevatedColor">#1F1C29</Color>
+    <Color x:Key="BgInputColor">#131118</Color>
+    <Color x:Key="BorderSubtleColor">#26222F</Color>
+    <Color x:Key="BorderStrongColor">#35303F</Color>
+    <Color x:Key="AccentColor">#6D28D9</Color>
+    <Color x:Key="AccentHoverColor">#7C3AED</Color>
+    <Color x:Key="AccentPressedColor">#5B21B6</Color>
+    <Color x:Key="OnAccentColor">#FFFFFF</Color>
+    <Color x:Key="TextPrimaryColor">#E8E6ED</Color>
+    <Color x:Key="TextSecondaryColor">#A09BB0</Color>
+    <Color x:Key="TextMutedColor">#6E6880</Color>
+    <Color x:Key="SuccessColor">#4ADE80</Color>
+    <Color x:Key="WarningColor">#FBBF24</Color>
+    <Color x:Key="DangerColor">#F87171</Color>
+
+    <!-- Brushes (what Views actually reference) -->
+    <SolidColorBrush x:Key="BgBase" Color="{StaticResource BgBaseColor}"/>
+    <SolidColorBrush x:Key="BgSurface" Color="{StaticResource BgSurfaceColor}"/>
+    <SolidColorBrush x:Key="BgElevated" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="BgInput" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="BorderSubtle" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="BorderStrong" Color="{StaticResource BorderStrongColor}"/>
+    <SolidColorBrush x:Key="Accent" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="AccentHover" Color="{StaticResource AccentHoverColor}"/>
+    <SolidColorBrush x:Key="AccentPressed" Color="{StaticResource AccentPressedColor}"/>
+    <!-- Accent at ~15% — selected list item, not the full purple -->
+    <SolidColorBrush x:Key="AccentSubtle" Color="{StaticResource AccentColor}" Opacity="0.15"/>
+    <SolidColorBrush x:Key="OnAccent" Color="{StaticResource OnAccentColor}"/>
+    <SolidColorBrush x:Key="TextPrimary" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="TextMuted" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="Success" Color="{StaticResource SuccessColor}"/>
+    <SolidColorBrush x:Key="Warning" Color="{StaticResource WarningColor}"/>
+    <SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}"/>
+
+    <!-- Radii -->
+    <CornerRadius x:Key="RadiusSm">4</CornerRadius>
+    <CornerRadius x:Key="RadiusMd">8</CornerRadius>
+    <CornerRadius x:Key="RadiusLg">12</CornerRadius>
+
+    <!-- Spacing scale (base 4) -->
+    <sys:Double x:Key="Space1">4</sys:Double>
+    <sys:Double x:Key="Space2">8</sys:Double>
+    <sys:Double x:Key="Space3">12</sys:Double>
+    <sys:Double x:Key="Space4">16</sys:Double>
+    <sys:Double x:Key="Space6">24</sys:Double>
+    <sys:Double x:Key="Space8">32</sys:Double>
+
+</ResourceDictionary>
