@@ -22,6 +22,7 @@ public sealed class LauncherCore : IDisposable
     public GameLauncher Game { get; }
     public ModService Mods { get; }
     public PackService Packs { get; }
+    public MrpackService Mrpacks { get; }
     public ProfileService Profiles { get; }
     public SkinApplyService Skins { get; }
     public SettingsService Settings { get; }
@@ -39,6 +40,7 @@ public sealed class LauncherCore : IDisposable
         Game = new GameLauncher(Paths, new LoaderInstaller(_http), Instances);
         Mods = new ModService(Paths, new ModrinthClient(_http));
         Packs = new PackService(Paths, Instances);
+        Mrpacks = new MrpackService(_http, Paths, Instances);
         Profiles = new ProfileService(Paths);
         Skins = new SkinApplyService(Paths, Mods);
         Settings = new SettingsService(Paths);

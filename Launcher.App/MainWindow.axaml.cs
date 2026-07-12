@@ -117,6 +117,7 @@ public partial class MainWindow : Window
         // --- modpack (.frpack) + skin profiles ---
         ExportPackButton.Click += OnExportPack;
         ImportPackButton.Click += OnImportPack;
+        ImportMrpackButton.Click += OnImportMrpack;
         SkinProfileCombo.SelectionChanged += OnSkinProfileSelected;
         NewProfileButton.Click += OnNewProfile;
         SaveProfileButton.Click += OnSaveProfile;
@@ -197,6 +198,7 @@ public partial class MainWindow : Window
         LblModpack.Text = Loc.T("label.modpack");
         ExportPackButton.Content = Loc.T("btn.exportpack");
         ImportPackButton.Content = Loc.T("btn.importpack");
+        ImportMrpackButton.Content = Loc.T("btn.importmrpack");
 
         // Play tab
         LblProfileOffline.Text = Loc.T("label.profile");
@@ -1027,6 +1029,25 @@ public partial class MainWindow : Window
 
         InstanceStatus.Text = Loc.T("pack.importing");
         var inst = await _core.Packs.ImportAsync(path);
+        await RefreshInstancesAsync();
+        InstanceStatus.Text = Loc.T("pack.imported", inst.Name, inst.McVersion, inst.Loader);
+    });
+
+    private async void OnImportMrpack(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Loc.T("pack.importtitle"),
+            AllowMultiple = false,
+            FileTypeFilter = new[] { new FilePickerFileType("Modrinth modpack") { Patterns = new[] { "*.mrpack" } } }
+        });
+        var path = files.FirstOrDefault()?.TryGetLocalPath();
+        if (string.IsNullOrEmpty(path)) return;
+
+        InstanceStatus.Text = Loc.T("mrpack.importing");
+        var progress = new Progress<(int done, int total)>(p =>
+            InstanceStatus.Text = Loc.T("mrpack.downloading", p.done, p.total));
+        var inst = await _core.Mrpacks.ImportAsync(path, progress);
         await RefreshInstancesAsync();
         InstanceStatus.Text = Loc.T("pack.imported", inst.Name, inst.McVersion, inst.Loader);
     });

@@ -96,6 +96,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Button x:Name="ExportPackButton" Content="Export .frpack"/>
                                 <Button x:Name="ImportPackButton" Content="Import .frpack"/>
+                                <Button x:Name="ImportMrpackButton" Content="Import .mrpack"/>
                             </StackPanel>
 
                             <TextBlock x:Name="InstanceStatus" Text="" TextWrapping="Wrap" Foreground="Gray"/>

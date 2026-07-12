@@ -11,7 +11,7 @@ instances, mod management, and a simple offline/Microsoft login. No clutter.
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
 > [!IMPORTANT]
-> **Current version: `v0.3.5.2-beta` (testing).** It is stable enough for everyday
+> **Current version: `v0.3.6-beta` (testing).** It is stable enough for everyday
 > testing but still a work in progress. Grab the latest build from the
 > [Releases](../../releases) page and please send feedback.
 
@@ -19,8 +19,8 @@ instances, mod management, and a simple offline/Microsoft login. No clutter.
 
 | Channel | Version | Who it's for |
 | --- | --- | --- |
-| **Beta (latest)** | `v0.3.5.2-beta` | Testers — start here |
-| Beta | `v0.3.5.1-beta` | Previous build |
+| **Beta (latest)** | `v0.3.6-beta` | Testers — start here |
+| Beta | `v0.3.5.2-beta` | Previous build |
 | Pre-alpha | `v0.2.0-pre-alpha` | Early, unstable |
 
 The **release** badge above always points to the newest published build.
@@ -56,8 +56,8 @@ Java is downloaded automatically the first time you launch a version that needs 
   download the version that matches your instance.
 - **Forge and NeoForge** are installed straight from Maven, so there is no ad link
   or browser step.
-- **Modpacks.** Export and import a self contained `.frpack` (manifest plus the
-  real mod jars).
+- **Modpacks.** Import Modrinth `.mrpack` packs (mods are downloaded and verified),
+  or export/import a self contained `.frpack` (manifest plus the real mod jars).
 - **Skins and capes** per offline profile, shown in game through CustomSkinLoader.
 
 ## Languages
