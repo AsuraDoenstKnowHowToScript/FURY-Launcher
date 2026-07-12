@@ -44,6 +44,7 @@ public partial class MainWindow : Window
     private List<ModItem> _mods = new();
     private List<OfflineProfile> _profiles = new();
     private IReadOnlyList<ModrinthHit> _hits = new List<ModrinthHit>();
+    private IReadOnlyList<ModrinthVersion> _modVersions = new List<ModrinthVersion>();
 
     private Instance? _editing;      // instance selected for editing (Instances tab)
     private MSession? _msSession;    // cached Microsoft session after login
@@ -101,6 +102,7 @@ public partial class MainWindow : Window
         RemoveModButton.Click += OnRemoveMod;
         ToggleModButton.Click += OnToggleMod;
         ModrinthSearchButton.Click += OnModrinthSearch;
+        ModrinthList.SelectionChanged += OnModrinthResultSelected;
         ModrinthDownloadButton.Click += OnModrinthDownload;
         // Enter in the search box triggers the search.
         ModrinthQueryBox.KeyDown += (s, e) =>
@@ -222,6 +224,7 @@ public partial class MainWindow : Window
         ToggleModButton.Content = Loc.T("btn.toggle");
         ModrinthQueryBox.Watermark = Loc.T("watermark.modrinth");
         ModrinthSearchButton.Content = Loc.T("btn.search");
+        LblModVersion.Text = Loc.T("label.version");
         ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
 
         // Skin tab — same profile/nick wording as the Play tab.
@@ -964,23 +967,43 @@ public partial class MainWindow : Window
 
         Notify(Loc.T("mods.searching"));
         _hits = await _core.Mods.SearchModrinthAsync(inst, ModrinthQueryBox.Text ?? "");
+        _modVersions = new List<ModrinthVersion>();
+        ModrinthVersionCombo.ItemsSource = null;
         ModrinthList.ItemsSource = _hits
             .Select(h => $"{h.Title}  —  {Truncate(h.Description, 60)}")
             .ToList();
         Notify(Loc.T("mods.results", _hits.Count));
     });
 
-    private async void OnModrinthDownload(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    /// <summary>When a search result is picked, load its versions into the chooser.</summary>
+    private async void OnModrinthResultSelected(object? sender, SelectionChangedEventArgs e) => await SafeAsync(async () =>
     {
         var inst = SelectedModInstance();
         var idx = ModrinthList.SelectedIndex;
-        if (inst == null || idx < 0 || idx >= _hits.Count) { Notify(Loc.T("mods.selectresult")); return; }
+        if (inst == null || idx < 0 || idx >= _hits.Count)
+        {
+            _modVersions = new List<ModrinthVersion>();
+            ModrinthVersionCombo.ItemsSource = null;
+            return;
+        }
 
-        var hit = _hits[idx];
-        Notify(Loc.T("mods.downloading", hit.Title));
-        var path = await _core.Mods.InstallFromModrinthAsync(inst, hit.ProjectId);
+        _modVersions = await _core.Mods.GetModrinthVersionsAsync(inst, _hits[idx].ProjectId);
+        ModrinthVersionCombo.ItemsSource = _modVersions.Select(v => v.Display).ToList();
+        if (_modVersions.Count > 0) ModrinthVersionCombo.SelectedIndex = 0;
+    });
+
+    private async void OnModrinthDownload(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    {
+        var inst = SelectedModInstance();
+        var vIdx = ModrinthVersionCombo.SelectedIndex;
+        if (inst == null || vIdx < 0 || vIdx >= _modVersions.Count) { Notify(Loc.T("mods.selectresult")); return; }
+
+        var version = _modVersions[vIdx];
+        Notify(Loc.T("mods.downloading", version.Display));
+        var log = new Progress<string>(f => AppendLog("[mod] " + f));
+        var installed = await _core.Mods.InstallVersionAsync(inst, version, log);
         RefreshMods();
-        Notify(Loc.T("mods.downloaded", System.IO.Path.GetFileName(path)));
+        Notify(Loc.T("mods.installedcount", installed.Count));
     });
 
     // ============================ MODPACK (.frpack) ============================

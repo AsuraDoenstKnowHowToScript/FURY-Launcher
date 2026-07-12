@@ -40,8 +40,8 @@ public sealed class ModrinthClient
         return response?.Hits ?? new List<ModrinthHit>();
     }
 
-    /// <summary>Resolves the newest project version compatible with the MC version + loader.</summary>
-    public async Task<ModrinthVersion?> GetCompatibleVersionAsync(
+    /// <summary>All project versions compatible with the MC version + loader (newest first).</summary>
+    public async Task<IReadOnlyList<ModrinthVersion>> GetVersionsAsync(
         string projectId, string mcVersion, LoaderType loader, CancellationToken ct = default)
     {
         var loaders = $"[\"{LoaderName(loader)}\"]";
@@ -51,8 +51,27 @@ public sealed class ModrinthClient
 
         await using var stream = await _http.GetStreamAsync(url, ct).ConfigureAwait(false);
         var list = await JsonSerializer.DeserializeAsync<List<ModrinthVersion>>(stream, JsonStore.Options, ct).ConfigureAwait(false);
-        // The API returns newest first; take the first that has a downloadable file.
-        return list?.FirstOrDefault(v => v.Files.Count > 0);
+        return (list ?? new List<ModrinthVersion>()).Where(v => v.Files.Count > 0).ToList();
+    }
+
+    /// <summary>Resolves the newest project version compatible with the MC version + loader.</summary>
+    public async Task<ModrinthVersion?> GetCompatibleVersionAsync(
+        string projectId, string mcVersion, LoaderType loader, CancellationToken ct = default)
+        => (await GetVersionsAsync(projectId, mcVersion, loader, ct).ConfigureAwait(false)).FirstOrDefault();
+
+    /// <summary>Fetches a specific version by its id (used to satisfy pinned dependencies).</summary>
+    public async Task<ModrinthVersion?> GetVersionByIdAsync(string versionId, CancellationToken ct = default)
+    {
+        var url = $"{BaseUrl}/version/{Uri.EscapeDataString(versionId)}";
+        try
+        {
+            await using var stream = await _http.GetStreamAsync(url, ct).ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<ModrinthVersion>(stream, JsonStore.Options, ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException)
+        {
+            return null; // version gone / not accessible
+        }
     }
 
     /// <summary>Downloads a version's primary file into <paramref name="targetDir"/>. Returns the saved path.</summary>

@@ -78,13 +78,68 @@ public sealed class ModService
     public Task<IReadOnlyList<ModrinthHit>> SearchModrinthAsync(Instance instance, string query, CancellationToken ct = default)
         => _modrinth.SearchAsync(query, instance.McVersion, instance.Loader, ct);
 
-    /// <summary>Resolves the compatible version of a Modrinth project and downloads it into the instance.</summary>
-    public async Task<string> InstallFromModrinthAsync(Instance instance, string projectId, CancellationToken ct = default)
+    /// <summary>Lists the mod versions compatible with the instance (for the version chooser).</summary>
+    public Task<IReadOnlyList<ModrinthVersion>> GetModrinthVersionsAsync(Instance instance, string projectId, CancellationToken ct = default)
+        => _modrinth.GetVersionsAsync(projectId, instance.McVersion, instance.Loader, ct);
+
+    /// <summary>Installs the newest compatible version of a project (plus its required dependencies).</summary>
+    public async Task<IReadOnlyList<string>> InstallFromModrinthAsync(Instance instance, string projectId, CancellationToken ct = default)
     {
         var version = await _modrinth.GetCompatibleVersionAsync(projectId, instance.McVersion, instance.Loader, ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException(
                 $"No version of this mod is compatible with {instance.McVersion} + {instance.Loader}.");
+        return await InstallVersionAsync(instance, version, null, ct).ConfigureAwait(false);
+    }
 
-        return await _modrinth.DownloadAsync(version, _paths.InstanceModsDir(instance), ct).ConfigureAwait(false);
+    /// <summary>
+    /// Installs a specific mod version and, recursively, every REQUIRED dependency
+    /// (resolved to a version compatible with the instance). Optional/incompatible
+    /// dependencies are ignored. Returns the file names that were downloaded.
+    /// </summary>
+    public async Task<IReadOnlyList<string>> InstallVersionAsync(
+        Instance instance, ModrinthVersion version, IProgress<string>? log = null, CancellationToken ct = default)
+    {
+        if (instance.Loader == LoaderType.Vanilla)
+            throw new InvalidOperationException("Vanilla instances do not support mods.");
+
+        var modsDir = _paths.InstanceModsDir(instance);
+        var installed = new List<string>();
+        var handled = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // project ids already done
+        await InstallWithDepsAsync(instance, version, modsDir, installed, handled, log, ct).ConfigureAwait(false);
+        return installed;
+    }
+
+    private async Task InstallWithDepsAsync(
+        Instance instance, ModrinthVersion version, string modsDir,
+        List<string> installed, HashSet<string> handled, IProgress<string>? log, CancellationToken ct)
+    {
+        // De-dupe by project so a shared dependency (e.g. Fabric API) is installed once.
+        if (version.ProjectId != null && !handled.Add(version.ProjectId))
+            return;
+
+        var path = await _modrinth.DownloadAsync(version, modsDir, ct).ConfigureAwait(false);
+        var name = Path.GetFileName(path);
+        installed.Add(name);
+        log?.Report(name);
+
+        foreach (var dep in version.Dependencies ?? new List<ModrinthDependency>())
+        {
+            ct.ThrowIfCancellationRequested();
+            if (!string.Equals(dep.DependencyType, "required", StringComparison.OrdinalIgnoreCase))
+                continue; // only auto-install required deps
+
+            ModrinthVersion? depVersion = null;
+            if (!string.IsNullOrEmpty(dep.VersionId))
+                depVersion = await _modrinth.GetVersionByIdAsync(dep.VersionId, ct).ConfigureAwait(false);
+            else if (!string.IsNullOrEmpty(dep.ProjectId))
+            {
+                if (handled.Contains(dep.ProjectId)) continue;
+                var list = await _modrinth.GetVersionsAsync(dep.ProjectId, instance.McVersion, instance.Loader, ct).ConfigureAwait(false);
+                depVersion = list.FirstOrDefault();
+            }
+
+            if (depVersion != null)
+                await InstallWithDepsAsync(instance, depVersion, modsDir, installed, handled, log, ct).ConfigureAwait(false);
+        }
     }
 }

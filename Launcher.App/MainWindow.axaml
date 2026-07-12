@@ -172,8 +172,12 @@
                                 <TextBox x:Name="ModrinthQueryBox" Width="240" Watermark="Search Modrinth..."/>
                                 <Button x:Name="ModrinthSearchButton" Content="Search"/>
                             </StackPanel>
-                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
-                                <Button x:Name="ModrinthDownloadButton" Content="Download to instance"/>
+                            <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,6,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock x:Name="LblModVersion" Text="Version:" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="ModrinthVersionCombo" Width="250"/>
+                                </StackPanel>
+                                <Button x:Name="ModrinthDownloadButton" Content="Download to instance" HorizontalAlignment="Left"/>
                             </StackPanel>
                             <ListBox x:Name="ModrinthList"/>
                         </DockPanel>
