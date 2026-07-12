@@ -27,14 +27,14 @@
     <Style Selector="TextBlock.Body">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
 
     <Style Selector="TextBlock.Caption">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="FontSize" Value="12"/>
-        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
     </Style>
 

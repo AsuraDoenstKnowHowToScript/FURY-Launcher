@@ -1,11 +1,29 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:uic="using:FluentAvalonia.UI.Controls">
 
     <!-- Global text defaults. Text is NEVER the accent colour — always a grey.
-         (Unstyled text was falling back to a tinted brush; pin it to TextPrimary.) -->
+         Medium weight: the Outfit "Normal" weight reads too thin. -->
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="Button">
+        <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="ComboBox">
+        <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="CheckBox">
+        <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+
+    <!-- Left navigation items: a bit larger + bolder. -->
+    <Style Selector="uic|NavigationViewItem">
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Height" Value="44"/>
     </Style>
 
     <!-- ============================ BUTTONS ============================ -->

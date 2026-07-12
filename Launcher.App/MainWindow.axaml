@@ -8,6 +8,7 @@
         MinWidth="900" MinHeight="600"
         Background="{DynamicResource BgBase}"
         Foreground="{DynamicResource TextPrimary}"
+        FontWeight="Medium"
         Title="FURY Launcher">
 
     <!-- Visible text is set from Launcher.Core.Localization at runtime (ApplyLanguage). -->
