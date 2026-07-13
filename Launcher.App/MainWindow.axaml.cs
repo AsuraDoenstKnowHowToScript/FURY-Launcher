@@ -249,6 +249,7 @@ public partial class MainWindow : AppWindow
         LblModInstance.Text = Loc.T("label.instance");
         RefreshModsButton.Content = Loc.T("btn.refresh");
         LblInstalledMods.Text = Loc.T("label.installedmods");
+        ModsEmptyText.Text = Loc.T("mods.noinstalled");
         AddModButton.Content = Loc.T("btn.addjar");
         RemoveModButton.Content = Loc.T("btn.remove");
         ToggleModButton.Content = Loc.T("btn.toggle");
@@ -690,7 +691,8 @@ public partial class MainWindow : AppWindow
         var inst = idx >= 0 && idx < _instances.Count ? _instances[idx] : null;
         _selected.Current = inst;
         ModsInstanceName.Text = inst?.Name ?? "—";
-        UpdateModsAvailability();
+        // Eagerly refresh the mods list so it's already correct when the Mods tab opens.
+        RefreshMods();
     }
 
     private async void OnCreateInstance(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
@@ -962,12 +964,17 @@ public partial class MainWindow : AppWindow
 
         var inst = SelectedModInstance();
         ModsInstanceName.Text = inst?.Name ?? "—";
-        if (inst == null) { _mods = new(); ModsList.ItemsSource = null; return; }
+        if (inst == null)
+        {
+            _mods = new();
+            ModsList.ItemsSource = null;
+            ModsEmptyState.IsVisible = true;
+            return;
+        }
 
         _mods = _core.Mods.ListMods(inst).ToList();
-        ModsList.ItemsSource = _mods
-            .Select(m => (m.Enabled ? "[on]  " : "[off] ") + m.DisplayName)
-            .ToList();
+        ModsList.ItemsSource = _mods;
+        ModsEmptyState.IsVisible = _mods.Count == 0;
     }
 
     /// <summary>

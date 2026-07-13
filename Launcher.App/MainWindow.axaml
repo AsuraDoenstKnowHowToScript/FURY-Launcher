@@ -272,7 +272,54 @@
                                 <Button x:Name="RemoveModButton" Classes="secondary" Content="Remove"/>
                                 <Button x:Name="ToggleModButton" Content="Enable/Disable"/>
                             </StackPanel>
-                            <ListBox x:Name="ModsList"/>
+                            <Grid>
+                                <ListBox x:Name="ModsList" Background="Transparent" BorderThickness="0" Padding="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.Styles>
+                                        <Style Selector="ListBoxItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0,0,0,8"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                        </Style>
+                                        <Style Selector="ListBoxItem:selected Border.card">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                            <Setter Property="Background" Value="{DynamicResource AccentSubtle}"/>
+                                        </Style>
+                                    </ListBox.Styles>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:ModItem">
+                                            <Border Classes="card" Padding="10">
+                                                <Grid ColumnDefinitions="Auto,10,*,10,Auto">
+                                                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="6"
+                                                            Background="{DynamicResource BgElevated}">
+                                                        <icon:PackIconLucide Kind="Package" Width="20" Height="20"
+                                                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                             Foreground="{DynamicResource TextMuted}"/>
+                                                    </Border>
+                                                    <TextBlock Grid.Column="2" Classes="Body" VerticalAlignment="Center"
+                                                               Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/>
+                                                    <Border Grid.Column="4" CornerRadius="4" Padding="8,3" VerticalAlignment="Center"
+                                                            Background="{DynamicResource BgElevated}">
+                                                        <Panel>
+                                                            <TextBlock Classes="Caption" Text="ON" IsVisible="{Binding Enabled}"
+                                                                       Foreground="{DynamicResource Success}"/>
+                                                            <TextBlock Classes="Caption" Text="OFF" IsVisible="{Binding !Enabled}"
+                                                                       Foreground="{DynamicResource TextMuted}"/>
+                                                        </Panel>
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <StackPanel x:Name="ModsEmptyState" IsVisible="False"
+                                            VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
+                                    <icon:PackIconLucide Kind="Package" Width="30" Height="30"
+                                                         HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
+                                    <TextBlock x:Name="ModsEmptyText" HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" Text="No mods installed"/>
+                                </StackPanel>
+                            </Grid>
                         </DockPanel>
 
                         <DockPanel Grid.Column="2">
