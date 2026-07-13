@@ -1,46 +1,38 @@
 # Security Policy
 
-Thanks for helping keep FURY Launcher and its users safe.
-
 ## Supported versions
 
-FURY Launcher is in beta and moves fast. Only the latest release gets security fixes.
+FURY Launcher is in beta and updates frequently. Only the latest release receives security fixes.
 
 | Version | Supported |
 | --- | --- |
-| Latest beta (0.3.x) | ✅ |
-| Older pre-releases | ❌ |
+| Latest beta (0.3.x) | Yes |
+| Older pre-releases | No |
 
-Always update to the newest build on the [Releases](../../releases) page before reporting.
+Please update to the newest build on the [Releases](../../releases) page before reporting.
 
 ## Reporting a vulnerability
 
-**Please do not open a public issue for security problems.** Public issues are for
-ordinary bugs; a security report there could expose users before a fix is out.
+Do not open a public issue for security problems. Public issues are for ordinary bugs, and a security report posted publicly could expose users before a fix is available.
 
 Report privately in one of these ways:
 
-- **Email:** furylauncher@gmail.com — put "SECURITY" in the subject.
-- **GitHub:** open a private report via the repository's **Security → Report a vulnerability** tab, if available.
+- Email `furylauncher@gmail.com` with "SECURITY" in the subject.
+- Open a private report through the repository's Security tab, using "Report a vulnerability".
 
-Please include, as far as you can:
+Where possible, include the following:
 
-- What the issue is and why it matters (impact).
-- Steps to reproduce, or a small proof of concept.
+- A description of the issue and its impact.
+- Steps to reproduce it, or a short proof of concept.
 - The launcher version (shown in the About tab) and your Windows version.
-- Any relevant lines from `crash.log` (next to the executable).
+- Any relevant lines from `crash.log`, located next to the executable.
 
 ## What to expect
 
-- We aim to acknowledge a report within a few days.
-- We will keep you updated while we investigate and work on a fix.
-- Please give us a reasonable chance to release a fix before disclosing publicly.
-- With your permission, we are happy to credit you once the fix ships.
+We aim to acknowledge a report within a few days and will keep you informed while we investigate and prepare a fix. Please allow a reasonable amount of time for a fix to ship before disclosing the issue publicly. With your permission, we are glad to credit you once the fix is released.
 
 ## Scope
 
 In scope: the FURY Launcher application and its official release builds.
 
-Out of scope: Minecraft itself, Mojang/Microsoft services, third-party mods,
-Modrinth, and other external services the launcher talks to. Report those to their
-respective owners.
+Out of scope: Minecraft itself, Mojang and Microsoft services, third-party mods, Modrinth, and other external services the launcher connects to. Please report those to their respective owners.
