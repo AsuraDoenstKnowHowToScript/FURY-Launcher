@@ -86,7 +86,8 @@
                                 <Button x:Name="RefreshInstancesButton" Classes="secondary" Content="Refresh"/>
                                 <Button x:Name="AddInstanceButton" Classes="primary">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <icon:PackIconLucide Kind="Plus" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <icon:PackIconLucide Kind="Plus" Width="16" Height="16" VerticalAlignment="Center"
+                                                             Foreground="{DynamicResource OnAccent}"/>
                                         <TextBlock x:Name="AddInstanceLabel" Text="New instance" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
@@ -110,7 +111,8 @@
                                         <Button x:Name="StopButton" Classes="secondary" Content="Stop" MinHeight="48"/>
                                         <Button x:Name="PlayButton" Classes="primary" MinHeight="48" Padding="34,0">
                                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                                <icon:PackIconLucide Kind="Play" Width="20" Height="20" VerticalAlignment="Center"/>
+                                                <icon:PackIconLucide Kind="Play" Width="20" Height="20" VerticalAlignment="Center"
+                                                                     Foreground="{DynamicResource OnAccent}"/>
                                                 <TextBlock x:Name="PlayButtonLabel" Text="PLAY" FontSize="18" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>

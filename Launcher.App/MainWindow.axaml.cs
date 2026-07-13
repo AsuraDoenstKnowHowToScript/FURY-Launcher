@@ -188,6 +188,7 @@ public partial class MainWindow : AppWindow
         {
             StopButton.IsEnabled = running;
             PlayButton.IsEnabled = !running;
+            PlayButtonLabel.Text = running ? Loc.T("status.running") : Loc.T("btn.play");
             PlayStatus.Text = running ? Loc.T("status.running") : Loc.T("status.ended");
         });
 
@@ -901,6 +902,7 @@ public partial class MainWindow : AppWindow
 
         _launchCts = new CancellationTokenSource();
         PlayButton.IsEnabled = false;
+        PlayButtonLabel.Text = Loc.T("play.preparing");
         DownloadProgress.Value = 0;
         PlayStatus.Text = Loc.T("play.preparing");
         try
@@ -927,6 +929,7 @@ public partial class MainWindow : AppWindow
         {
             PlayStatus.Text = Loc.T("status.cancelled");
             PlayButton.IsEnabled = true;
+            PlayButtonLabel.Text = Loc.T("btn.play");
         }
         catch (Exception ex)
         {
@@ -935,6 +938,7 @@ public partial class MainWindow : AppWindow
             PlayStatus.Text = Loc.T("status.error", ex.Message);
             LogDrawer.IsExpanded = true;
             PlayButton.IsEnabled = true;
+            PlayButtonLabel.Text = Loc.T("btn.play");
         }
     });
 
