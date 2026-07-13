@@ -6,11 +6,11 @@
         xmlns:models="using:Launcher.Core.Models"
         xmlns:vm="using:Launcher.App.ViewModels"
         x:Class="Launcher.App.MainWindow"
-        Width="1040" Height="720"
-        MinWidth="900" MinHeight="600"
+        Width="1280" Height="860"
+        MinWidth="1120" MinHeight="740"
         Background="{DynamicResource BgBase}"
         Foreground="{DynamicResource TextPrimary}"
-        FontWeight="Medium"
+        FontWeight="SemiBold"
         Title="FURY Launcher">
 
     <!-- Visible text is set from Launcher.Core.Localization at runtime (ApplyLanguage). -->

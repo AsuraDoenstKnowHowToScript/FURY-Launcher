@@ -23,9 +23,9 @@
     <Color x:Key="AccentHoverColor">#7C3AED</Color>
     <Color x:Key="AccentPressedColor">#5B21B6</Color>
     <Color x:Key="OnAccentColor">#FFFFFF</Color>
-    <Color x:Key="TextPrimaryColor">#E8E6ED</Color>
-    <Color x:Key="TextSecondaryColor">#A09BB0</Color>
-    <Color x:Key="TextMutedColor">#6E6880</Color>
+    <Color x:Key="TextPrimaryColor">#F1F0F4</Color>
+    <Color x:Key="TextSecondaryColor">#C3BFD0</Color>
+    <Color x:Key="TextMutedColor">#948EA6</Color>
     <Color x:Key="SuccessColor">#4ADE80</Color>
     <Color x:Key="WarningColor">#FBBF24</Color>
     <Color x:Key="DangerColor">#F87171</Color>

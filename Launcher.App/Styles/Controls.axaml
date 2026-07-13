@@ -3,26 +3,26 @@
         xmlns:uic="using:FluentAvalonia.UI.Controls">
 
     <!-- Global text defaults. Text is NEVER the accent colour — always a grey.
-         Medium weight: the Outfit "Normal" weight reads too thin. -->
+         SemiBold weight: lighter weights of Outfit read too thin for low-vision users. -->
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
-        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="Button">
-        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="ComboBox">
-        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="CheckBox">
-        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
     <!-- Left navigation items: a bit larger + bolder. -->
     <Style Selector="uic|NavigationViewItem">
         <Setter Property="FontSize" Value="15"/>
-        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Height" Value="44"/>
     </Style>
 
@@ -33,7 +33,7 @@
     <!-- primary -->
     <Style Selector="Button.primary">
         <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
-        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="Button.primary /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource Accent}"/>
