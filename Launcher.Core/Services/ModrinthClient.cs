@@ -29,11 +29,15 @@ public sealed class ModrinthClient
                 AppInfo.Name.Replace(" ", ""), AppInfo.Version));
     }
 
+    /// <summary>Page size for search; the UI pages by requesting successive <paramref name="offset"/>s.</summary>
+    public const int SearchPageSize = 30;
+
     public async Task<IReadOnlyList<ModrinthHit>> SearchAsync(
-        string query, string mcVersion, LoaderType loader, CancellationToken ct = default)
+        string query, string mcVersion, LoaderType loader, int offset = 0, CancellationToken ct = default)
     {
         var facets = $"[[\"project_type:mod\"],[\"versions:{mcVersion}\"],[\"categories:{LoaderName(loader)}\"]]";
-        var url = $"{BaseUrl}/search?limit=30&query={Uri.EscapeDataString(query)}&facets={Uri.EscapeDataString(facets)}";
+        var url = $"{BaseUrl}/search?limit={SearchPageSize}&offset={offset}" +
+                  $"&query={Uri.EscapeDataString(query)}&facets={Uri.EscapeDataString(facets)}";
 
         await using var stream = await _http.GetStreamAsync(url, ct).ConfigureAwait(false);
         var response = await JsonSerializer.DeserializeAsync<SearchResponse>(stream, JsonStore.Options, ct).ConfigureAwait(false);

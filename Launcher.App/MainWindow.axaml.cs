@@ -6,9 +6,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -22,10 +24,12 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CmlLib.Core.Auth;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Windowing;
 using Launcher.App.Services;
+using Launcher.App.ViewModels;
 using Launcher.Core;
 using Launcher.Core.Localization;
 using Launcher.Core.Models;
@@ -47,8 +51,18 @@ public partial class MainWindow : AppWindow
     private List<Instance> _instances = new();
     private List<ModItem> _mods = new();
     private List<OfflineProfile> _profiles = new();
-    private IReadOnlyList<ModrinthHit> _hits = new List<ModrinthHit>();
+    private readonly ObservableCollection<ModrinthHitVm> _modrinthVms = new();
     private IReadOnlyList<ModrinthVersion> _modVersions = new List<ModrinthVersion>();
+
+    // Modrinth search: debounced query, page-by-scroll, cancel-on-new-search.
+    private DispatcherTimer? _searchDebounce;
+    private CancellationTokenSource? _modrinthCts;
+    private string _modrinthQuery = "";
+    private int _modrinthOffset;
+    private bool _modrinthHasMore;
+    private bool _modrinthLoading;
+    private static readonly HttpClient _iconHttp = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private static readonly Dictionary<string, Bitmap> _iconCache = new();
 
     private Instance? _editing;      // instance selected for editing (Instances tab)
     private MSession? _msSession;    // cached Microsoft session after login
@@ -111,14 +125,20 @@ public partial class MainWindow : AppWindow
         AddModButton.Click += OnAddMod;
         RemoveModButton.Click += OnRemoveMod;
         ToggleModButton.Click += OnToggleMod;
-        ModrinthSearchButton.Click += OnModrinthSearch;
+        ModrinthList.ItemsSource = _modrinthVms;
+        ModrinthSearchButton.Click += (_, _) => StartModrinthSearch();
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
         ModrinthDownloadButton.Click += OnModrinthDownload;
-        // Enter in the search box triggers the search.
-        ModrinthQueryBox.KeyDown += (s, e) =>
+        // Debounced search: type-to-search after a short pause; Enter searches now.
+        _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _searchDebounce.Tick += (_, _) => { _searchDebounce!.Stop(); StartModrinthSearch(); };
+        ModrinthQueryBox.TextChanged += (_, _) => { _searchDebounce!.Stop(); _searchDebounce!.Start(); };
+        ModrinthQueryBox.KeyDown += (_, e) =>
         {
-            if (e.Key == Key.Enter) { e.Handled = true; OnModrinthSearch(s, e); }
+            if (e.Key == Key.Enter) { e.Handled = true; _searchDebounce!.Stop(); StartModrinthSearch(); }
         };
+        // Infinite scroll: fetch the next page when scrolled near the bottom.
+        ModrinthList.AddHandler(ScrollViewer.ScrollChangedEvent, OnModrinthScroll);
         // Left navigation: swap the visible section; refresh mods when opening Mods.
         NavView.SelectionChanged += OnNavSelectionChanged;
         NavVersion.Text = "v" + AppInfo.Version;
@@ -235,6 +255,7 @@ public partial class MainWindow : AppWindow
         ModrinthSearchButton.Content = Loc.T("btn.search");
         LblModVersion.Text = Loc.T("label.version");
         ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
+        ModrinthEmptyText.Text = Loc.T("mods.searchprompt");
 
         // Skin tab — same profile/nick wording as the Play tab.
         LblSkinProfile.Text = Loc.T("label.profile");
@@ -1063,34 +1084,125 @@ public partial class MainWindow : AppWindow
         return Task.CompletedTask;
     });
 
-    private async void OnModrinthSearch(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    /// <summary>Begins a fresh Modrinth search: cancels the previous one, clears results, loads page 0.</summary>
+    private void StartModrinthSearch()
     {
+        var inst = SelectedModInstance();
+        if (inst == null) { ModrinthStatus.Text = Loc.T("common.selectinstance"); return; }
+
+        _modrinthCts?.Cancel();
+        _modrinthCts = new CancellationTokenSource();
+        _modrinthQuery = ModrinthQueryBox.Text ?? "";
+        _modrinthOffset = 0;
+        _modrinthHasMore = true;
+        _modrinthVms.Clear();
+        _modVersions = new List<ModrinthVersion>();
+        ModrinthVersionCombo.ItemsSource = null;
+        ModrinthEmptyState.IsVisible = false;
+        _ = LoadNextModrinthPageAsync(_modrinthCts.Token);
+    }
+
+    /// <summary>Loads the next page of results and appends it; icons stream in asynchronously.</summary>
+    private async Task LoadNextModrinthPageAsync(CancellationToken ct)
+    {
+        if (_modrinthLoading || !_modrinthHasMore) return;
+        var inst = SelectedModInstance();
+        if (inst == null) return;
+
+        _modrinthLoading = true;
+        ModrinthStatus.Text = Loc.T("mods.searching");
+        try
+        {
+            var page = await _core.Mods.SearchModrinthAsync(inst, _modrinthQuery, _modrinthOffset, ct);
+            if (ct.IsCancellationRequested) return;
+
+            foreach (var hit in page)
+            {
+                var vm = new ModrinthHitVm(hit);
+                _modrinthVms.Add(vm);
+                _ = LoadIconAsync(vm, ct);
+            }
+            _modrinthOffset += page.Count;
+            if (page.Count < ModrinthClient.SearchPageSize) _modrinthHasMore = false;
+
+            ModrinthEmptyState.IsVisible = _modrinthVms.Count == 0;
+            ModrinthStatus.Text = _modrinthVms.Count == 0
+                ? Loc.T("mods.noresults")
+                : Loc.T("mods.results", _modrinthVms.Count);
+        }
+        catch (OperationCanceledException) { /* superseded by a newer search */ }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[modrinth] search failed", ex);
+            ModrinthStatus.Text = Loc.T("status.error", ex.Message);
+        }
+        finally { _modrinthLoading = false; }
+    }
+
+    /// <summary>Pages in more results when the list is scrolled near the bottom.</summary>
+    private void OnModrinthScroll(object? sender, ScrollChangedEventArgs e)
+    {
+        if (sender is not ListBox lb) return;
+        var sv = lb.FindDescendantOfType<ScrollViewer>();
+        if (sv == null || _modrinthLoading || !_modrinthHasMore || _modrinthCts == null) return;
+        // Within ~1.5 viewports of the end → prefetch the next page.
+        if (sv.Offset.Y + sv.Viewport.Height * 1.5 >= sv.Extent.Height)
+            _ = LoadNextModrinthPageAsync(_modrinthCts.Token);
+    }
+
+    /// <summary>Downloads a hit's icon (cached by URL) and assigns it on the UI thread.</summary>
+    private async Task LoadIconAsync(ModrinthHitVm vm, CancellationToken ct)
+    {
+        var url = vm.IconUrl;
+        if (string.IsNullOrWhiteSpace(url)) return;
+        try
+        {
+            if (_iconCache.TryGetValue(url, out var cached)) { vm.Icon = cached; return; }
+
+            var bytes = await _iconHttp.GetByteArrayAsync(url, ct).ConfigureAwait(false);
+            if (ct.IsCancellationRequested) return;
+            using var ms = new MemoryStream(bytes);
+            var bmp = new Bitmap(ms);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _iconCache[url] = bmp;
+                vm.Icon = bmp;
+            });
+        }
+        catch { /* icon is decorative — a missing one just keeps the placeholder */ }
+    }
+
+    /// <summary>Per-card one-click install: newest compatible version + required dependencies.</summary>
+    private async void OnModrinthInstallClick(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    {
+        if (sender is not Control c || c.DataContext is not ModrinthHitVm vm) return;
         var inst = SelectedModInstance();
         if (inst == null) { Notify(Loc.T("common.selectinstance")); return; }
 
-        Notify(Loc.T("mods.searching"));
-        _hits = await _core.Mods.SearchModrinthAsync(inst, ModrinthQueryBox.Text ?? "");
-        _modVersions = new List<ModrinthVersion>();
-        ModrinthVersionCombo.ItemsSource = null;
-        ModrinthList.ItemsSource = _hits
-            .Select(h => $"{h.Title}  —  {Truncate(h.Description, 60)}")
-            .ToList();
-        Notify(Loc.T("mods.results", _hits.Count));
+        vm.Installing = true;
+        ModrinthStatus.Text = Loc.T("mods.downloading", vm.Title);
+        try
+        {
+            var installed = await _core.Mods.InstallFromModrinthAsync(inst, vm.ProjectId);
+            RefreshMods();
+            ModrinthStatus.Text = Loc.T("mods.installedcount", installed.Count);
+        }
+        finally { vm.Installing = false; }
     });
 
-    /// <summary>When a search result is picked, load its versions into the chooser.</summary>
+    /// <summary>When a result is picked, load its versions into the advanced version chooser.</summary>
     private async void OnModrinthResultSelected(object? sender, SelectionChangedEventArgs e) => await SafeAsync(async () =>
     {
         var inst = SelectedModInstance();
         var idx = ModrinthList.SelectedIndex;
-        if (inst == null || idx < 0 || idx >= _hits.Count)
+        if (inst == null || idx < 0 || idx >= _modrinthVms.Count)
         {
             _modVersions = new List<ModrinthVersion>();
             ModrinthVersionCombo.ItemsSource = null;
             return;
         }
 
-        _modVersions = await _core.Mods.GetModrinthVersionsAsync(inst, _hits[idx].ProjectId);
+        _modVersions = await _core.Mods.GetModrinthVersionsAsync(inst, _modrinthVms[idx].ProjectId);
         ModrinthVersionCombo.ItemsSource = _modVersions.Select(v => v.Display).ToList();
         if (_modVersions.Count > 0) ModrinthVersionCombo.SelectedIndex = 0;
     });
@@ -1102,11 +1214,11 @@ public partial class MainWindow : AppWindow
         if (inst == null || vIdx < 0 || vIdx >= _modVersions.Count) { Notify(Loc.T("mods.selectresult")); return; }
 
         var version = _modVersions[vIdx];
-        Notify(Loc.T("mods.downloading", version.Display));
+        ModrinthStatus.Text = Loc.T("mods.downloading", version.Display);
         var log = new Progress<string>(f => AppendLog("[mod] " + f));
         var installed = await _core.Mods.InstallVersionAsync(inst, version, log);
         RefreshMods();
-        Notify(Loc.T("mods.installedcount", installed.Count));
+        ModrinthStatus.Text = Loc.T("mods.installedcount", installed.Count);
     });
 
     // ============================ MODPACK (.frpack) ============================

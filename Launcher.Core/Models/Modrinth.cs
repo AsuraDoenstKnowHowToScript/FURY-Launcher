@@ -14,7 +14,9 @@ public sealed record ModrinthHit(
     [property: JsonPropertyName("slug")] string Slug,
     [property: JsonPropertyName("title")] string Title,
     [property: JsonPropertyName("description")] string Description,
-    [property: JsonPropertyName("downloads")] long Downloads);
+    [property: JsonPropertyName("downloads")] long Downloads,
+    [property: JsonPropertyName("icon_url")] string? IconUrl = null,
+    [property: JsonPropertyName("author")] string? Author = null);
 
 /// <summary>A concrete downloadable version of a Modrinth project.</summary>
 public sealed record ModrinthVersion(

@@ -75,8 +75,8 @@ public sealed class ModService
         File.Move(path, Path.Combine(dir, target), overwrite: true);
     }
 
-    public Task<IReadOnlyList<ModrinthHit>> SearchModrinthAsync(Instance instance, string query, CancellationToken ct = default)
-        => _modrinth.SearchAsync(query, instance.McVersion, instance.Loader, ct);
+    public Task<IReadOnlyList<ModrinthHit>> SearchModrinthAsync(Instance instance, string query, int offset = 0, CancellationToken ct = default)
+        => _modrinth.SearchAsync(query, instance.McVersion, instance.Loader, offset, ct);
 
     /// <summary>Lists the mod versions compatible with the instance (for the version chooser).</summary>
     public Task<IReadOnlyList<ModrinthVersion>> GetModrinthVersionsAsync(Instance instance, string projectId, CancellationToken ct = default)

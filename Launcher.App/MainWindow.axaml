@@ -4,6 +4,7 @@
         xmlns:uic="using:FluentAvalonia.UI.Controls"
         xmlns:icon="using:IconPacks.Avalonia.Lucide"
         xmlns:models="using:Launcher.Core.Models"
+        xmlns:vm="using:Launcher.App.ViewModels"
         x:Class="Launcher.App.MainWindow"
         Width="1040" Height="720"
         MinWidth="900" MinHeight="600"
@@ -273,18 +274,75 @@
                         </DockPanel>
 
                         <DockPanel Grid.Column="2">
-                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,4">
+                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
                                 <TextBox x:Name="ModrinthQueryBox" Width="240" Watermark="Search Modrinth..."/>
-                                <Button x:Name="ModrinthSearchButton" Content="Search"/>
+                                <Button x:Name="ModrinthSearchButton" Classes="secondary" Content="Search"/>
+                                <TextBlock x:Name="ModrinthStatus" Classes="Caption" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" Text=""/>
                             </StackPanel>
-                            <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,6,0,0">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock x:Name="LblModVersion" Text="Version:" VerticalAlignment="Center"/>
-                                    <ComboBox x:Name="ModrinthVersionCombo" Width="250"/>
+                            <!-- Advanced: pick a specific version for the selected result. -->
+                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                                <TextBlock x:Name="LblModVersion" Text="Version:" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="ModrinthVersionCombo" Width="230"/>
+                                <Button x:Name="ModrinthDownloadButton" Classes="secondary" Content="Download to instance"/>
+                            </StackPanel>
+                            <Grid>
+                                <ListBox x:Name="ModrinthList" Background="Transparent" BorderThickness="0" Padding="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.Styles>
+                                        <Style Selector="ListBoxItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0,0,0,8"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                        </Style>
+                                        <Style Selector="ListBoxItem:selected Border.card">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                        </Style>
+                                    </ListBox.Styles>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ModrinthHitVm">
+                                            <Border Classes="card" Padding="10">
+                                                <Grid ColumnDefinitions="Auto,10,*,10,Auto">
+                                                    <Border Grid.Column="0" Width="48" Height="48" CornerRadius="6"
+                                                            Background="{DynamicResource BgElevated}" ClipToBounds="True">
+                                                        <Panel>
+                                                            <icon:PackIconLucide Kind="Package" Width="22" Height="22"
+                                                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                                 Foreground="{DynamicResource TextMuted}"
+                                                                                 IsVisible="{Binding !HasIcon}"/>
+                                                            <Image Source="{Binding Icon}" Stretch="UniformToFill"
+                                                                   IsVisible="{Binding HasIcon}"/>
+                                                        </Panel>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Classes="Subtitle" Text="{Binding Title}"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Classes="Caption" VerticalAlignment="Center"
+                                                                       Foreground="{DynamicResource TextMuted}" Text="{Binding Author}"/>
+                                                        </StackPanel>
+                                                        <TextBlock Classes="Caption" Text="{Binding Description}"
+                                                                   TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Classes="Caption" Foreground="{DynamicResource TextMuted}"
+                                                                   Text="{Binding DownloadsText}"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="4" Classes="primary" x:Name="InstallHitButton"
+                                                            VerticalAlignment="Center" Content="Install"
+                                                            IsEnabled="{Binding !Installing}"
+                                                            Click="OnModrinthInstallClick"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <StackPanel x:Name="ModrinthEmptyState" IsVisible="False"
+                                            VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+                                    <icon:PackIconLucide Kind="Package" Width="34" Height="34"
+                                                         HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
+                                    <TextBlock x:Name="ModrinthEmptyText" HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource TextSecondary}" Text="Search for mods"/>
                                 </StackPanel>
-                                <Button x:Name="ModrinthDownloadButton" Content="Download to instance" HorizontalAlignment="Left"/>
-                            </StackPanel>
-                            <ListBox x:Name="ModrinthList"/>
+                            </Grid>
                         </DockPanel>
                     </Grid>
                 </DockPanel>
