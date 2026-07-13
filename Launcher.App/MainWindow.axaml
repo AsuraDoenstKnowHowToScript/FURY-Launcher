@@ -3,6 +3,7 @@
         xmlns:ui="using:FluentAvalonia.UI.Windowing"
         xmlns:uic="using:FluentAvalonia.UI.Controls"
         xmlns:icon="using:IconPacks.Avalonia.Lucide"
+        xmlns:models="using:Launcher.Core.Models"
         x:Class="Launcher.App.MainWindow"
         Width="1040" Height="720"
         MinWidth="900" MinHeight="600"
@@ -72,18 +73,114 @@
             <Grid Margin="0">
 
                 <!-- ============================ HOME (instances + play) ============================ -->
-                <Grid x:Name="HomePanel" ColumnDefinitions="300,*" Margin="16">
-                    <DockPanel Grid.Column="0" Margin="0,0,16,0">
-                        <TextBlock x:Name="LblInstances" DockPanel.Dock="Top" Text="Instances:" Margin="0,0,0,6"/>
-                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
-                            <Button x:Name="RefreshInstancesButton" Content="Refresh"/>
-                            <Button x:Name="DeleteInstanceButton" Classes="secondary" Content="Delete"/>
-                        </StackPanel>
+                <Grid x:Name="HomePanel" Margin="24">
+                    <DockPanel>
+                        <!-- Header: title + instance-level actions -->
+                        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+                            <TextBlock Grid.Column="0" x:Name="LblInstances" Classes="Title"
+                                       Text="Instances" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="ImportPackButton" Classes="secondary" Content="Import .frpack"/>
+                                <Button x:Name="ImportMrpackButton" Classes="secondary" Content="Import .mrpack"/>
+                                <Button x:Name="RefreshInstancesButton" Classes="secondary" Content="Refresh"/>
+                                <Button x:Name="AddInstanceButton" Classes="primary">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <icon:PackIconLucide Kind="Plus" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="AddInstanceLabel" Text="New instance" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Hero: the selected instance + the big PLAY button (bottom band) -->
+                        <Border DockPanel.Dock="Bottom" Classes="card" x:Name="HeroCard" Margin="0,16,0,0">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock x:Name="HeroName" Classes="Display" Text="—" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="HeroMeta" Classes="Caption"
+                                                   Foreground="{DynamicResource TextSecondary}" Text=""/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <Button x:Name="EditInstanceButton" Classes="secondary" Content="Edit" MinHeight="48"/>
+                                        <Button x:Name="OpenFolderButton" Classes="secondary" Content="Folder" MinHeight="48"/>
+                                        <Button x:Name="ExportPackButton" Classes="secondary" Content="Export" MinHeight="48"/>
+                                        <Button x:Name="DeleteInstanceButton" Classes="secondary" Content="Delete" MinHeight="48"/>
+                                        <Button x:Name="StopButton" Classes="secondary" Content="Stop" MinHeight="48"/>
+                                        <Button x:Name="PlayButton" Classes="primary" MinHeight="48" Padding="34,0">
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <icon:PackIconLucide Kind="Play" Width="20" Height="20" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="PlayButtonLabel" Text="PLAY" FontSize="18" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock x:Name="LblProfileOffline" Text="Profile:" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="OfflineProfileCombo" Width="220"/>
+                                    <!-- Hidden: kept in sync with the card grid so play logic is unchanged. -->
+                                    <ComboBox x:Name="PlayInstanceCombo" IsVisible="False" Width="0"/>
+                                </StackPanel>
+                                <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="6"/>
+                                <TextBlock x:Name="PlayStatus" Classes="Caption" Text="" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Log drawer: collapsed by default; opens automatically on error. -->
+                        <Expander x:Name="LogDrawer" DockPanel.Dock="Bottom" IsExpanded="False"
+                                  Margin="0,12,0,0" HorizontalAlignment="Stretch">
+                            <Expander.Header>
+                                <TextBlock x:Name="LblLog" Text="Log"/>
+                            </Expander.Header>
+                            <TextBox x:Name="LogBox" Classes="Mono" Height="180" AcceptsReturn="True" IsReadOnly="True"
+                                     TextWrapping="NoWrap" VerticalContentAlignment="Top"/>
+                        </Expander>
+
+                        <!-- Instance cards grid (fills remaining space) -->
                         <Grid>
-                            <ListBox x:Name="InstancesList"/>
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                                <ListBox x:Name="InstancesList" Background="Transparent" BorderThickness="0" Padding="0">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.Styles>
+                                        <Style Selector="ListBoxItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0,0,12,12"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                        </Style>
+                                        <!-- Selected card: 1px accent border + subtle tint, not a full purple fill. -->
+                                        <Style Selector="ListBoxItem:selected Border.card">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                            <Setter Property="Background" Value="{DynamicResource AccentSubtle}"/>
+                                        </Style>
+                                    </ListBox.Styles>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:Instance">
+                                            <Border Classes="card" Width="196" Padding="14">
+                                                <StackPanel Spacing="8">
+                                                    <TextBlock Classes="Subtitle" Text="{Binding Name}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <Border Background="{DynamicResource BgElevated}" CornerRadius="4"
+                                                            Padding="6,2" HorizontalAlignment="Left">
+                                                        <TextBlock Classes="Caption"
+                                                                   Foreground="{DynamicResource TextSecondary}"
+                                                                   Text="{Binding Loader}"/>
+                                                    </Border>
+                                                    <TextBlock Classes="Caption" Foreground="{DynamicResource TextMuted}"
+                                                               Text="{Binding McVersion}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </ScrollViewer>
                             <StackPanel x:Name="InstancesEmptyState" IsVisible="False"
                                         VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
-                                <icon:PackIconLucide Kind="LayoutGrid" Width="32" Height="32"
+                                <icon:PackIconLucide Kind="LayoutGrid" Width="40" Height="40"
                                                      HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
                                 <TextBlock x:Name="EmptyStateText" Text="No instances yet"
                                            HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
@@ -93,73 +190,58 @@
                         </Grid>
                     </DockPanel>
 
-                    <DockPanel Grid.Column="1">
-                        <!-- Play + log docked at the bottom; the edit form fills the rest. -->
-                        <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock x:Name="LblProfileOffline" Text="Profile:" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="OfflineProfileCombo" Width="220"/>
-                                <Button x:Name="PlayButton" Classes="primary" Content="PLAY" FontSize="18" Padding="30,8"/>
-                                <Button x:Name="StopButton" Classes="secondary" Content="Stop" Padding="14,8"/>
-                                <!-- Hidden: kept in sync with the instance list so play logic is unchanged. -->
-                                <ComboBox x:Name="PlayInstanceCombo" IsVisible="False" Width="0"/>
-                            </StackPanel>
-                            <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="14"/>
-                            <TextBlock x:Name="PlayStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
-                            <TextBlock x:Name="LblLog" Text="Log:"/>
-                            <TextBox x:Name="LogBox" Classes="Mono" Height="150" AcceptsReturn="True" IsReadOnly="True"
-                                     TextWrapping="NoWrap" VerticalContentAlignment="Top"/>
-                        </StackPanel>
-
-                        <ScrollViewer>
-                            <StackPanel Spacing="14">
-                                <TextBlock x:Name="LblSecGeneral" Classes="Title" Text="General"/>
-                                <StackPanel Spacing="6">
-                                    <TextBlock x:Name="LblName" Text="Name" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBox x:Name="NameBox"/>
-                                    <TextBlock x:Name="LblMcVersion" Text="Minecraft version" Foreground="{DynamicResource TextSecondary}"/>
-                                    <ComboBox x:Name="McVersionCombo" HorizontalAlignment="Stretch"/>
-                                    <TextBlock x:Name="LblLoader" Text="Loader" Foreground="{DynamicResource TextSecondary}"/>
-                                    <ComboBox x:Name="LoaderCombo" HorizontalAlignment="Stretch"/>
+                    <!-- Create / edit instance overlay (hidden until +New or Edit) -->
+                    <Grid x:Name="InstanceOverlay" IsVisible="False" Background="#B3000000">
+                        <Border Classes="card" Width="480" MaxHeight="640"
+                                VerticalAlignment="Center" HorizontalAlignment="Center" Padding="22">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" x:Name="OverlayTitle" Classes="Title"
+                                           Text="New instance" Margin="0,0,0,14"/>
+                                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                                            HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+                                    <Button x:Name="CancelInstanceButton" Classes="secondary" Content="Cancel"/>
+                                    <Button x:Name="NewInstanceButton" Classes="primary" Content="Create"/>
+                                    <Button x:Name="SaveInstanceButton" Classes="primary" Content="Save"/>
                                 </StackPanel>
-
-                                <TextBlock x:Name="LblSecMemory" Classes="Title" Text="Memory &amp; Java"/>
-                                <StackPanel Spacing="6">
-                                    <Grid ColumnDefinitions="*,12,*">
-                                        <StackPanel Grid.Column="0" Spacing="6">
-                                            <TextBlock x:Name="LblMinRam" Text="Min RAM (MB)" Foreground="{DynamicResource TextSecondary}"/>
-                                            <TextBox x:Name="MinRamBox" Text="512"/>
+                                <ScrollViewer>
+                                    <StackPanel Spacing="14">
+                                        <TextBlock x:Name="LblSecGeneral" Classes="Subtitle" Text="General"/>
+                                        <StackPanel Spacing="6">
+                                            <TextBlock x:Name="LblName" Text="Name" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBox x:Name="NameBox"/>
+                                            <TextBlock x:Name="LblMcVersion" Text="Minecraft version" Foreground="{DynamicResource TextSecondary}"/>
+                                            <ComboBox x:Name="McVersionCombo" HorizontalAlignment="Stretch"/>
+                                            <TextBlock x:Name="LblLoader" Text="Loader" Foreground="{DynamicResource TextSecondary}"/>
+                                            <ComboBox x:Name="LoaderCombo" HorizontalAlignment="Stretch"/>
                                         </StackPanel>
-                                        <StackPanel Grid.Column="2" Spacing="6">
-                                            <TextBlock x:Name="LblMaxRam" Text="Max RAM (MB)" Foreground="{DynamicResource TextSecondary}"/>
-                                            <TextBox x:Name="MaxRamBox" Text="2048"/>
+
+                                        <TextBlock x:Name="LblSecMemory" Classes="Subtitle" Text="Memory &amp; Java"/>
+                                        <StackPanel Spacing="6">
+                                            <Grid ColumnDefinitions="*,12,*">
+                                                <StackPanel Grid.Column="0" Spacing="6">
+                                                    <TextBlock x:Name="LblMinRam" Text="Min RAM (MB)" Foreground="{DynamicResource TextSecondary}"/>
+                                                    <TextBox x:Name="MinRamBox" Text="512"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Spacing="6">
+                                                    <TextBlock x:Name="LblMaxRam" Text="Max RAM (MB)" Foreground="{DynamicResource TextSecondary}"/>
+                                                    <TextBox x:Name="MaxRamBox" Text="2048"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBlock x:Name="LblJvmArgs" Text="JVM arguments (space-separated)" Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBox x:Name="JvmArgsBox" Classes="Mono"/>
+                                            <TextBlock x:Name="LblJavaPath" Text="Java path (empty = managed)" Foreground="{DynamicResource TextSecondary}"/>
+                                            <DockPanel>
+                                                <Button x:Name="BrowseJavaButton" Content="..." DockPanel.Dock="Right" Margin="6,0,0,0"/>
+                                                <TextBox x:Name="JavaPathBox" Classes="Mono"/>
+                                            </DockPanel>
                                         </StackPanel>
-                                    </Grid>
-                                    <TextBlock x:Name="LblJvmArgs" Text="JVM arguments (space-separated)" Foreground="{DynamicResource TextSecondary}"/>
-                                    <TextBox x:Name="JvmArgsBox" Classes="Mono"/>
-                                    <TextBlock x:Name="LblJavaPath" Text="Java path (empty = managed)" Foreground="{DynamicResource TextSecondary}"/>
-                                    <DockPanel>
-                                        <Button x:Name="BrowseJavaButton" Content="..." DockPanel.Dock="Right" Margin="6,0,0,0"/>
-                                        <TextBox x:Name="JavaPathBox" Classes="Mono"/>
-                                    </DockPanel>
-                                </StackPanel>
 
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Button x:Name="NewInstanceButton" Classes="primary" Content="Create new"/>
-                                    <Button x:Name="SaveInstanceButton" Classes="secondary" Content="Save changes"/>
-                                </StackPanel>
-
-                                <TextBlock x:Name="LblModpack" Classes="Title" Text="Modpack (.frpack)"/>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Button x:Name="ExportPackButton" Content="Export .frpack"/>
-                                    <Button x:Name="ImportPackButton" Content="Import .frpack"/>
-                                    <Button x:Name="ImportMrpackButton" Content="Import .mrpack"/>
-                                </StackPanel>
-
-                                <TextBlock x:Name="InstanceStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </DockPanel>
+                                        <TextBlock x:Name="InstanceStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
                 </Grid>
 
                 <!-- =============================== MODS =============================== -->

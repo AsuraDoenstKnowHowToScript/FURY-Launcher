@@ -90,8 +90,13 @@ public partial class MainWindow : AppWindow
 
         // --- wire events ---
         InstancesList.SelectionChanged += OnInstanceSelected;
+        InstancesList.DoubleTapped += OnInstanceDoubleTapped;
         RefreshInstancesButton.Click += async (_, _) => await SafeAsync(RefreshInstancesAsync);
         DeleteInstanceButton.Click += OnDeleteInstance;
+        AddInstanceButton.Click += (_, _) => OpenInstanceDialog(isNew: true);
+        EditInstanceButton.Click += (_, _) => OpenInstanceDialog(isNew: false);
+        CancelInstanceButton.Click += (_, _) => InstanceOverlay.IsVisible = false;
+        OpenFolderButton.Click += OnOpenInstanceFolder;
         NewInstanceButton.Click += OnCreateInstance;
         SaveInstanceButton.Click += OnSaveInstance;
         BrowseJavaButton.Click += OnBrowseJava;
@@ -186,6 +191,10 @@ public partial class MainWindow : AppWindow
 
         // Instances tab
         LblInstances.Text = Loc.T("instances.list");
+        AddInstanceLabel.Text = Loc.T("home.newtitle");
+        EditInstanceButton.Content = Loc.T("btn.edit");
+        OpenFolderButton.Content = Loc.T("btn.folder");
+        CancelInstanceButton.Content = Loc.T("btn.cancel");
         RefreshInstancesButton.Content = Loc.T("btn.refresh");
         DeleteInstanceButton.Content = Loc.T("btn.delete");
         LblName.Text = Loc.T("field.name");
@@ -199,7 +208,6 @@ public partial class MainWindow : AppWindow
         SaveInstanceButton.Content = Loc.T("btn.saveedit");
         LblSecGeneral.Text = Loc.T("section.general");
         LblSecMemory.Text = Loc.T("section.memoryjava");
-        LblModpack.Text = Loc.T("label.modpack");
         ExportPackButton.Content = Loc.T("btn.exportpack");
         ImportPackButton.Content = Loc.T("btn.importpack");
         ImportMrpackButton.Content = Loc.T("btn.importmrpack");
@@ -209,7 +217,7 @@ public partial class MainWindow : AppWindow
         RefreshPlayAccountList();
         MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
         MicrosoftLogoutButton.Content = Loc.T("btn.mslogout");
-        PlayButton.Content = Loc.T("btn.play");
+        PlayButtonLabel.Text = Loc.T("btn.play");
         StopButton.Content = Loc.T("btn.stop");
         LblLog.Text = Loc.T("label.log");
         AccountStatus.Text = _msSession != null
@@ -593,7 +601,9 @@ public partial class MainWindow : AppWindow
         _instances = (await _core.Instances.ListAsync()).ToList();
         var labels = _instances.Select(i => $"{i.Name}  [{i.McVersion} / {i.Loader}]").ToList();
 
-        InstancesList.ItemsSource = labels;
+        // The Home grid binds to the Instance objects (card template); the hidden combos
+        // stay label-based so their existing selection logic is unchanged.
+        InstancesList.ItemsSource = _instances;
         PlayInstanceCombo.ItemsSource = labels.ToList();
         ModInstanceCombo.ItemsSource = labels.ToList();
         SkinInstanceCombo.ItemsSource = labels.ToList();
@@ -609,6 +619,7 @@ public partial class MainWindow : AppWindow
 
         // Empty-state overlay: prominent "create" call-to-action when there's nothing yet.
         InstancesEmptyState.IsVisible = _instances.Count == 0;
+        if (_instances.Count == 0) UpdateHero(null);
     }
 
     private void OnInstanceSelected(object? sender, SelectionChangedEventArgs e)
@@ -629,6 +640,23 @@ public partial class MainWindow : AppWindow
         // The instance list is the single selector: keep the (now hidden) per-screen
         // instance combos in sync so play/mods logic is unchanged, and reflect it on Mods.
         SyncSelectedInstance(idx);
+        UpdateHero(_editing);
+    }
+
+    /// <summary>Refreshes the Home hero band (name + loader · version · mod count) for the selection.</summary>
+    private void UpdateHero(Instance? inst)
+    {
+        if (inst == null)
+        {
+            HeroName.Text = "—";
+            HeroMeta.Text = Loc.T("home.noselection");
+            return;
+        }
+        HeroName.Text = inst.Name;
+        int mods;
+        try { mods = _core.Mods.ListMods(inst).Count(); }
+        catch { mods = 0; }
+        HeroMeta.Text = $"{inst.Loader} · {inst.McVersion} · {Loc.T("home.modscount", mods)}";
     }
 
     /// <summary>Propagates the instance chosen in the Home list to the shared state + hidden combos.</summary>
@@ -648,6 +676,7 @@ public partial class MainWindow : AppWindow
         var inst = await _core.Instances.CreateAsync(
             NameBox.Text ?? "", SelectedVersion(), SelectedLoader());
         await RefreshInstancesAsync();
+        InstanceOverlay.IsVisible = false;
         InstanceStatus.Text = Loc.T("inst.created", inst.Name, inst.FolderName);
     });
 
@@ -665,6 +694,7 @@ public partial class MainWindow : AppWindow
 
         await _core.Instances.UpdateAsync(_editing);
         await RefreshInstancesAsync();
+        InstanceOverlay.IsVisible = false;
         InstanceStatus.Text = Loc.T("inst.saved", _editing.Name);
     });
 
@@ -882,6 +912,7 @@ public partial class MainWindow : AppWindow
             CrashLog.Write("[play] launch failed", ex);
             AppendLog(Loc.T("log.error") + ex.Message);
             PlayStatus.Text = Loc.T("status.error", ex.Message);
+            LogDrawer.IsExpanded = true;
             PlayButton.IsEnabled = true;
         }
     });
@@ -941,14 +972,54 @@ public partial class MainWindow : AppWindow
     private void StartNewInstanceFlow()
     {
         NavView.SelectedItem = NavHome;
-        _editing = null;
-        NameBox.Text = "";
-        // Default the loader to a modded one so "create" is immediately mod-capable.
-        if (LoaderCombo.SelectedIndex <= 0 && _loaders.Length > 1)
-            LoaderCombo.SelectedIndex = Array.IndexOf(_loaders, LoaderType.Fabric);
-        NameBox.Focus();
-        InstanceStatus.Text = "";
+        OpenInstanceDialog(isNew: true);
     }
+
+    /// <summary>Shows the create/edit overlay. New mode clears the form; edit mode uses the current selection.</summary>
+    private void OpenInstanceDialog(bool isNew)
+    {
+        if (isNew)
+        {
+            _editing = null;
+            NameBox.Text = "";
+            // Default the loader to a modded one so "create" is immediately mod-capable.
+            if (LoaderCombo.SelectedIndex <= 0 && _loaders.Length > 1)
+                LoaderCombo.SelectedIndex = Array.IndexOf(_loaders, LoaderType.Fabric);
+            MinRamBox.Text = "512";
+            MaxRamBox.Text = "2048";
+            JvmArgsBox.Text = "";
+            JavaPathBox.Text = "";
+            InstanceStatus.Text = "";
+            OverlayTitle.Text = Loc.T("home.newtitle");
+        }
+        else
+        {
+            // The form is kept in sync with the selection by OnInstanceSelected.
+            if (_editing == null) { Notify(Loc.T("inst.selecttoedit")); return; }
+            OverlayTitle.Text = Loc.T("home.edittitle");
+        }
+        NewInstanceButton.IsVisible = isNew;
+        SaveInstanceButton.IsVisible = !isNew;
+        InstanceOverlay.IsVisible = true;
+        NameBox.Focus();
+    }
+
+    /// <summary>Double-clicking an instance card launches it directly.</summary>
+    private void OnInstanceDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (InstancesList.SelectedIndex < 0) return;
+        OnPlay(sender, new RoutedEventArgs());
+    }
+
+    private async void OnOpenInstanceFolder(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    {
+        var idx = InstancesList.SelectedIndex;
+        if (idx < 0 || idx >= _instances.Count) { Notify(Loc.T("inst.nothingselected")); return; }
+        var dir = _core.Paths.InstanceDir(_instances[idx]);
+        Directory.CreateDirectory(dir);
+        Process.Start(new ProcessStartInfo { FileName = dir, UseShellExecute = true });
+        await Task.CompletedTask;
+    });
 
     private async void OnAddMod(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
@@ -1294,6 +1365,8 @@ public partial class MainWindow : AppWindow
             {
                 AppendLog(Loc.T("log.error") + ex.Message);
                 PlayStatus.Text = Loc.T("status.error", ex.Message);
+                // Surface the log so the error is never silent.
+                if (LogDrawer != null) LogDrawer.IsExpanded = true;
             });
         }
     }
