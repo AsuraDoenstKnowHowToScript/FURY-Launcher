@@ -30,6 +30,13 @@ public sealed class GameLauncher
     private readonly object _runGate = new();
     private readonly Dictionary<string, Process> _running = new();
 
+    /// <summary>
+    /// Java used when an instance has no Java of its own ("Auto"). Null means the
+    /// launcher manages the runtime. Set from the Settings tab to avoid a broken
+    /// Oracle "javapath" stub on PATH.
+    /// </summary>
+    public string? DefaultJavaPath { get; set; }
+
     public GameLauncher(LauncherPaths paths, LoaderInstaller loaderInstaller, IInstanceService instances, LogHub logs)
     {
         _paths = paths;
@@ -73,6 +80,12 @@ public sealed class GameLauncher
         // switching instances in the UI switches the log instead of mixing runs.
         var log = _logs.Get(instance.Id);
 
+        // The instance's Java wins; otherwise fall back to the global default the
+        // user picked in Settings (null keeps the launcher-managed runtime).
+        var configuredJava = !string.IsNullOrWhiteSpace(instance.JavaPath)
+            ? instance.JavaPath
+            : DefaultJavaPath;
+
         var minecraftDir = _paths.InstanceMinecraft(instance);
         var mcPath = new MinecraftPath(minecraftDir);
         var launcher = new MinecraftLauncher(mcPath);
@@ -94,9 +107,9 @@ public sealed class GameLauncher
             log.Append($"[install] Preparing base files for {instance.McVersion} (also fetches Java)...");
             await launcher.InstallAsync(instance.McVersion, fileProgress, byteProgress, ct).ConfigureAwait(false);
 
-            // Prefer the instance's Java, else the runtime we just downloaded (system JDK last).
-            var installerJava = !string.IsNullOrWhiteSpace(instance.JavaPath)
-                ? instance.JavaPath
+            // Prefer the configured Java, else the runtime we just downloaded (system JDK last).
+            var installerJava = !string.IsNullOrWhiteSpace(configuredJava)
+                ? configuredJava
                 : JavaLocator.FindBundledJava(minecraftDir);
 
             log.Append($"[loader] Installing {instance.Loader} for {instance.McVersion}...");
@@ -119,8 +132,8 @@ public sealed class GameLauncher
             MaximumRamMb = instance.MaxRamMb,
             MinimumRamMb = instance.MinRamMb
         };
-        if (!string.IsNullOrWhiteSpace(instance.JavaPath))
-            option.JavaPath = instance.JavaPath;
+        if (!string.IsNullOrWhiteSpace(configuredJava))
+            option.JavaPath = configuredJava;
 
         var extraArgs = SplitJvmArgs(instance.JvmArgs);
         if (extraArgs.Count > 0)

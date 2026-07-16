@@ -70,6 +70,11 @@ public partial class MainWindow : AppWindow
     private bool _suppressLangEvent; // guards the language dropdown during programmatic set
     private List<string> _versions = new(); // Minecraft versions shown in the create/edit dropdown
     private UpdateInfo? _pendingUpdate;     // newer release found on GitHub, if any
+
+    // Java runtimes detected on this machine, shared by the Settings default picker
+    // and the per-instance Java dropdown. Index 0 in both combos is always "Auto".
+    private IReadOnlyList<JavaLocator.JavaRuntime> _javaRuntimes = Array.Empty<JavaLocator.JavaRuntime>();
+    private bool _suppressJavaEvents; // guards the Java combos during programmatic fills
     private readonly SelectedInstanceService _selected = App.Services.GetRequiredService<SelectedInstanceService>();
 
     // Coalesced UI updates. The game/installer raise log + progress events far too
@@ -120,6 +125,9 @@ public partial class MainWindow : AppWindow
         NewInstanceButton.Click += OnCreateInstance;
         SaveInstanceButton.Click += OnSaveInstance;
         BrowseJavaButton.Click += OnBrowseJava;
+        DetectJavaButton.Click += async (_, _) => await SafeAsync(DetectJavaAsync);
+        DefaultJavaCombo.SelectionChanged += OnDefaultJavaChanged;
+        JavaCombo.SelectionChanged += OnInstanceJavaChanged;
 
         MicrosoftLoginButton.Click += OnMicrosoftLogin;
         MicrosoftLogoutButton.Click += OnMicrosoftLogout;
@@ -222,6 +230,9 @@ public partial class MainWindow : AppWindow
         NavMods.Content = Loc.T("nav.mods");
         NavAccounts.Content = Loc.T("nav.accounts");
         NavSettings.Content = Loc.T("nav.settings");
+        LblJavaSection.Text = Loc.T("settings.java");
+        DetectJavaButton.Content = Loc.T("btn.detectjava");
+        RebuildJavaCombos(); // refresh the "Auto" label in the current language
 
         // Instances tab
         LblInstances.Text = Loc.T("instances.list");
@@ -375,6 +386,10 @@ public partial class MainWindow : AppWindow
         // Restore the saved UI language before anything else so first paint is localized.
         var settings = await _core.Settings.LoadAsync();
         ApplySavedLanguage(settings.Language);
+
+        // Apply the saved default Java and scan the machine for runtimes.
+        _core.Game.DefaultJavaPath = settings.DefaultJavaPath;
+        await DetectJavaAsync();
 
         await LoadVersionsAsync();
         await RefreshInstancesAsync();
@@ -671,6 +686,7 @@ public partial class MainWindow : AppWindow
         MaxRamBox.Text = _editing.MaxRamMb.ToString();
         JvmArgsBox.Text = _editing.JvmArgs;
         JavaPathBox.Text = _editing.JavaPath ?? "";
+        SyncInstanceJavaCombo();
         InstanceStatus.Text = Loc.T("inst.editing", _editing.Name);
 
         // The instance list is the single selector: keep the (now hidden) per-screen
@@ -766,6 +782,86 @@ public partial class MainWindow : AppWindow
         var path = files.FirstOrDefault()?.TryGetLocalPath();
         if (!string.IsNullOrEmpty(path)) JavaPathBox.Text = path;
     });
+
+    /// <summary>Rescans the machine for Java runtimes and repopulates both pickers.</summary>
+    private async Task DetectJavaAsync()
+    {
+        JavaStatus.Text = Loc.T("java.scanning");
+        _javaRuntimes = await Task.Run(JavaLocator.DiscoverAll);
+        RebuildJavaCombos();
+
+        JavaStatus.Text = _javaRuntimes.Count > 0
+            ? Loc.T("java.found", _javaRuntimes.Count)
+            : Loc.T("java.none");
+
+        var stub = JavaLocator.OracleStubPath();
+        JavaOracleWarn.IsVisible = stub != null;
+        JavaOracleWarn.Text = stub != null ? Loc.T("java.oraclewarn") : "";
+    }
+
+    /// <summary>(Re)fills both Java combos from the cached runtimes; index 0 is "Auto".</summary>
+    private void RebuildJavaCombos()
+    {
+        var items = new List<string> { Loc.T("java.auto") };
+        foreach (var r in _javaRuntimes) items.Add(r.Display);
+
+        _suppressJavaEvents = true;
+        DefaultJavaCombo.ItemsSource = items;
+        JavaCombo.ItemsSource = new List<string>(items);
+
+        // Reselect the saved default (Auto when unset or no longer present).
+        var def = _core.Game.DefaultJavaPath;
+        var i = string.IsNullOrEmpty(def) ? -1 : IndexOfRuntime(def);
+        DefaultJavaCombo.SelectedIndex = i >= 0 ? i + 1 : 0;
+        SyncJavaComboToBox();
+        _suppressJavaEvents = false;
+    }
+
+    /// <summary>Points the instance Java combo at whatever JavaPathBox holds (suppressed-safe).</summary>
+    private void SyncInstanceJavaCombo()
+    {
+        _suppressJavaEvents = true;
+        SyncJavaComboToBox();
+        _suppressJavaEvents = false;
+    }
+
+    private void SyncJavaComboToBox()
+    {
+        var path = JavaPathBox.Text;
+        if (string.IsNullOrWhiteSpace(path)) { JavaCombo.SelectedIndex = 0; return; } // Auto
+        var i = IndexOfRuntime(path.Trim());
+        JavaCombo.SelectedIndex = i >= 0 ? i + 1 : -1; // custom path not in the list → blank
+    }
+
+    private int IndexOfRuntime(string path)
+    {
+        for (int i = 0; i < _javaRuntimes.Count; i++)
+            if (string.Equals(_javaRuntimes[i].Path, path, StringComparison.OrdinalIgnoreCase))
+                return i;
+        return -1;
+    }
+
+    private async void OnDefaultJavaChanged(object? sender, SelectionChangedEventArgs e) => await SafeAsync(async () =>
+    {
+        if (_suppressJavaEvents) return;
+        var idx = DefaultJavaCombo.SelectedIndex;
+        string? path = idx > 0 && idx - 1 < _javaRuntimes.Count ? _javaRuntimes[idx - 1].Path : null;
+
+        _core.Game.DefaultJavaPath = path;
+        var s = await _core.Settings.LoadAsync();
+        s.DefaultJavaPath = path;
+        await _core.Settings.SaveAsync(s);
+        JavaStatus.Text = Loc.T("java.defaultsaved");
+    });
+
+    private void OnInstanceJavaChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressJavaEvents) return;
+        var idx = JavaCombo.SelectedIndex;
+        if (idx == 0) { JavaPathBox.Text = ""; return; }          // Auto
+        if (idx > 0 && idx - 1 < _javaRuntimes.Count)             // a detected runtime
+            JavaPathBox.Text = _javaRuntimes[idx - 1].Path;
+    }
 
     private LoaderType SelectedLoader()
     {
@@ -1083,6 +1179,7 @@ public partial class MainWindow : AppWindow
             MaxRamBox.Text = "2048";
             JvmArgsBox.Text = "";
             JavaPathBox.Text = "";
+            SyncInstanceJavaCombo();
             InstanceStatus.Text = "";
             OverlayTitle.Text = Loc.T("home.newtitle");
         }

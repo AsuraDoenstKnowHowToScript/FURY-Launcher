@@ -74,6 +74,118 @@ public static class JavaLocator
         return null;
     }
 
+    /// <summary>A Java runtime found on this machine: its launcher exe, major version and full version.</summary>
+    public sealed record JavaRuntime(string Path, int Major, string Version)
+    {
+        /// <summary>"Java 17 · 17.0.9" style label for the UI.</summary>
+        public string Display =>
+            string.IsNullOrEmpty(Version) || Version == Major.ToString()
+                ? $"Java {Major}"
+                : $"Java {Major} · {Version}";
+    }
+
+    /// <summary>
+    /// Enumerates every distinct Java runtime found via the common install roots,
+    /// <c>JAVA_HOME</c> and <c>PATH</c>, newest major first. The Oracle "javapath"
+    /// stub is skipped here on purpose (see <see cref="OracleStubPath"/>). Does file
+    /// I/O, so call it off the UI thread.
+    /// </summary>
+    public static IReadOnlyList<JavaRuntime> DiscoverAll()
+    {
+        var byPath = new Dictionary<string, JavaRuntime>(StringComparer.OrdinalIgnoreCase);
+
+        void Add(string exe)
+        {
+            try
+            {
+                if (!File.Exists(exe)) return;
+                var full = Path.GetFullPath(exe);
+                if (IsOracleStub(full) || byPath.ContainsKey(full)) return;
+                var (major, version) = ProbeVersion(full);
+                if (major > 0) byPath[full] = new JavaRuntime(full, major, version);
+            }
+            catch { /* skip unreadable entries */ }
+        }
+
+        foreach (var j in Discover()) Add(j.Path);
+
+        var home = Environment.GetEnvironmentVariable("JAVA_HOME");
+        if (!string.IsNullOrEmpty(home))
+        {
+            Add(Path.Combine(home, "bin", "java.exe"));
+            Add(Path.Combine(home, "bin", "java"));
+        }
+
+        var path = Environment.GetEnvironmentVariable("PATH") ?? "";
+        foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
+            Add(Path.Combine(dir, "java.exe"));
+            Add(Path.Combine(dir, "java"));
+        }
+
+        return byPath.Values.OrderByDescending(j => j.Major).ThenBy(j => j.Path).ToList();
+    }
+
+    /// <summary>
+    /// The Oracle "javapath" launcher stub, if it exists on this PC. These shim exes
+    /// under Common Files/ProgramData forward to whatever Oracle runtime was last
+    /// installed; once that runtime is removed they still sit at the front of PATH and
+    /// fail with "could not find java.dll" / "Could not find Java SE Runtime Environment".
+    /// </summary>
+    public static string? OracleStubPath()
+    {
+        foreach (var root in new[]
+                 {
+                     Environment.GetEnvironmentVariable("CommonProgramFiles"),
+                     Environment.GetEnvironmentVariable("CommonProgramFiles(x86)"),
+                     Environment.GetEnvironmentVariable("ProgramData")
+                 })
+        {
+            if (string.IsNullOrEmpty(root)) continue;
+            var stub = Path.Combine(root, "Oracle", "Java", "javapath", "java.exe");
+            if (File.Exists(stub)) return stub;
+        }
+        return null;
+    }
+
+    private static bool IsOracleStub(string exe)
+        => exe.Replace('/', '\\').Contains(@"\Oracle\Java\javapath\", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Reads the runtime's version from its <c>release</c> file, else the folder name.</summary>
+    private static (int Major, string Version) ProbeVersion(string exe)
+    {
+        try
+        {
+            var home = Path.GetDirectoryName(Path.GetDirectoryName(exe)); // .../bin/java.exe → home
+            if (home != null)
+            {
+                var release = Path.Combine(home, "release");
+                if (File.Exists(release))
+                {
+                    var m = Regex.Match(File.ReadAllText(release), "JAVA_VERSION=\"([^\"]+)\"");
+                    if (m.Success)
+                    {
+                        var ver = m.Groups[1].Value;
+                        return (MajorFromVersion(ver), ver);
+                    }
+                }
+
+                var byName = MajorFromName(Path.GetFileName(home));
+                if (byName > 0) return (byName, byName.ToString());
+            }
+        }
+        catch { /* fall through */ }
+        return (0, "");
+    }
+
+    private static int MajorFromVersion(string v)
+    {
+        var m = Regex.Match(v, @"^1\.(\d+)");       // legacy "1.8.0_382" → 8
+        if (m.Success) return int.TryParse(m.Groups[1].Value, out var legacy) ? legacy : 0;
+        m = Regex.Match(v, @"^(\d+)");              // "17.0.9" → 17
+        return m.Success && int.TryParse(m.Groups[1].Value, out var major) ? major : 0;
+    }
+
     private static int DesiredMajor(string mcVersion)
     {
         // Parse "1.<minor>(.<patch>)".

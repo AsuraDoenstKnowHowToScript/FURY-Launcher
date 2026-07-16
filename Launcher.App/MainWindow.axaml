@@ -233,6 +233,7 @@
                                             <TextBlock x:Name="LblJvmArgs" Text="JVM arguments (space-separated)" Foreground="{DynamicResource TextSecondary}"/>
                                             <TextBox x:Name="JvmArgsBox" Classes="Mono"/>
                                             <TextBlock x:Name="LblJavaPath" Text="Java path (empty = managed)" Foreground="{DynamicResource TextSecondary}"/>
+                                            <ComboBox x:Name="JavaCombo" HorizontalAlignment="Stretch" Margin="0,0,0,4"/>
                                             <DockPanel>
                                                 <Button x:Name="BrowseJavaButton" Content="..." DockPanel.Dock="Right" Margin="6,0,0,0"/>
                                                 <TextBox x:Name="JavaPathBox" Classes="Mono"/>
@@ -469,6 +470,17 @@
                         <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
                             <Button x:Name="CheckUpdatesButton" Content="Check for updates"/>
                             <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Java: detect real runtimes and pick a default, dodging the Oracle stub. -->
+                        <StackPanel Spacing="6" Margin="0,20,0,0">
+                            <TextBlock x:Name="LblJavaSection" Classes="Subtitle" Text="Java"/>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button x:Name="DetectJavaButton" Content="Detect / fix Java"/>
+                                <ComboBox x:Name="DefaultJavaCombo" Width="360" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock x:Name="JavaStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+                            <TextBlock x:Name="JavaOracleWarn" Text="" TextWrapping="Wrap" IsVisible="False" Foreground="{DynamicResource Warning}"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

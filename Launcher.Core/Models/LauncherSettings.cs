@@ -14,4 +14,11 @@ public sealed class LauncherSettings
 
     /// <summary>UI language code (BCP-47-ish): en, pt, nl, zh-Hant, ru. Default English.</summary>
     public string Language { get; set; } = "en";
+
+    /// <summary>
+    /// Default Java executable used when an instance is on "Auto". Null lets the
+    /// launcher manage the runtime itself (recommended). Set from the Settings tab
+    /// to steer clear of a broken Oracle "javapath" stub.
+    /// </summary>
+    public string? DefaultJavaPath { get; set; }
 }
