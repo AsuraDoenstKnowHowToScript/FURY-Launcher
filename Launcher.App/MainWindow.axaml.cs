@@ -80,6 +80,12 @@ public partial class MainWindow : AppWindow
     private readonly Queue<string> _pendingLog = new();
     private readonly LinkedList<string> _logLines = new();
     private const int MaxLogLines = 500;
+
+    // The log panel mirrors ONE instance's session at a time. Instances launched
+    // in the background keep filling their own session; switching the selection
+    // swaps which session is shown (see ShowLogFor), never mixing runs.
+    private LogSession? _displayedSession;
+    private Action<string>? _sessionSink;
     private double? _pendingProgress;
     private string? _pendingStatus;
     private DispatcherTimer? _uiTimer;
@@ -118,7 +124,12 @@ public partial class MainWindow : AppWindow
         MicrosoftLoginButton.Click += OnMicrosoftLogin;
         MicrosoftLogoutButton.Click += OnMicrosoftLogout;
         PlayButton.Click += OnPlay;
-        StopButton.Click += (_, _) => { _launchCts?.Cancel(); _core.Game.Stop(); };
+        StopButton.Click += (_, _) =>
+        {
+            _launchCts?.Cancel();
+            var id = _selected.Current?.Id;
+            if (id != null) _core.Game.Stop(id);
+        };
 
         ModInstanceCombo.SelectionChanged += (_, _) => RefreshMods();
         RefreshModsButton.Click += (_, _) => RefreshMods();
@@ -182,15 +193,17 @@ public partial class MainWindow : AppWindow
         {
             lock (_uiLock) _pendingStatus = $"{f.EventType}: {f.Name} ({f.Progressed}/{f.Total})";
         };
-        _core.Game.Log += (_, line) => AppendLog(line);
-        // RunningChanged is rare (twice a session) and flips button state, so keep it immediate.
-        _core.Game.RunningChanged += (_, running) => Dispatcher.UIThread.Post(() =>
+        // Game/installer log lines are written straight to each instance's session
+        // by the Core; the UI only listens to the session it is currently showing.
+        // RunningChanged is rare and per-instance, so update the controls immediately
+        // but only when the event is about the instance the user has selected.
+        _core.Game.RunningChanged += (_, e) => Dispatcher.UIThread.Post(() =>
         {
-            StopButton.IsEnabled = running;
-            PlayButton.IsEnabled = !running;
-            PlayButtonLabel.Text = running ? Loc.T("status.running") : Loc.T("btn.play");
-            PlayStatus.Text = running ? Loc.T("status.running") : Loc.T("status.ended");
+            if (e.InstanceId == (_selected.Current?.Id ?? "")) ApplyRunState(e.Running);
         });
+
+        // Start on the general session so pre-selection logs (auth, updates) still show.
+        ShowLogFor(LogHub.GeneralId);
 
         _uiTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         _uiTimer.Tick += OnUiTick;
@@ -691,6 +704,15 @@ public partial class MainWindow : AppWindow
         var inst = idx >= 0 && idx < _instances.Count ? _instances[idx] : null;
         _selected.Current = inst;
         ModsInstanceName.Text = inst?.Name ?? "—";
+
+        // Follow the selection: show this instance's log session and reflect whether
+        // it is currently running (it may have been launched in the background).
+        ShowLogFor(inst?.Id ?? LogHub.GeneralId);
+        var running = inst != null && _core.Game.IsRunning(inst.Id);
+        StopButton.IsEnabled = running;
+        PlayButton.IsEnabled = !running;
+        PlayButtonLabel.Text = running ? Loc.T("status.running") : Loc.T("btn.play");
+
         // Eagerly refresh the mods list so it's already correct when the Mods tab opens.
         RefreshMods();
     }
@@ -888,6 +910,9 @@ public partial class MainWindow : AppWindow
         if (idx < 0 || idx >= _instances.Count) { PlayStatus.Text = Loc.T("common.selectinstance"); return; }
         var inst = _instances[idx];
 
+        // Show this instance's log for the launch, even if it differs from the selection.
+        ShowLogFor(inst.Id);
+
         MSession session;
         OfflineProfile? offlineProfile = null;
         if (IsMicrosoftProfileSelected())
@@ -944,10 +969,47 @@ public partial class MainWindow : AppWindow
         }
     });
 
-    /// <summary>Queues a log line from any thread; the UI timer renders it (capped/batched).</summary>
+    /// <summary>
+    /// Writes a UI-side log line (auth, mods, skins, errors) to the session currently
+    /// shown. Game output is written to its own instance session by the Core instead.
+    /// Thread-safe: the session marshals the line onto the UI render timer.
+    /// </summary>
     private void AppendLog(string line)
+        => (_displayedSession ?? _core.Logs.Get(LogHub.GeneralId)).Append(line);
+
+    /// <summary>
+    /// Points the log panel at one instance's session: detaches the old session,
+    /// reloads the view from the new session's history, and streams its new lines.
+    /// Runs on the UI thread (touches LogBox).
+    /// </summary>
+    private void ShowLogFor(string? instanceId)
     {
-        lock (_uiLock) _pendingLog.Enqueue(line);
+        var session = _core.Logs.Get(instanceId);
+        if (ReferenceEquals(session, _displayedSession)) return;
+
+        if (_displayedSession != null && _sessionSink != null)
+            _displayedSession.LineAdded -= _sessionSink;
+
+        _displayedSession = session;
+        _sessionSink = line => { lock (_uiLock) _pendingLog.Enqueue(line); };
+        session.LineAdded += _sessionSink;
+
+        // Drop any pending lines from the previous session and rebuild from history.
+        lock (_uiLock) _pendingLog.Clear();
+        _logLines.Clear();
+        foreach (var l in session.Snapshot()) _logLines.AddLast(l);
+        while (_logLines.Count > MaxLogLines) _logLines.RemoveFirst();
+        LogBox.Text = string.Join(Environment.NewLine, _logLines);
+        LogBox.CaretIndex = LogBox.Text.Length;
+    }
+
+    /// <summary>Reflects a running/stopped state on the Play/Stop controls.</summary>
+    private void ApplyRunState(bool running)
+    {
+        StopButton.IsEnabled = running;
+        PlayButton.IsEnabled = !running;
+        PlayButtonLabel.Text = running ? Loc.T("status.running") : Loc.T("btn.play");
+        PlayStatus.Text = running ? Loc.T("status.running") : Loc.T("status.ended");
     }
 
     // =============================== MODS ===============================

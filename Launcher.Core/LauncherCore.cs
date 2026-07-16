@@ -19,6 +19,7 @@ public sealed class LauncherCore : IDisposable
     public LauncherPaths Paths { get; }
     public InstanceService Instances { get; }
     public AuthManager Auth { get; }
+    public LogHub Logs { get; }
     public GameLauncher Game { get; }
     public ModService Mods { get; }
     public PackService Packs { get; }
@@ -37,7 +38,8 @@ public sealed class LauncherCore : IDisposable
 
         Instances = new InstanceService(Paths);
         Auth = new AuthManager(Paths);
-        Game = new GameLauncher(Paths, new LoaderInstaller(_http), Instances);
+        Logs = new LogHub();
+        Game = new GameLauncher(Paths, new LoaderInstaller(_http), Instances, Logs);
         Mods = new ModService(Paths, new ModrinthClient(_http));
         Packs = new PackService(Paths, Instances);
         Mrpacks = new MrpackService(_http, Paths, Instances);

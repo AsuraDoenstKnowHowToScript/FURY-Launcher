@@ -23,14 +23,19 @@ public sealed class GameLauncher
     private readonly LauncherPaths _paths;
     private readonly LoaderInstaller _loaderInstaller;
     private readonly IInstanceService _instances;
+    private readonly LogHub _logs;
 
-    private Process? _current;
+    // One live process per instance id. Instances run independently and in the
+    // background, so this is keyed rather than a single "current" process.
+    private readonly object _runGate = new();
+    private readonly Dictionary<string, Process> _running = new();
 
-    public GameLauncher(LauncherPaths paths, LoaderInstaller loaderInstaller, IInstanceService instances)
+    public GameLauncher(LauncherPaths paths, LoaderInstaller loaderInstaller, IInstanceService instances, LogHub logs)
     {
         _paths = paths;
         _loaderInstaller = loaderInstaller;
         _instances = instances;
+        _logs = logs;
     }
 
     /// <summary>Coarse file-count progress (which file, how many done).</summary>
@@ -39,13 +44,21 @@ public sealed class GameLauncher
     /// <summary>Byte-level download progress (0..1 ratio).</summary>
     public event EventHandler<ByteProgressInfo>? ByteProgress;
 
-    /// <summary>A line of game/installer log output.</summary>
-    public event EventHandler<string>? Log;
+    /// <summary>Raised with the instance id when its process starts (true) or exits (false).</summary>
+    public event EventHandler<(string InstanceId, bool Running)>? RunningChanged;
 
-    /// <summary>Raised true when the game process starts, false when it exits.</summary>
-    public event EventHandler<bool>? RunningChanged;
+    /// <summary>True if the given instance currently has a live process.</summary>
+    public bool IsRunning(string instanceId)
+    {
+        lock (_runGate)
+            return _running.TryGetValue(instanceId, out var p) && p is { HasExited: false };
+    }
 
-    public bool IsRunning => _current is { HasExited: false };
+    /// <summary>True if any instance is currently running.</summary>
+    public bool IsAnyRunning
+    {
+        get { lock (_runGate) return _running.Values.Any(p => !p.HasExited); }
+    }
 
     /// <summary>
     /// Installs the loader (if needed), installs game files, then starts Minecraft.
@@ -53,8 +66,12 @@ public sealed class GameLauncher
     /// <returns>The started game process (already reading its output).</returns>
     public async Task<Process> LaunchAsync(Instance instance, MSession session, CancellationToken ct = default)
     {
-        if (IsRunning)
-            throw new InvalidOperationException("A game instance is already running.");
+        if (IsRunning(instance.Id))
+            throw new InvalidOperationException("This instance is already running.");
+
+        // Every line for this launch goes to the instance's own log session, so
+        // switching instances in the UI switches the log instead of mixing runs.
+        var log = _logs.Get(instance.Id);
 
         var minecraftDir = _paths.InstanceMinecraft(instance);
         var mcPath = new MinecraftPath(minecraftDir);
@@ -74,7 +91,7 @@ public sealed class GameLauncher
         {
             // Fetch the base game files first (this also downloads a Java runtime) so the
             // Forge/NeoForge installer can run on machines with no system JDK installed.
-            Log?.Invoke(this, $"[install] Preparing base files for {instance.McVersion} (also fetches Java)...");
+            log.Append($"[install] Preparing base files for {instance.McVersion} (also fetches Java)...");
             await launcher.InstallAsync(instance.McVersion, fileProgress, byteProgress, ct).ConfigureAwait(false);
 
             // Prefer the instance's Java, else the runtime we just downloaded (system JDK last).
@@ -82,17 +99,17 @@ public sealed class GameLauncher
                 ? instance.JavaPath
                 : JavaLocator.FindBundledJava(minecraftDir);
 
-            Log?.Invoke(this, $"[loader] Installing {instance.Loader} for {instance.McVersion}...");
-            var loaderLog = new Progress<string>(line => Log?.Invoke(this, line));
+            log.Append($"[loader] Installing {instance.Loader} for {instance.McVersion}...");
+            var loaderLog = new Progress<string>(line => log.Append(line));
             instance.LoaderVersion = await _loaderInstaller
                 .InstallAsync(instance, launcher, minecraftDir, loaderLog, ct, installerJava).ConfigureAwait(false);
             await _instances.UpdateAsync(instance, ct).ConfigureAwait(false);
-            Log?.Invoke(this, $"[loader] Installed: {instance.LoaderVersion}");
+            log.Append($"[loader] Installed: {instance.LoaderVersion}");
         }
 
         // 2) Install/verify game files (manifests, libraries, assets, java runtime).
         var versionId = instance.LaunchVersionId;
-        Log?.Invoke(this, $"[install] Verifying files for {versionId}...");
+        log.Append($"[install] Verifying files for {versionId}...");
         await launcher.InstallAsync(versionId, fileProgress, byteProgress, ct).ConfigureAwait(false);
 
         // 3) Build the launch options from the instance config.
@@ -109,37 +126,52 @@ public sealed class GameLauncher
         if (extraArgs.Count > 0)
             option.ExtraJvmArguments = extraArgs.Select(a => new MArgument(a));
 
-        Log?.Invoke(this, $"[launch] Starting {instance.Name} as {session.Username}...");
+        log.Append($"[launch] Starting {instance.Name} as {session.Username}...");
         var process = await launcher.BuildProcessAsync(versionId, option, ct).ConfigureAwait(false);
 
         // 4) Capture the process output and lifetime.
+        var instanceId = instance.Id;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.CreateNoWindow = true;
         process.EnableRaisingEvents = true;
-        process.OutputDataReceived += (_, e) => { if (e.Data != null) Log?.Invoke(this, e.Data); };
-        process.ErrorDataReceived += (_, e) => { if (e.Data != null) Log?.Invoke(this, e.Data); };
+        process.OutputDataReceived += (_, e) => { if (e.Data != null) log.Append(e.Data); };
+        process.ErrorDataReceived += (_, e) => { if (e.Data != null) log.Append(e.Data); };
         process.Exited += (_, _) =>
         {
-            RunningChanged?.Invoke(this, false);
-            _current = null;
+            lock (_runGate)
+            {
+                if (_running.TryGetValue(instanceId, out var p) && ReferenceEquals(p, process))
+                    _running.Remove(instanceId);
+            }
+            RunningChanged?.Invoke(this, (instanceId, false));
         };
 
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        _current = process;
-        RunningChanged?.Invoke(this, true);
+        lock (_runGate) _running[instanceId] = process;
+        RunningChanged?.Invoke(this, (instanceId, true));
         return process;
     }
 
-    /// <summary>Force-stops the running game, if any.</summary>
-    public void Stop()
+    /// <summary>Force-stops the given instance's game, if it is running.</summary>
+    public void Stop(string instanceId)
     {
-        var p = _current;
+        Process? p;
+        lock (_runGate) _running.TryGetValue(instanceId, out p);
         if (p is { HasExited: false })
             p.Kill(entireProcessTree: true);
+    }
+
+    /// <summary>Force-stops every running instance (e.g. on app shutdown).</summary>
+    public void StopAll()
+    {
+        Process[] all;
+        lock (_runGate) all = _running.Values.ToArray();
+        foreach (var p in all)
+            if (!p.HasExited) p.Kill(entireProcessTree: true);
     }
 
     private static List<string> SplitJvmArgs(string raw)
