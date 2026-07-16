@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:uic="using:FluentAvalonia.UI.Controls">
 
-    <!-- Global text defaults. Text is NEVER the accent colour — always a grey.
+    <!-- Global text defaults. Text is never the accent colour, always a grey.
          SemiBold weight: lighter weights of Outfit read too thin for low-vision users. -->
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>

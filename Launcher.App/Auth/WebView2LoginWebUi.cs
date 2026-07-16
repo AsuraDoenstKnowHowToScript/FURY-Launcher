@@ -17,7 +17,7 @@ namespace Launcher.App;
 /// <summary>
 /// Embedded Microsoft sign-in: hosts a WebView2 in a small WinForms window on its own
 /// STA thread, navigates to the OAuth page, and captures the authorization code the
-/// moment the browser reaches the registered <c>oauth20_desktop.srf</c> redirect — no
+/// moment the browser reaches the registered <c>oauth20_desktop.srf</c> redirect, with no
 /// system browser tab and no copy/paste. Requires the WebView2 runtime (present on
 /// Windows 10/11 by default); callers should check <see cref="IsRuntimeAvailable"/>.
 /// </summary>

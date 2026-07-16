@@ -111,8 +111,8 @@ public static class Loc
             ["label.skinpreview"] = "Skin (raw PNG)",
             ["label.facepreview"] = "Face (8x8)",
             ["label.capepreview"] = "Cape",
-            ["skin.help1"] = "The skin and cape are saved ON THE PROFILE (they persist even if you change the nick). When you play OFFLINE with this profile, they are applied automatically (the launcher installs CustomSkinLoader into the instance — requires a Forge/Fabric/NeoForge loader). The 'Apply in-game' button does it right away, without waiting for the next launch. Microsoft account: the skin comes from Mojang, this isn't needed.",
-            ["skin.help2"] = "Cape: CustomSkinLoader also applies a local cape (offline). Alternatively, cape via OptiFine. Only works with a valid PNG — a WebP/JPG renamed to .png won't load.",
+            ["skin.help1"] = "The skin and cape are stored on the profile, so they stay even if you change the nick. When you play offline with this profile they are applied automatically; the launcher installs CustomSkinLoader into the instance, which needs a Forge, Fabric, or NeoForge loader. Use 'Apply in-game' to apply them right away instead of waiting for the next launch. On a Microsoft account the skin comes from Mojang, so this is not needed.",
+            ["skin.help2"] = "CustomSkinLoader also applies a local cape when you play offline. You can also use a cape through OptiFine. Only a valid PNG works; a WebP or JPG renamed to .png will not load.",
             ["label.language"] = "Language:",
             ["about.description"] = "Minecraft launcher. Isolated instances, Forge/NeoForge straight from Maven (no ad-links), .frpack modpacks and per-profile skin/cape display.",
             ["about.version"] = "version {0}",
@@ -217,7 +217,7 @@ public static class Loc
             ["warn.dontshow"] = "Don't show again",
             ["warn.nicktitle"] = "Change offline account nick",
             ["warn.nickack"] = "I understand",
-            ["warn.nickmsg"] = "You are about to rename '{0}' to '{1}'.\n\nAn OFFLINE account is not a Microsoft account: it is identified by a UUID generated from the NAME. In other words, the nick IS the identity.\n\nIf you have progress on servers that accept offline/cracked accounts (e.g. MushMC) — rank, money, homes, stats — it is all tied to the UUID of the CURRENT nick. If you change the nick, the server sees you as a NEW player and you lose access to that progress (on a Microsoft account this wouldn't happen, because the UUID is fixed and persistent).\n\nThe profile's skin and cape stay saved here in the launcher — they are not lost.",
+            ["warn.nickmsg"] = "You are about to rename '{0}' to '{1}'.\n\nAn offline account is not a Microsoft account. It is identified by a UUID generated from the name, so the nick is effectively the identity.\n\nIf you have progress on servers that accept offline accounts (for example MushMC), such as rank, money, homes, or stats, all of it is tied to the UUID of the current nick. If you change the nick, the server treats you as a new player and you lose access to that progress. This does not happen on a Microsoft account, where the UUID is fixed and permanent.\n\nThe profile's skin and cape stay saved here in the launcher and are not lost.",
         },
 
         [Language.Portuguese] = new()
@@ -288,8 +288,8 @@ public static class Loc
             ["label.skinpreview"] = "Skin (PNG cru)",
             ["label.facepreview"] = "Rosto (8x8)",
             ["label.capepreview"] = "Capa",
-            ["skin.help1"] = "A skin e a capa ficam salvas NO PERFIL (persistem mesmo se você trocar o nick). Ao jogar OFFLINE com este perfil, elas são aplicadas automaticamente (o launcher instala o CustomSkinLoader na instância — precisa de loader Forge/Fabric/NeoForge). O botão 'Aplicar no jogo' faz isso na hora, sem esperar o próximo launch. Conta Microsoft: a skin vem do Mojang, não precisa disto.",
-            ["skin.help2"] = "Capa: o CustomSkinLoader também aplica capa local (offline). Alternativamente, capa por OptiFine. Só funciona com PNG válido — WebP/JPG renomeado para .png não carrega.",
+            ["skin.help1"] = "A skin e a capa ficam salvas no perfil, então continuam mesmo se você trocar o nick. Ao jogar offline com este perfil, elas são aplicadas automaticamente; o launcher instala o CustomSkinLoader na instância, o que exige um loader Forge, Fabric ou NeoForge. Use 'Aplicar no jogo' para aplicar na hora, sem esperar o próximo início. Em conta Microsoft a skin vem do Mojang, então isto não é necessário.",
+            ["skin.help2"] = "O CustomSkinLoader também aplica uma capa local quando você joga offline. Você também pode usar uma capa pelo OptiFine. Só funciona com um PNG válido; um WebP ou JPG renomeado para .png não carrega.",
             ["label.language"] = "Idioma:",
             ["about.description"] = "Launcher de Minecraft. Instâncias isoladas, Forge/NeoForge direto do Maven (sem adfoc.us), modpacks .frpack e exibição de skin/capa por perfil.",
             ["about.version"] = "versão {0}",
@@ -394,7 +394,7 @@ public static class Loc
             ["warn.dontshow"] = "Não mostrar novamente",
             ["warn.nicktitle"] = "Trocar o nick da conta offline",
             ["warn.nickack"] = "Estou ciente",
-            ["warn.nickmsg"] = "Você vai renomear '{0}' para '{1}'.\n\nConta OFFLINE não é uma conta Microsoft: ela é identificada por um UUID gerado a partir do NOME. Ou seja, o nick É a identidade.\n\nSe você tem progresso em servidores que aceitam conta offline/cracked (ex.: MushMC) — rank, dinheiro, casas, stats — tudo isso está preso ao UUID do nick ATUAL. Ao mudar o nick, o servidor te vê como um jogador NOVO e você perde o acesso a esse progresso (numa conta Microsoft isso não aconteceria, porque o UUID é fixo e persistente).\n\nA skin e a capa do perfil continuam salvas aqui no launcher — não se perdem.",
+            ["warn.nickmsg"] = "Você vai renomear '{0}' para '{1}'.\n\nUma conta offline não é uma conta Microsoft. Ela é identificada por um UUID gerado a partir do nome, então o nick é, na prática, a identidade.\n\nSe você tem progresso em servidores que aceitam contas offline (por exemplo, MushMC), como rank, dinheiro, casas ou estatísticas, tudo isso está ligado ao UUID do nick atual. Ao mudar o nick, o servidor passa a te ver como um jogador novo e você perde o acesso a esse progresso. Em uma conta Microsoft isso não acontece, porque o UUID é fixo e permanente.\n\nA skin e a capa do perfil continuam salvas aqui no launcher e não se perdem.",
         },
 
         [Language.Dutch] = new()
@@ -465,8 +465,8 @@ public static class Loc
             ["label.skinpreview"] = "Skin (ruwe PNG)",
             ["label.facepreview"] = "Gezicht (8x8)",
             ["label.capepreview"] = "Cape",
-            ["skin.help1"] = "De skin en cape worden opgeslagen OP HET PROFIEL (ze blijven behouden, zelfs als je je nick wijzigt). Wanneer je OFFLINE speelt met dit profiel, worden ze automatisch toegepast (de launcher installeert CustomSkinLoader in de instantie — vereist een Forge/Fabric/NeoForge-loader). De knop 'In spel toepassen' doet dit direct, zonder op de volgende start te wachten. Microsoft-account: de skin komt van Mojang, dit is dan niet nodig.",
-            ["skin.help2"] = "Cape: CustomSkinLoader past ook een lokale cape toe (offline). Als alternatief een cape via OptiFine. Werkt alleen met een geldige PNG — een WebP/JPG die is hernoemd naar .png laadt niet.",
+            ["skin.help1"] = "De skin en cape worden op het profiel opgeslagen, dus ze blijven behouden ook als je je nick wijzigt. Wanneer je offline speelt met dit profiel worden ze automatisch toegepast; de launcher installeert CustomSkinLoader in de instantie, waarvoor een Forge-, Fabric- of NeoForge-loader nodig is. Gebruik 'In spel toepassen' om ze meteen toe te passen, zonder op de volgende start te wachten. Bij een Microsoft-account komt de skin van Mojang, dus dan is dit niet nodig.",
+            ["skin.help2"] = "CustomSkinLoader past ook een lokale cape toe wanneer je offline speelt. Je kunt ook een cape via OptiFine gebruiken. Werkt alleen met een geldige PNG; een WebP of JPG die is hernoemd naar .png laadt niet.",
             ["label.language"] = "Taal:",
             ["about.description"] = "Minecraft-launcher. Geïsoleerde instanties, Forge/NeoForge rechtstreeks van Maven (zonder ad-links), .frpack-modpacks en skin/cape-weergave per profiel.",
             ["about.version"] = "versie {0}",
@@ -571,7 +571,7 @@ public static class Loc
             ["warn.dontshow"] = "Niet meer tonen",
             ["warn.nicktitle"] = "Nick van offline-account wijzigen",
             ["warn.nickack"] = "Ik begrijp het",
-            ["warn.nickmsg"] = "Je staat op het punt '{0}' te hernoemen naar '{1}'.\n\nEen OFFLINE-account is geen Microsoft-account: het wordt geïdentificeerd door een UUID die is gegenereerd op basis van de NAAM. Met andere woorden, de nick IS de identiteit.\n\nAls je voortgang hebt op servers die offline/cracked-accounts accepteren (bijv. MushMC) — rang, geld, huizen, statistieken — dan is die allemaal gekoppeld aan de UUID van de HUIDIGE nick. Als je de nick wijzigt, ziet de server je als een NIEUWE speler en verlies je de toegang tot die voortgang (bij een Microsoft-account zou dit niet gebeuren, omdat de UUID vast en blijvend is).\n\nDe skin en cape van het profiel blijven hier in de launcher opgeslagen — die gaan niet verloren.",
+            ["warn.nickmsg"] = "Je staat op het punt '{0}' te hernoemen naar '{1}'.\n\nEen offline-account is geen Microsoft-account. Het wordt geïdentificeerd door een UUID die op basis van de naam wordt gegenereerd, dus de nick is in feite de identiteit.\n\nAls je voortgang hebt op servers die offline-accounts accepteren (bijvoorbeeld MushMC), zoals rang, geld, huizen of statistieken, dan is die allemaal gekoppeld aan de UUID van de huidige nick. Als je de nick wijzigt, ziet de server je als een nieuwe speler en verlies je de toegang tot die voortgang. Bij een Microsoft-account gebeurt dit niet, omdat de UUID vast en permanent is.\n\nDe skin en cape van het profiel blijven hier in de launcher opgeslagen en gaan niet verloren.",
         },
 
         [Language.ChineseTraditional] = new()
@@ -642,8 +642,8 @@ public static class Loc
             ["label.skinpreview"] = "皮膚（原始 PNG）",
             ["label.facepreview"] = "臉部（8x8）",
             ["label.capepreview"] = "披風",
-            ["skin.help1"] = "皮膚與披風會儲存在「設定檔」中（即使你更改暱稱也會保留）。當你使用此設定檔以離線方式遊玩時，它們會自動套用（啟動器會在該實例安裝 CustomSkinLoader — 需要 Forge/Fabric/NeoForge 載入器）。「在遊戲中套用」按鈕會立即執行，無需等待下次啟動。Microsoft 帳號：皮膚來自 Mojang，不需要這項功能。",
-            ["skin.help2"] = "披風：CustomSkinLoader 也會套用本機披風（離線）。或者可透過 OptiFine 使用披風。僅支援有效的 PNG — 將 WebP/JPG 重新命名為 .png 無法載入。",
+            ["skin.help1"] = "皮膚與披風會儲存在設定檔中，因此即使更改暱稱也會保留。使用此設定檔以離線方式遊玩時，它們會自動套用；啟動器會在該實例安裝 CustomSkinLoader，這需要 Forge、Fabric 或 NeoForge 載入器。點選「在遊戲中套用」即可立即套用，無需等待下次啟動。使用 Microsoft 帳號時，皮膚來自 Mojang，因此不需要這項功能。",
+            ["skin.help2"] = "離線遊玩時，CustomSkinLoader 也會套用本機披風。你也可以透過 OptiFine 使用披風。僅支援有效的 PNG；將 WebP 或 JPG 重新命名為 .png 無法載入。",
             ["label.language"] = "語言：",
             ["about.description"] = "Minecraft 啟動器。獨立的實例、直接從 Maven 取得 Forge/NeoForge（無廣告連結）、.frpack 模組包，以及依設定檔顯示皮膚/披風。",
             ["about.version"] = "版本 {0}",
@@ -748,7 +748,7 @@ public static class Loc
             ["warn.dontshow"] = "不再顯示",
             ["warn.nicktitle"] = "變更離線帳號的暱稱",
             ["warn.nickack"] = "我了解",
-            ["warn.nickmsg"] = "你即將把「{0}」重新命名為「{1}」。\n\n離線帳號不是 Microsoft 帳號：它是以根據「名稱」產生的 UUID 來識別。換句話說，暱稱就是身分。\n\n如果你在接受離線/破解帳號的伺服器（例如 MushMC）上有進度 — 等級、金錢、房屋、統計資料 — 這些全都綁定在「目前暱稱」的 UUID 上。變更暱稱後，伺服器會把你視為全新的玩家，你將失去對這些進度的存取（若是 Microsoft 帳號則不會發生，因為 UUID 是固定且持續的）。\n\n設定檔的皮膚與披風仍會保存在啟動器中 — 不會遺失。",
+            ["warn.nickmsg"] = "你即將把「{0}」重新命名為「{1}」。\n\n離線帳號不是 Microsoft 帳號，它是以根據名稱產生的 UUID 來識別，換句話說，暱稱就等於身分。\n\n如果你在接受離線帳號的伺服器（例如 MushMC）上有進度，例如等級、金錢、房屋或統計資料，這些全都綁定在目前暱稱的 UUID 上。變更暱稱後，伺服器會把你視為全新的玩家，你將失去對這些進度的存取。若使用 Microsoft 帳號則不會發生，因為 UUID 是固定且永久的。\n\n設定檔的皮膚與披風仍會保存在啟動器中，不會遺失。",
         },
 
         [Language.Russian] = new()
@@ -819,8 +819,8 @@ public static class Loc
             ["label.skinpreview"] = "Скин (исходный PNG)",
             ["label.facepreview"] = "Лицо (8x8)",
             ["label.capepreview"] = "Плащ",
-            ["skin.help1"] = "Скин и плащ сохраняются В ПРОФИЛЕ (они остаются даже при смене ника). Когда вы играете ОФЛАЙН с этим профилем, они применяются автоматически (лаунчер устанавливает CustomSkinLoader в сборку — нужен загрузчик Forge/Fabric/NeoForge). Кнопка «Применить в игре» делает это сразу, не дожидаясь следующего запуска. Аккаунт Microsoft: скин берётся из Mojang, это не требуется.",
-            ["skin.help2"] = "Плащ: CustomSkinLoader также применяет локальный плащ (офлайн). Как вариант — плащ через OptiFine. Работает только с корректным PNG — WebP/JPG, переименованный в .png, не загрузится.",
+            ["skin.help1"] = "Скин и плащ сохраняются в профиле, поэтому они остаются даже при смене ника. Когда вы играете офлайн с этим профилем, они применяются автоматически; лаунчер устанавливает CustomSkinLoader в сборку, для чего нужен загрузчик Forge, Fabric или NeoForge. Нажмите «Применить в игре», чтобы применить их сразу, не дожидаясь следующего запуска. На аккаунте Microsoft скин берётся из Mojang, поэтому это не требуется.",
+            ["skin.help2"] = "При игре офлайн CustomSkinLoader также применяет локальный плащ. Ещё можно использовать плащ через OptiFine. Работает только с корректным PNG; файл WebP или JPG, переименованный в .png, не загрузится.",
             ["label.language"] = "Язык:",
             ["about.description"] = "Лаунчер Minecraft. Изолированные сборки, Forge/NeoForge напрямую из Maven (без рекламных ссылок), модпаки .frpack и отображение скина/плаща по профилю.",
             ["about.version"] = "версия {0}",
@@ -925,7 +925,7 @@ public static class Loc
             ["warn.dontshow"] = "Больше не показывать",
             ["warn.nicktitle"] = "Смена ника офлайн-аккаунта",
             ["warn.nickack"] = "Я понимаю",
-            ["warn.nickmsg"] = "Вы собираетесь переименовать «{0}» в «{1}».\n\nОФЛАЙН-аккаунт — это не аккаунт Microsoft: он определяется по UUID, сгенерированному из ИМЕНИ. То есть ник — это и есть личность.\n\nЕсли у вас есть прогресс на серверах, принимающих офлайн/пиратские аккаунты (напр. MushMC) — ранг, деньги, дома, статистика — всё это привязано к UUID ТЕКУЩЕГО ника. При смене ника сервер увидит в вас НОВОГО игрока, и вы потеряете доступ к этому прогрессу (с аккаунтом Microsoft этого бы не произошло, так как UUID постоянный).\n\nСкин и плащ профиля останутся сохранёнными здесь, в лаунчере — они не потеряются.",
+            ["warn.nickmsg"] = "Вы собираетесь переименовать «{0}» в «{1}».\n\nОфлайн-аккаунт не является аккаунтом Microsoft. Он определяется по UUID, сгенерированному из имени, поэтому ник фактически и есть личность.\n\nЕсли у вас есть прогресс на серверах, принимающих офлайн-аккаунты (например, MushMC), такой как ранг, деньги, дома или статистика, всё это привязано к UUID текущего ника. При смене ника сервер увидит в вас нового игрока, и вы потеряете доступ к этому прогрессу. На аккаунте Microsoft этого не происходит, так как UUID фиксированный и постоянный.\n\nСкин и плащ профиля останутся сохранёнными здесь, в лаунчере, и не потеряются.",
         },
     };
 }

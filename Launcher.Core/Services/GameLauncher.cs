@@ -16,7 +16,7 @@ namespace Launcher.Core.Services;
 /// <summary>
 /// Installs the required files for an instance (with progress) and launches the
 /// game, streaming its stdout/stderr. All progress and logs are surfaced via
-/// events so the UI only subscribes — it never polls and never touches CmlLib.
+/// events so the UI only subscribes; it never polls and never touches CmlLib.
 /// </summary>
 public sealed class GameLauncher
 {
@@ -72,7 +72,7 @@ public sealed class GameLauncher
         // 1) Install the mod loader on first launch and remember its version id.
         if (instance.Loader != LoaderType.Vanilla && string.IsNullOrEmpty(instance.LoaderVersion))
         {
-            // Fetch the base game files first — this also downloads a Java runtime — so the
+            // Fetch the base game files first (this also downloads a Java runtime) so the
             // Forge/NeoForge installer can run on machines with no system JDK installed.
             Log?.Invoke(this, $"[install] Preparing base files for {instance.McVersion} (also fetches Java)...");
             await launcher.InstallAsync(instance.McVersion, fileProgress, byteProgress, ct).ConfigureAwait(false);

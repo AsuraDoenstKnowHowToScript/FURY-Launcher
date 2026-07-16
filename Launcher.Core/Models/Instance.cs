@@ -9,7 +9,7 @@ namespace Launcher.Core.Models;
 /// <summary>
 /// A launcher instance: an isolated .minecraft with its own version, loader,
 /// memory and Java configuration. Serialized to <c>instance.json</c> per folder
-/// and mirrored in the <c>instances.json</c> index. Pure data — no UI, no CmlLib.
+/// and mirrored in the <c>instances.json</c> index. Pure data, no UI, no CmlLib.
 /// </summary>
 public sealed class Instance
 {
