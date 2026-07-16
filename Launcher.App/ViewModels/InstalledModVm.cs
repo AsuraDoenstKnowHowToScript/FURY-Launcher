@@ -48,6 +48,21 @@ public sealed class InstalledModVm : INotifyPropertyChanged
 
     public bool HasVersion => !string.IsNullOrEmpty(_version);
 
+    private string? _description;
+    public string? Description
+    {
+        get => _description;
+        private set
+        {
+            if (_description == value) return;
+            _description = value;
+            Raise(nameof(Description));
+            Raise(nameof(HasDescription));
+        }
+    }
+
+    public bool HasDescription => !string.IsNullOrEmpty(_description);
+
     private Bitmap? _icon;
     public Bitmap? Icon
     {
@@ -64,10 +79,11 @@ public sealed class InstalledModVm : INotifyPropertyChanged
     public bool HasIcon => _icon != null;
 
     /// <summary>Applies resolved metadata; a null icon leaves the placeholder in place.</summary>
-    public void Apply(string title, string? version, Bitmap? icon)
+    public void Apply(string title, string? version, string? description, Bitmap? icon)
     {
         if (!string.IsNullOrWhiteSpace(title)) Title = title;
         Version = version;
+        Description = description;
         if (icon != null) Icon = icon;
     }
 

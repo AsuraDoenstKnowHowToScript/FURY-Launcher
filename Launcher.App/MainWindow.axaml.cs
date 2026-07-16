@@ -145,7 +145,6 @@ public partial class MainWindow : AppWindow
         RefreshModsButton.Click += (_, _) => RefreshMods();
         AddModButton.Click += OnAddMod;
         RemoveModButton.Click += OnRemoveMod;
-        ToggleModButton.Click += OnToggleMod;
         ModrinthList.ItemsSource = _modrinthVms;
         ModrinthSearchButton.Click += (_, _) => StartModrinthSearch();
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
@@ -278,7 +277,6 @@ public partial class MainWindow : AppWindow
         ModsEmptyText.Text = Loc.T("mods.noinstalled");
         AddModButton.Content = Loc.T("btn.addjar");
         RemoveModButton.Content = Loc.T("btn.remove");
-        ToggleModButton.Content = Loc.T("btn.toggle");
         ModrinthQueryBox.Watermark = Loc.T("watermark.modrinth");
         ModrinthSearchButton.Content = Loc.T("btn.search");
         LblModVersion.Text = Loc.T("label.version");
@@ -1159,7 +1157,7 @@ public partial class MainWindow : AppWindow
                 if (info.IconPath is { } iconPath)
                     icon = await Task.Run(() => TryLoadBitmap(iconPath), ct);
                 if (ct.IsCancellationRequested) return;
-                vm.Apply(info.Title, info.Version, icon);
+                vm.Apply(info.Title, info.Version, info.Description, icon);
             }
         }
         catch (OperationCanceledException) { /* superseded by a newer refresh */ }
@@ -1280,14 +1278,15 @@ public partial class MainWindow : AppWindow
         return Task.CompletedTask;
     });
 
-    private async void OnToggleMod(object? sender, RoutedEventArgs e) => await SafeAsync(() =>
+    /// <summary>The per-card switch enables/disables a mod directly (renames the jar).</summary>
+    private async void OnModToggleSwitch(object? sender, RoutedEventArgs e) => await SafeAsync(() =>
     {
         var inst = SelectedModInstance();
-        var idx = ModsList.SelectedIndex;
-        if (inst == null || idx < 0 || idx >= _mods.Count) { Notify(Loc.T("mods.selectmod")); return Task.CompletedTask; }
+        if (inst == null || sender is not ToggleSwitch { DataContext: InstalledModVm vm })
+            return Task.CompletedTask;
 
-        _core.Mods.ToggleMod(inst, _mods[idx].FileName);
-        RefreshMods();
+        _core.Mods.ToggleMod(inst, vm.Item.FileName);
+        RefreshMods(); // rebuilds the list so the switch reflects the new state
         return Task.CompletedTask;
     });
 

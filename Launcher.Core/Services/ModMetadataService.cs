@@ -99,6 +99,9 @@ public sealed class ModMetadataService
                 var p = Path.Combine(CacheDir(modsDir), e.IconFile);
                 if (File.Exists(p)) icon = p;
             }
+            // No cached Modrinth icon (project had none, or it failed to download):
+            // fall back to whatever icon the jar itself ships.
+            icon ??= TryReadJar(item.FullPath, CacheDir(modsDir))?.IconPath;
             return new ModDisplayInfo(e.Title!, e.Version, e.Description, icon);
         }
 
