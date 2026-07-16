@@ -18,6 +18,14 @@ public sealed record ModrinthHit(
     [property: JsonPropertyName("icon_url")] string? IconUrl = null,
     [property: JsonPropertyName("author")] string? Author = null);
 
+/// <summary>Project-level details used to label an installed mod (name, icon, description).</summary>
+public sealed record ModrinthProject(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("slug")] string? Slug,
+    [property: JsonPropertyName("title")] string? Title,
+    [property: JsonPropertyName("description")] string? Description,
+    [property: JsonPropertyName("icon_url")] string? IconUrl);
+
 /// <summary>A concrete downloadable version of a Modrinth project.</summary>
 public sealed record ModrinthVersion(
     [property: JsonPropertyName("id")] string Id,

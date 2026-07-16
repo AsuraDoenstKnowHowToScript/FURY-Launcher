@@ -288,17 +288,26 @@
                                         </Style>
                                     </ListBox.Styles>
                                     <ListBox.ItemTemplate>
-                                        <DataTemplate x:DataType="models:ModItem">
+                                        <DataTemplate x:DataType="vm:InstalledModVm">
                                             <Border Classes="card" Padding="10">
                                                 <Grid ColumnDefinitions="Auto,10,*,10,Auto">
                                                     <Border Grid.Column="0" Width="40" Height="40" CornerRadius="6"
-                                                            Background="{DynamicResource BgElevated}">
-                                                        <icon:PackIconLucide Kind="Package" Width="20" Height="20"
-                                                                             HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                             Foreground="{DynamicResource TextMuted}"/>
+                                                            Background="{DynamicResource BgElevated}" ClipToBounds="True">
+                                                        <Panel>
+                                                            <icon:PackIconLucide Kind="Package" Width="20" Height="20"
+                                                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                                 Foreground="{DynamicResource TextMuted}"
+                                                                                 IsVisible="{Binding !HasIcon}"/>
+                                                            <Image Source="{Binding Icon}" Stretch="UniformToFill"
+                                                                   IsVisible="{Binding HasIcon}"/>
+                                                        </Panel>
                                                     </Border>
-                                                    <TextBlock Grid.Column="2" Classes="Body" VerticalAlignment="Center"
-                                                               Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/>
+                                                    <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                                        <TextBlock Classes="Body" Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Classes="Caption" Foreground="{DynamicResource TextMuted}"
+                                                                   Text="{Binding Version}" IsVisible="{Binding HasVersion}"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
                                                     <Border Grid.Column="4" CornerRadius="4" Padding="8,3" VerticalAlignment="Center"
                                                             Background="{DynamicResource BgElevated}">
                                                         <Panel>

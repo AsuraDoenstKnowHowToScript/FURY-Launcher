@@ -78,6 +78,32 @@ public sealed class ModrinthClient
         }
     }
 
+    /// <summary>Fetches project-level details (title, icon, description) for a mod. Null if unavailable.</summary>
+    public async Task<ModrinthProject?> GetProjectAsync(string projectId, CancellationToken ct = default)
+    {
+        var url = $"{BaseUrl}/project/{Uri.EscapeDataString(projectId)}";
+        try
+        {
+            await using var stream = await _http.GetStreamAsync(url, ct).ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<ModrinthProject>(stream, JsonStore.Options, ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException)
+        {
+            return null; // project gone / not accessible
+        }
+    }
+
+    /// <summary>Downloads any URL to a local file (used to cache mod icons). Best-effort.</summary>
+    public async Task DownloadFileAsync(string url, string destPath, CancellationToken ct = default)
+    {
+        var dir = Path.GetDirectoryName(destPath);
+        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+
+        await using var src = await _http.GetStreamAsync(url, ct).ConfigureAwait(false);
+        await using var dst = File.Create(destPath);
+        await src.CopyToAsync(dst, ct).ConfigureAwait(false);
+    }
+
     /// <summary>Downloads a version's primary file into <paramref name="targetDir"/>. Returns the saved path.</summary>
     public async Task<string> DownloadAsync(ModrinthVersion version, string targetDir, CancellationToken ct = default)
     {

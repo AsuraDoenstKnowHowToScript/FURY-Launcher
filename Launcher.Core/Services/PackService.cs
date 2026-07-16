@@ -46,7 +46,7 @@ public sealed class PackService
             MaxRamMb = instance.MaxRamMb,
             JvmArgs = instance.JvmArgs,
             Mods = Directory.Exists(modsDir)
-                ? Directory.EnumerateFiles(modsDir).Select(Path.GetFileName).Where(n => n != null).ToList()!
+                ? Directory.EnumerateFiles(modsDir).Select(Path.GetFileName).Where(IsModJarName).ToList()!
                 : new List<string>()
         };
 
@@ -65,11 +65,12 @@ public sealed class PackService
             await using (var es = manifestEntry.Open())
                 await JsonSerializer.SerializeAsync(es, manifest, JsonStore.Options, ct).ConfigureAwait(false);
 
-            // Mods (the real jars)
+            // Mods (the real jars only, never the sidecar index/icon cache)
             if (Directory.Exists(modsDir))
                 foreach (var file in Directory.EnumerateFiles(modsDir))
                 {
                     ct.ThrowIfCancellationRequested();
+                    if (!IsModJarName(Path.GetFileName(file))) continue;
                     await AddFileAsync(zip, file, "mods/" + Path.GetFileName(file), ct).ConfigureAwait(false);
                 }
 
@@ -85,6 +86,12 @@ public sealed class PackService
 
         File.Move(tmp, destPath, overwrite: true);
     }
+
+    /// <summary>True for a real mod file (<c>.jar</c> / <c>.jar.disabled</c>), excluding sidecar data.</summary>
+    private static bool IsModJarName(string? name)
+        => name != null
+           && (name.EndsWith(".jar", StringComparison.OrdinalIgnoreCase)
+               || name.EndsWith(".jar" + ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase));
 
     private static async Task AddFileAsync(ZipArchive zip, string sourcePath, string entryName, CancellationToken ct)
     {

@@ -50,6 +50,8 @@ public partial class MainWindow : AppWindow
 
     private List<Instance> _instances = new();
     private List<ModItem> _mods = new();
+    private readonly ObservableCollection<InstalledModVm> _modVms = new();
+    private CancellationTokenSource? _modEnrichCts; // cancels stale metadata enrichment on refresh
     private List<OfflineProfile> _profiles = new();
     private readonly ObservableCollection<ModrinthHitVm> _modrinthVms = new();
     private IReadOnlyList<ModrinthVersion> _modVersions = new List<ModrinthVersion>();
@@ -1122,6 +1124,9 @@ public partial class MainWindow : AppWindow
 
         var inst = SelectedModInstance();
         ModsInstanceName.Text = inst?.Name ?? "—";
+
+        _modEnrichCts?.Cancel();
+        _modVms.Clear();
         if (inst == null)
         {
             _mods = new();
@@ -1131,8 +1136,40 @@ public partial class MainWindow : AppWindow
         }
 
         _mods = _core.Mods.ListMods(inst).ToList();
-        ModsList.ItemsSource = _mods;
+        foreach (var m in _mods) _modVms.Add(new InstalledModVm(m));
+        ModsList.ItemsSource = _modVms;
         ModsEmptyState.IsVisible = _mods.Count == 0;
+
+        // Resolve real names/versions/icons off-thread; the cards update in place.
+        _modEnrichCts = new CancellationTokenSource();
+        _ = EnrichModsAsync(inst, _modVms.ToList(), _modEnrichCts.Token);
+    }
+
+    /// <summary>Fills each installed-mod card with its resolved name, version and icon.</summary>
+    private async Task EnrichModsAsync(Instance inst, List<InstalledModVm> vms, CancellationToken ct)
+    {
+        try
+        {
+            var index = await _core.ModMetadata.LoadIndexAsync(inst);
+            foreach (var vm in vms)
+            {
+                if (ct.IsCancellationRequested) return;
+                var info = await Task.Run(() => _core.ModMetadata.Resolve(inst, vm.Item, index), ct);
+                Bitmap? icon = null;
+                if (info.IconPath is { } iconPath)
+                    icon = await Task.Run(() => TryLoadBitmap(iconPath), ct);
+                if (ct.IsCancellationRequested) return;
+                vm.Apply(info.Title, info.Version, icon);
+            }
+        }
+        catch (OperationCanceledException) { /* superseded by a newer refresh */ }
+        catch (Exception ex) { CrashLog.Write("[mods] enriching metadata failed", ex); }
+    }
+
+    private static Bitmap? TryLoadBitmap(string path)
+    {
+        try { return new Bitmap(path); }
+        catch { return null; } // unsupported format (e.g. webp) → keep the placeholder
     }
 
     /// <summary>

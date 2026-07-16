@@ -22,6 +22,7 @@ public sealed class LauncherCore : IDisposable
     public LogHub Logs { get; }
     public GameLauncher Game { get; }
     public ModService Mods { get; }
+    public ModMetadataService ModMetadata { get; }
     public PackService Packs { get; }
     public MrpackService Mrpacks { get; }
     public ProfileService Profiles { get; }
@@ -40,7 +41,9 @@ public sealed class LauncherCore : IDisposable
         Auth = new AuthManager(Paths);
         Logs = new LogHub();
         Game = new GameLauncher(Paths, new LoaderInstaller(_http), Instances, Logs);
-        Mods = new ModService(Paths, new ModrinthClient(_http));
+        var modrinth = new ModrinthClient(_http);
+        ModMetadata = new ModMetadataService(Paths, modrinth);
+        Mods = new ModService(Paths, modrinth, ModMetadata);
         Packs = new PackService(Paths, Instances);
         Mrpacks = new MrpackService(_http, Paths, Instances);
         Profiles = new ProfileService(Paths);

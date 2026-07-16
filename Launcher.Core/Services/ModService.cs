@@ -17,11 +17,13 @@ public sealed class ModService
 {
     private readonly LauncherPaths _paths;
     private readonly ModrinthClient _modrinth;
+    private readonly ModMetadataService _metadata;
 
-    public ModService(LauncherPaths paths, ModrinthClient modrinth)
+    public ModService(LauncherPaths paths, ModrinthClient modrinth, ModMetadataService metadata)
     {
         _paths = paths;
         _modrinth = modrinth;
+        _metadata = metadata;
     }
 
     public IReadOnlyList<ModItem> ListMods(Instance instance)
@@ -121,6 +123,9 @@ public sealed class ModService
         var name = Path.GetFileName(path);
         installed.Add(name);
         log?.Report(name);
+
+        // Remember the pretty name/version/icon so the list never shows the raw file name.
+        await _metadata.RecordInstallAsync(instance, name, version, ct).ConfigureAwait(false);
 
         foreach (var dep in version.Dependencies ?? new List<ModrinthDependency>())
         {
