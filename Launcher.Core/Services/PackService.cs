@@ -13,7 +13,7 @@ namespace Launcher.Core.Services;
 /// <summary>
 /// Exports and imports <c>.frpack</c> (FURY Package) files: a self-contained ZIP
 /// holding <c>fury.json</c> (manifest), the real mod jars under <c>mods/</c> and
-/// optional instance <c>config/</c>. No UI, no network — a friend imports a file
+/// optional instance <c>config/</c>. No UI, no network; a friend imports a file
 /// and plays, even offline.
 /// </summary>
 public sealed class PackService
@@ -122,7 +122,7 @@ public sealed class PackService
         if (!Enum.IsDefined(manifest.Loader))
             warnings.Add("Loader do pacote desconhecido para este launcher.");
         if (manifest.Loader == LoaderType.Vanilla && manifest.Mods.Count > 0)
-            warnings.Add("Pacote traz mods mas o loader e Vanilla — os mods nao vao carregar.");
+            warnings.Add("Pacote traz mods mas o loader e Vanilla; os mods nao vao carregar.");
 
         // Cross-check declared mods vs. what is actually inside the zip.
         var present = zip.Entries

@@ -27,10 +27,10 @@ public sealed record ModrinthVersion(
     [property: JsonPropertyName("files")] List<ModrinthFile> Files,
     [property: JsonPropertyName("dependencies")] List<ModrinthDependency>? Dependencies = null)
 {
-    /// <summary>"1.2.3 — release name" for a version dropdown.</summary>
+    /// <summary>"1.2.3 · release name" for a version dropdown.</summary>
     public string Display => string.IsNullOrWhiteSpace(Name) || Name == VersionNumber
         ? VersionNumber
-        : $"{VersionNumber} — {Name}";
+        : $"{VersionNumber} · {Name}";
 }
 
 public sealed record ModrinthFile(

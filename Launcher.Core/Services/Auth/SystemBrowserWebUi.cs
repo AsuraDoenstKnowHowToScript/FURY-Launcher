@@ -14,7 +14,7 @@ namespace Launcher.Core.Services;
 /// client only accepts the <c>login.live.com/oauth20_desktop.srf</c> redirect (a
 /// loopback <c>http://127.0.0.1:port</c> is rejected with "redirect_uri is not
 /// valid"), and a system browser can't be intercepted. So we open the system browser
-/// on the default redirect and ask the user to paste the final page URL back — the
+/// on the default redirect and ask the user to paste the final page URL back. The
 /// code is in that URL, and the token exchange uses the same registered redirect.
 /// </summary>
 public sealed class SystemBrowserWebUi : IWebUI
@@ -58,7 +58,7 @@ public sealed class SystemBrowserWebUi : IWebUI
 
     public Task DisplayDialogAndNavigateUri(Uri uri, CancellationToken cancellationToken)
     {
-        // Used e.g. for browser sign-out — just open the page.
+        // Used e.g. for browser sign-out: just open the page.
         OpenBrowser(uri.ToString());
         return Task.CompletedTask;
     }

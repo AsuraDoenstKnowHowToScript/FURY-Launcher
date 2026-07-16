@@ -75,7 +75,7 @@ public sealed class AuthManager : IAuthManager
 
     /// <summary>
     /// Full Microsoft login: tries the cached session first, then falls back to
-    /// interactive OAuth (opens the system browser). Throws on failure — never
+    /// interactive OAuth (opens the system browser). Throws on failure; never
     /// swallowed.
     /// </summary>
     public async Task<MSession> LoginMicrosoftAsync(CancellationToken ct = default)
@@ -86,7 +86,7 @@ public sealed class AuthManager : IAuthManager
         }
         catch (Exception ex)
         {
-            // No valid cached session — do the interactive flow. Never silent: log why.
+            // No valid cached session, so do the interactive flow. Never silent: log why.
             Log?.Invoke(this, $"[auth] No cached session ({ex.Message}); starting interactive sign-in.");
             CrashLog.Write("[auth] silent login failed", ex);
             return await _handler.Value.AuthenticateInteractively(ct).ConfigureAwait(false);

@@ -171,7 +171,7 @@ public sealed class ForgeDirectInstaller
             // modern installers (Forge 1.13+, all NeoForge) run headless with processors.
             if (TryReadLegacyProfile(jarPath, out var versionInfo, out var installNode))
             {
-                log?.Report("[loader] Instalador legacy detectado — extraindo manualmente (sem processos).");
+                log?.Report("[loader] Instalador legacy detectado; extraindo manualmente (sem processos).");
                 var legacyId = ExtractLegacyForge(jarPath, minecraftDir, versionInfo, installNode);
                 log?.Report($"[loader] Instalado: {legacyId}");
                 return legacyId;

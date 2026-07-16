@@ -17,7 +17,7 @@ public static class AppInfo
     public const string Version = "0.3.8-beta";
 
     /// <summary>Copyright/licença exibida no título/Sobre. Software proprietário.</summary>
-    public const string Copyright = "© 2026 Suny. Todos os direitos reservados. Software proprietário — ver LICENSE.";
+    public const string Copyright = "© 2026 Suny. Todos os direitos reservados. Software proprietário. Consulte o LICENSE.";
 
     /// <summary>Folder name under %APPDATA% where all launcher data lives.</summary>
     public const string DataFolderName = "FURY Launcher";

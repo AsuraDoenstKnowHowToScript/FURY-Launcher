@@ -3,7 +3,7 @@
                     xmlns:sys="using:System">
 
     <!-- ============================================================
-         DESIGN TOKENS — the single source of truth for colour, radius,
+         DESIGN TOKENS: the single source of truth for colour, radius,
          spacing and type. Views must reference these via {DynamicResource};
          no hard-coded colours anywhere. Aesthetic: dark purple on soft black.
          ============================================================ -->
@@ -40,7 +40,7 @@
     <SolidColorBrush x:Key="Accent" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="AccentHover" Color="{StaticResource AccentHoverColor}"/>
     <SolidColorBrush x:Key="AccentPressed" Color="{StaticResource AccentPressedColor}"/>
-    <!-- Accent at ~15% — selected list item, not the full purple -->
+    <!-- Accent at ~15%, for a selected list item, not the full purple -->
     <SolidColorBrush x:Key="AccentSubtle" Color="{StaticResource AccentColor}" Opacity="0.15"/>
     <SolidColorBrush x:Key="OnAccent" Color="{StaticResource OnAccentColor}"/>
     <SolidColorBrush x:Key="TextPrimary" Color="{StaticResource TextPrimaryColor}"/>

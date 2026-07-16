@@ -183,7 +183,7 @@ public partial class MainWindow : AppWindow
             lock (_uiLock) _pendingStatus = $"{f.EventType}: {f.Name} ({f.Progressed}/{f.Total})";
         };
         _core.Game.Log += (_, line) => AppendLog(line);
-        // RunningChanged is rare (twice a session) and flips button state — keep it immediate.
+        // RunningChanged is rare (twice a session) and flips button state, so keep it immediate.
         _core.Game.RunningChanged += (_, running) => Dispatcher.UIThread.Post(() =>
         {
             StopButton.IsEnabled = running;
@@ -259,7 +259,7 @@ public partial class MainWindow : AppWindow
         ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
         ModrinthEmptyText.Text = Loc.T("mods.searchprompt");
 
-        // Skin tab — same profile/nick wording as the Play tab.
+        // Skin tab: same profile/nick wording as the Play tab.
         LblSkinProfile.Text = Loc.T("label.profile");
         NewProfileButton.Content = Loc.T("btn.new");
         DeleteProfileButton.Content = Loc.T("btn.deleteprofile");
@@ -465,7 +465,7 @@ public partial class MainWindow : AppWindow
 
     /// <summary>
     /// Writes a tiny batch script that waits for this process to exit, copies the staged
-    /// files over the install folder, relaunches, and deletes itself — then shuts down.
+    /// files over the install folder, relaunches, and deletes itself, then shuts down.
     /// </summary>
     private void ApplyUpdateAndRestart(string stagingDir, string exeName)
     {
@@ -581,7 +581,7 @@ public partial class MainWindow : AppWindow
         var nameChanged = !string.Equals(newName, p.Name, StringComparison.Ordinal);
 
         // Warn (once) that changing an offline nick changes the identity/UUID and can lose
-        // server progress. Skin/cape stay on the profile — this is only about the nick.
+        // server progress. Skin/cape stay on the profile; this is only about the nick.
         if (nameChanged)
         {
             var settings = await _core.Settings.LoadAsync();
@@ -910,7 +910,7 @@ public partial class MainWindow : AppWindow
         try
         {
             // Auto-apply the active profile's skin/cape (offline) so the user never has to
-            // "apply by name" — it just follows the profile, even after a rename.
+            // "apply by name": it just follows the profile, even after a rename.
             if (offlineProfile != null && inst.Loader != LoaderType.Vanilla &&
                 (offlineProfile.SkinPath != null || offlineProfile.CapePath != null))
             {
@@ -1180,7 +1180,7 @@ public partial class MainWindow : AppWindow
                 vm.Icon = bmp;
             });
         }
-        catch { /* icon is decorative — a missing one just keeps the placeholder */ }
+        catch { /* icon is decorative; a missing one just keeps the placeholder */ }
     }
 
     /// <summary>Per-card one-click install: newest compatible version + required dependencies.</summary>
@@ -1374,7 +1374,7 @@ public partial class MainWindow : AppWindow
         // Cheap face preview: the 8x8 face region lives at (8,8) in every skin
         // texture (64x64 and legacy 64x32). Nearest-neighbor upscaling keeps it crisp.
         try { FaceImage.Source = new CroppedBitmap(bmp, new PixelRect(8, 8, 8, 8)); }
-        catch { FaceImage.Source = null; } // not a real skin texture — skip the crop
+        catch { FaceImage.Source = null; } // not a real skin texture, skip the crop
     }
 
     private void SetCapeImage(string? path)

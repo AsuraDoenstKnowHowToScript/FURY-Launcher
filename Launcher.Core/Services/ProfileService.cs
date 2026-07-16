@@ -84,7 +84,7 @@ public sealed class ProfileService
         if (!IsPng(sourcePath))
             throw new InvalidOperationException(
                 "O arquivo nao e um PNG valido (Minecraft so aceita PNG). Imagens WebP/JPG " +
-                "renomeadas para .png nao funcionam — reexporte/baixe como PNG de verdade.");
+                "renomeadas para .png nao funcionam; reexporte ou baixe como PNG de verdade.");
 
         Directory.CreateDirectory(_paths.AppearanceDir);
         var ext = Path.GetExtension(sourcePath);

@@ -12,7 +12,7 @@ namespace Launcher.Core.Services;
 /// Applies a profile's skin/cape in-game for an <b>offline</b> player by setting
 /// up the CustomSkinLoader mod with a LocalSkin entry. Vanilla Minecraft cannot
 /// show a custom skin on an offline (non-paid) account, so this is the only real
-/// path — it installs CustomSkinLoader into the instance and drops the skin under
+/// path: it installs CustomSkinLoader into the instance and drops the skin under
 /// <c>LocalSkin/(skins|capes)/{name}.png</c>, keyed by the profile's own name.
 ///
 /// Microsoft accounts get their skin from Mojang and would need an upload flow
@@ -48,7 +48,7 @@ public sealed class SkinApplyService
         if (instance.Loader == LoaderType.Vanilla)
             throw new InvalidOperationException(
                 "Skin em conta offline precisa do mod CustomSkinLoader, que exige um loader " +
-                "(Forge/Fabric/NeoForge). Esta instancia e Vanilla — crie/edite para usar um loader.");
+                "(Forge/Fabric/NeoForge). Esta instancia e Vanilla; crie ou edite para usar um loader.");
 
         var hasSkin = profile.SkinPath != null && File.Exists(profile.SkinPath);
         var hasCape = profile.CapePath != null && File.Exists(profile.CapePath);

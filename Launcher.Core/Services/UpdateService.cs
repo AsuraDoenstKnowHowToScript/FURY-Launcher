@@ -22,7 +22,7 @@ public sealed class UpdateInfo
 /// <summary>
 /// Checks the project's GitHub Releases for a newer build and downloads it. Stable
 /// releases (no pre-release suffix) are preferred; betas are surfaced too so the UI
-/// can warn before installing one. No UI here — the app drives the install/restart.
+/// can warn before installing one. No UI here; the app drives the install/restart.
 /// </summary>
 public sealed class UpdateService
 {

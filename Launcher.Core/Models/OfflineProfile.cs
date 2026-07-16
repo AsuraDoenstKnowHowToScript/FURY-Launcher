@@ -9,7 +9,7 @@ namespace Launcher.Core.Models;
 /// <summary>
 /// A saved offline identity the user selects to play (no need to retype a name
 /// every time). Carries its own skin/cape and body model. Skins are client-side
-/// only (via CustomSkinLoader) — they are not shown to other players.
+/// only (via CustomSkinLoader); they are not shown to other players.
 /// </summary>
 public sealed class OfflineProfile
 {

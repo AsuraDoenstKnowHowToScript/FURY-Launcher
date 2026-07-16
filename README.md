@@ -37,19 +37,19 @@ Windows 10 and Windows 11 (64-bit). A Linux build is in development, though Wind
 
 ## Features
 
-Instances. Create as many as you need. Each instance keeps its own isolated `.minecraft`, Minecraft version, loader (Vanilla, Fabric, Forge, or NeoForge), memory limits, and JVM arguments.
+You can create as many instances as you need, and each one stays fully isolated: its own `.minecraft`, Minecraft version, loader (Vanilla, Fabric, Forge, or NeoForge), memory limits, and JVM arguments.
 
-Accounts. Sign in with a Microsoft account through an embedded window, with no browser tab or copy and paste, or play offline by typing a nick. Microsoft accounts and offline profiles share a single picker.
+Sign in with a Microsoft account through an embedded window, without a browser tab or any copy and paste, or play offline by typing a nick. Microsoft accounts and offline profiles share the same picker.
 
-Mods. Add, remove, and toggle mod jars per instance. Search Modrinth, choose a version, and install it. Required dependencies are resolved and installed for you.
+Manage mods per instance: add, remove, and toggle jars, or search Modrinth, pick a version, and install it. Any required dependencies are pulled in automatically.
 
-Loaders. Forge and NeoForge install directly from Maven, with no ad links or browser steps.
+Install Forge and NeoForge straight from Maven, with no ad links or extra browser steps.
 
-Modpacks. Import Modrinth `.mrpack` packs, with mods downloaded and verified, or export and import a self-contained `.frpack` that bundles the manifest and the mod jars.
+Import Modrinth `.mrpack` packs (the mods are downloaded and verified), or share a self-contained `.frpack` that bundles the manifest together with the mod jars.
 
-Skins and capes. Set them per offline profile. They are shown in game through CustomSkinLoader.
+Set a skin and cape per offline profile, and they show up in game through CustomSkinLoader.
 
-Updates. The launcher checks GitHub at startup and can update in place. Stable builds install directly; beta builds ask for confirmation first.
+The launcher checks GitHub for updates at startup and can update itself in place. Stable builds install directly, while beta builds ask for confirmation first.
 
 ## Languages
 
