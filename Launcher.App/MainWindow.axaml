@@ -282,6 +282,13 @@
                                             <Setter Property="Padding" Value="0"/>
                                             <Setter Property="Margin" Value="0,0,0,8"/>
                                             <Setter Property="Background" Value="Transparent"/>
+                                            <!-- Soft fade-in as cards appear (refresh, toggle, reorder). -->
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:0.22" Easing="CubicEaseOut" FillMode="Both">
+                                                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/></KeyFrame>
+                                                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
                                         </Style>
                                         <Style Selector="ListBoxItem:selected Border.card">
                                             <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>

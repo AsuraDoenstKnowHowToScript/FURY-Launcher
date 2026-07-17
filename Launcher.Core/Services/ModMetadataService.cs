@@ -83,6 +83,59 @@ public sealed class ModMetadataService
     }
 
     /// <summary>
+    /// Resolves display metadata, upgrading unknown mods via Modrinth when possible: if the
+    /// index has no entry, the jar is matched to a Modrinth version by SHA-512 hash to pull
+    /// the real name/description/icon, then cached in the index. Whatever it resolves (even
+    /// the jar/file-name fallback) is written back, so this only hits the network once per
+    /// mod. Fully async; safe to call off the UI thread.
+    /// </summary>
+    public async Task<ModDisplayInfo> ResolveWithOnlineAsync(Instance instance, ModItem item, CancellationToken ct = default)
+    {
+        var index = await LoadIndexAsync(instance).ConfigureAwait(false);
+
+        // Already known from a previous resolve/install: use it, no network.
+        if (index.TryGetValue(item.DisplayName, out var known) && !string.IsNullOrWhiteSpace(known.Title))
+            return Resolve(instance, item, index);
+
+        // Try to identify the jar on Modrinth by content hash.
+        try
+        {
+            var hash = await Task.Run(() => ComputeSha512(item.FullPath), ct).ConfigureAwait(false);
+            var version = hash == null ? null : await _modrinth.GetVersionByHashAsync(hash, ct).ConfigureAwait(false);
+            if (version != null)
+            {
+                await RecordInstallAsync(instance, item.DisplayName, version, ct).ConfigureAwait(false);
+                index = await LoadIndexAsync(instance).ConfigureAwait(false);
+                return Resolve(instance, item, index);
+            }
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex) { CrashLog.Write("[mods] online metadata resolve failed", ex); }
+
+        // Not on Modrinth: fall back to the jar/file name, and cache it so the next
+        // refresh does not hash and query the network again.
+        var info = await Task.Run(() => Resolve(instance, item, index), ct).ConfigureAwait(false);
+        try
+        {
+            index[item.DisplayName] = new ModIndexEntry { Title = info.Title, Version = info.Version, Description = info.Description };
+            await JsonStore.WriteAsync(IndexPath(instance), index).ConfigureAwait(false);
+        }
+        catch (Exception ex) { CrashLog.Write("[mods] caching resolved metadata failed", ex); }
+        return info;
+    }
+
+    private static string? ComputeSha512(string path)
+    {
+        try
+        {
+            using var stream = File.OpenRead(path);
+            using var sha = System.Security.Cryptography.SHA512.Create();
+            return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
     /// Resolves display metadata for one installed mod, trying the index, then the jar
     /// manifest, then a cleaned file name. Does jar I/O, so call it off the UI thread.
     /// </summary>

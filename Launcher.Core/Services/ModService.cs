@@ -62,8 +62,11 @@ public sealed class ModService
             File.Delete(path);
     }
 
-    /// <summary>Enables/disables a mod by renaming between <c>.jar</c> and <c>.jar.disabled</c>.</summary>
-    public void ToggleMod(Instance instance, string fileName)
+    /// <summary>
+    /// Enables/disables a mod by renaming between <c>.jar</c> and <c>.jar.disabled</c>.
+    /// Returns the new file name so the caller can update state without a full reload.
+    /// </summary>
+    public string ToggleMod(Instance instance, string fileName)
     {
         var dir = _paths.InstanceModsDir(instance);
         var path = Path.Combine(dir, fileName);
@@ -75,6 +78,7 @@ public sealed class ModService
             : fileName + ModItem.DisabledSuffix;                          // disable
 
         File.Move(path, Path.Combine(dir, target), overwrite: true);
+        return target;
     }
 
     public Task<IReadOnlyList<ModrinthHit>> SearchModrinthAsync(Instance instance, string query, int offset = 0, CancellationToken ct = default)

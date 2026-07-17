@@ -153,13 +153,24 @@
         <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
     </Style>
 
-    <!-- Card container -->
+    <!-- Card container: subtle border + a soft drop shadow so cards read as raised. -->
     <Style Selector="Border.card">
         <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusLg}"/>
         <Setter Property="Padding" Value="16"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #40000000"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.14"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <!-- Lift a card a touch more when the pointer is over it (inside a hoverable list). -->
+    <Style Selector="ListBoxItem:pointerover Border.card">
+        <Setter Property="BoxShadow" Value="0 4 14 0 #55000000"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
     </Style>
 
 </Styles>

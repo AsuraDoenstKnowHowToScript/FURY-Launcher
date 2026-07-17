@@ -1173,11 +1173,12 @@ public partial class MainWindow : AppWindow
     {
         try
         {
-            var index = await _core.ModMetadata.LoadIndexAsync(inst);
             foreach (var vm in vms)
             {
                 if (ct.IsCancellationRequested) return;
-                var info = await Task.Run(() => _core.ModMetadata.Resolve(inst, vm.Item, index), ct);
+                // Resolves from the index, or identifies the jar on Modrinth by hash and
+                // caches it, so manual/CurseForge mods get a real name, version and icon.
+                var info = await _core.ModMetadata.ResolveWithOnlineAsync(inst, vm.Item, ct);
                 Bitmap? icon = null;
                 if (info.IconPath is { } iconPath)
                     icon = await Task.Run(() => TryLoadBitmap(iconPath), ct);
@@ -1295,9 +1296,9 @@ public partial class MainWindow : AppWindow
     {
         var inst = SelectedModInstance();
         var idx = ModsList.SelectedIndex;
-        if (inst == null || idx < 0 || idx >= _mods.Count) { Notify(Loc.T("mods.selectmod")); return Task.CompletedTask; }
+        if (inst == null || idx < 0 || idx >= _modVms.Count) { Notify(Loc.T("mods.selectmod")); return Task.CompletedTask; }
 
-        _core.Mods.RemoveMod(inst, _mods[idx].FileName);
+        _core.Mods.RemoveMod(inst, _modVms[idx].FileName); // VM holds the current name (survives in-place toggles)
         RefreshMods();
         Notify(Loc.T("mods.removed"));
         return Task.CompletedTask;
@@ -1310,8 +1311,10 @@ public partial class MainWindow : AppWindow
         if (inst == null || sender is not ToggleSwitch { DataContext: InstalledModVm vm })
             return Task.CompletedTask;
 
-        _core.Mods.ToggleMod(inst, vm.Item.FileName);
-        RefreshMods(); // rebuilds the list so the switch reflects the new state
+        // Toggle in place: rename the jar and update just this card, so the switch
+        // animates smoothly instead of rebuilding the whole list (which flickered).
+        var newName = _core.Mods.ToggleMod(inst, vm.FileName);
+        vm.SetToggled(newName);
         return Task.CompletedTask;
     });
 

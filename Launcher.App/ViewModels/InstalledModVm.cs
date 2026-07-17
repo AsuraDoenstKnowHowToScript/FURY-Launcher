@@ -21,10 +21,33 @@ public sealed class InstalledModVm : INotifyPropertyChanged
     {
         Item = item;
         _title = item.DisplayName;
+        _fileName = item.FileName;
+        _enabled = item.Enabled;
     }
 
+    /// <summary>The original item; kept for metadata resolution (path, display name).</summary>
     public ModItem Item { get; }
-    public bool Enabled => Item.Enabled;
+
+    private string _fileName;
+    /// <summary>Current on-disk file name; changes when the mod is enabled/disabled.</summary>
+    public string FileName => _fileName;
+
+    private bool _enabled;
+    public bool Enabled
+    {
+        get => _enabled;
+        private set { if (_enabled != value) { _enabled = value; Raise(nameof(Enabled)); } }
+    }
+
+    /// <summary>
+    /// Updates state after a toggle in place (no list rebuild), so the switch animates
+    /// smoothly instead of flickering.
+    /// </summary>
+    public void SetToggled(string newFileName)
+    {
+        _fileName = newFileName;
+        Enabled = !newFileName.EndsWith(ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase);
+    }
 
     private string _title;
     public string Title

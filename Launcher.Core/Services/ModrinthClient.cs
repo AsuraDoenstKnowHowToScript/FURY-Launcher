@@ -78,6 +78,24 @@ public sealed class ModrinthClient
         }
     }
 
+    /// <summary>
+    /// Resolves a jar to its Modrinth version by SHA-512 hash, so a mod added by hand or
+    /// from CurseForge can still be identified. Null if the file is not on Modrinth.
+    /// </summary>
+    public async Task<ModrinthVersion?> GetVersionByHashAsync(string sha512, CancellationToken ct = default)
+    {
+        var url = $"{BaseUrl}/version_file/{Uri.EscapeDataString(sha512)}?algorithm=sha512";
+        try
+        {
+            await using var stream = await _http.GetStreamAsync(url, ct).ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<ModrinthVersion>(stream, JsonStore.Options, ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException)
+        {
+            return null; // 404 = not indexed on Modrinth
+        }
+    }
+
     /// <summary>Fetches project-level details (title, icon, description) for a mod. Null if unavailable.</summary>
     public async Task<ModrinthProject?> GetProjectAsync(string projectId, CancellationToken ct = default)
     {
