@@ -32,7 +32,7 @@ public static class SmoothScroll
     private const double Ease = 0.18;
 
     public static readonly AttachedProperty<bool> EnabledProperty =
-        AvaloniaProperty.RegisterAttached<SmoothScroll, Control, bool>("Enabled");
+        AvaloniaProperty.RegisterAttached<Control, bool>("Enabled", typeof(SmoothScroll));
 
     public static void SetEnabled(Control control, bool value) => control.SetValue(EnabledProperty, value);
     public static bool GetEnabled(Control control) => control.GetValue(EnabledProperty);
