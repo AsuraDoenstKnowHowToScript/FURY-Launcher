@@ -325,8 +325,8 @@
                                                                        IsVisible="{Binding HasDescription}"
                                                                        TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
                                                         </StackPanel>
-                                                        <ToggleSwitch Grid.Column="4" VerticalAlignment="Center"
-                                                                      OnContent="" OffContent=""
+                                                        <ToggleButton Grid.Column="4" Classes="switch"
+                                                                      VerticalAlignment="Center"
                                                                       IsChecked="{Binding Enabled}"/>
                                                         <Button Grid.Column="6" Classes="ghost" VerticalAlignment="Center"
                                                                 Padding="8" Click="OnRemoveModClick" ToolTip.Tip="Remove">

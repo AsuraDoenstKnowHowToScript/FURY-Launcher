@@ -1363,16 +1363,21 @@ public partial class MainWindow : AppWindow
     {
         var inst = SelectedModInstance();
         if (inst == null) return;
-        try
+
+        // Defer the jar rename so the switch's slide animation isn't blocked by disk I/O.
+        Dispatcher.UIThread.Post(() =>
         {
-            vm.UpdateFileName(_core.Mods.ToggleMod(inst, vm.FileName));
-        }
-        catch (Exception ex)
-        {
-            CrashLog.Write("[mods] toggle failed", ex);
-            vm.SetEnabledSilently(!enabled); // revert the switch on failure
-            Notify(Loc.T("status.error", ex.Message));
-        }
+            try
+            {
+                vm.UpdateFileName(_core.Mods.ToggleMod(inst, vm.FileName));
+            }
+            catch (Exception ex)
+            {
+                CrashLog.Write("[mods] toggle failed", ex);
+                vm.SetEnabledSilently(!enabled); // revert the switch on failure
+                Notify(Loc.T("status.error", ex.Message));
+            }
+        }, DispatcherPriority.Background);
     }
 
     /// <summary>Begins a fresh Modrinth search: cancels the previous one, clears results, loads page 0.</summary>
