@@ -111,6 +111,55 @@ public sealed class ModMetadataService
         return new ModDisplayInfo(CleanName(key), null, null, null);
     }
 
+    /// <summary>
+    /// Builds the set of things already installed in an instance (Modrinth project ids
+    /// plus normalized names, including manually added / CurseForge jars) so the search
+    /// results can flag duplicates. Reads the index, then parses only the jars the index
+    /// does not cover. Off-thread for the jar work.
+    /// </summary>
+    public async Task<InstalledSignatures> GetInstalledSignaturesAsync(Instance instance)
+    {
+        var index = await LoadIndexAsync(instance).ConfigureAwait(false);
+        return await Task.Run(() => BuildSignatures(instance, index)).ConfigureAwait(false);
+    }
+
+    private InstalledSignatures BuildSignatures(Instance instance, Dictionary<string, ModIndexEntry> index)
+    {
+        var projectIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var names = new HashSet<string>();
+
+        foreach (var e in index.Values)
+        {
+            if (!string.IsNullOrEmpty(e.ProjectId)) projectIds.Add(e.ProjectId!);
+            if (!string.IsNullOrWhiteSpace(e.Title)) names.Add(InstalledSignatures.Normalize(e.Title!));
+        }
+
+        var modsDir = _paths.InstanceModsDir(instance);
+        if (Directory.Exists(modsDir))
+        {
+            foreach (var path in Directory.EnumerateFiles(modsDir))
+            {
+                var file = Path.GetFileName(path);
+                if (!IsJarFile(file)) continue;
+
+                var key = file.EndsWith(ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase)
+                    ? file[..^ModItem.DisabledSuffix.Length]
+                    : file;
+                if (index.ContainsKey(key)) continue; // already accounted for by the index
+
+                var jar = TryReadJar(path, CacheDir(modsDir));
+                if (jar != null && !string.IsNullOrWhiteSpace(jar.Title))
+                    names.Add(InstalledSignatures.Normalize(jar.Title));
+            }
+        }
+
+        return new InstalledSignatures(projectIds, names);
+    }
+
+    private static bool IsJarFile(string name)
+        => name.EndsWith(".jar", StringComparison.OrdinalIgnoreCase)
+           || name.EndsWith(".jar" + ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase);
+
     private async Task<string?> TryCacheIconAsync(Instance instance, string projectId, string url, CancellationToken ct)
     {
         try

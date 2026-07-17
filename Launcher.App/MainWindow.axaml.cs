@@ -55,6 +55,7 @@ public partial class MainWindow : AppWindow
     private List<OfflineProfile> _profiles = new();
     private readonly ObservableCollection<ModrinthHitVm> _modrinthVms = new();
     private IReadOnlyList<ModrinthVersion> _modVersions = new List<ModrinthVersion>();
+    private InstalledSignatures? _installedSigs; // what the selected instance already has, for the "Installed" tag
 
     // Modrinth search: debounced query, page-by-scroll, cancel-on-new-search.
     private DispatcherTimer? _searchDebounce;
@@ -1141,6 +1142,30 @@ public partial class MainWindow : AppWindow
         // Resolve real names/versions/icons off-thread; the cards update in place.
         _modEnrichCts = new CancellationTokenSource();
         _ = EnrichModsAsync(inst, _modVms.ToList(), _modEnrichCts.Token);
+
+        // Refresh the "already installed" set so search results flag duplicates.
+        _ = RefreshInstalledSignaturesAsync(inst);
+    }
+
+    /// <summary>Recomputes what the instance already has and re-flags the visible search results.</summary>
+    private async Task RefreshInstalledSignaturesAsync(Instance inst)
+    {
+        try
+        {
+            _installedSigs = await _core.ModMetadata.GetInstalledSignaturesAsync(inst);
+            MarkInstalledResults();
+        }
+        catch (Exception ex) { CrashLog.Write("[mods] computing installed signatures failed", ex); }
+    }
+
+    /// <summary>Tags each Modrinth result the instance already has (by project id or name).</summary>
+    private void MarkInstalledResults()
+    {
+        var sigs = _installedSigs;
+        if (sigs == null) return;
+        foreach (var vm in _modrinthVms)
+            if (!vm.Installing)
+                vm.Installed = sigs.IsInstalled(vm.ProjectId, vm.Title, vm.Hit.Slug);
     }
 
     /// <summary>Fills each installed-mod card with its resolved name, version and icon.</summary>
@@ -1328,6 +1353,7 @@ public partial class MainWindow : AppWindow
                 _modrinthVms.Add(vm);
                 _ = LoadIconAsync(vm, ct);
             }
+            MarkInstalledResults(); // flag any results the instance already has
             _modrinthOffset += page.Count;
             if (page.Count < ModrinthClient.SearchPageSize) _modrinthHasMore = false;
 
