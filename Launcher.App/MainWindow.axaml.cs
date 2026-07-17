@@ -50,7 +50,8 @@ public partial class MainWindow : AppWindow
 
     private List<Instance> _instances = new();
     private List<ModItem> _mods = new();
-    private readonly ObservableCollection<InstalledModVm> _modVms = new();
+    private readonly List<InstalledModVm> _allModVms = new();      // full set for the current instance
+    private readonly ObservableCollection<InstalledModVm> _modVms = new(); // filtered, bound to the list
     private CancellationTokenSource? _modEnrichCts; // cancels stale metadata enrichment on refresh
     private List<OfflineProfile> _profiles = new();
     private readonly ObservableCollection<ModrinthHitVm> _modrinthVms = new();
@@ -146,6 +147,7 @@ public partial class MainWindow : AppWindow
         RefreshModsButton.Click += (_, _) => RefreshMods();
         AddModButton.Click += OnAddMod;
         RemoveModButton.Click += OnRemoveMod;
+        ModsFilterBox.TextChanged += (_, _) => ApplyModFilter();
         ModrinthList.ItemsSource = _modrinthVms;
         ModrinthSearchButton.Click += (_, _) => StartModrinthSearch();
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
@@ -274,7 +276,8 @@ public partial class MainWindow : AppWindow
         // Mods tab
         LblModInstance.Text = Loc.T("label.instance");
         RefreshModsButton.Content = Loc.T("btn.refresh");
-        LblInstalledMods.Text = Loc.T("label.installedmods");
+        LblInstalledMods.Text = Loc.T("nav.mods");
+        ModsFilterBox.Watermark = Loc.T("mods.filter");
         ModsEmptyText.Text = Loc.T("mods.noinstalled");
         AddModButton.Content = Loc.T("btn.addjar");
         RemoveModButton.Content = Loc.T("btn.remove");
@@ -1126,25 +1129,43 @@ public partial class MainWindow : AppWindow
 
         _modEnrichCts?.Cancel();
         _modVms.Clear();
+        _allModVms.Clear();
         if (inst == null)
         {
             _mods = new();
             ModsList.ItemsSource = null;
             ModsEmptyState.IsVisible = true;
+            ModsCountBadge.Text = "0";
             return;
         }
 
         _mods = _core.Mods.ListMods(inst).ToList();
-        foreach (var m in _mods) _modVms.Add(new InstalledModVm(m));
+        foreach (var m in _mods) _allModVms.Add(new InstalledModVm(m));
         ModsList.ItemsSource = _modVms;
+        ApplyModFilter();
         ModsEmptyState.IsVisible = _mods.Count == 0;
+        ModsCountBadge.Text = _mods.Count.ToString();
 
         // Resolve real names/versions/icons off-thread; the cards update in place.
         _modEnrichCts = new CancellationTokenSource();
-        _ = EnrichModsAsync(inst, _modVms.ToList(), _modEnrichCts.Token);
+        _ = EnrichModsAsync(inst, _allModVms.ToList(), _modEnrichCts.Token);
 
         // Refresh the "already installed" set so search results flag duplicates.
         _ = RefreshInstalledSignaturesAsync(inst);
+    }
+
+    /// <summary>Filters the shown mods by the header search box (name or file name). No reload of the source.</summary>
+    private void ApplyModFilter()
+    {
+        var query = (ModsFilterBox.Text ?? "").Trim();
+        _modVms.Clear();
+        foreach (var vm in _allModVms)
+        {
+            if (query.Length == 0
+                || vm.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || vm.FileName.Contains(query, StringComparison.OrdinalIgnoreCase))
+                _modVms.Add(vm);
+        }
     }
 
     /// <summary>Recomputes what the instance already has and re-flags the visible search results.</summary>
