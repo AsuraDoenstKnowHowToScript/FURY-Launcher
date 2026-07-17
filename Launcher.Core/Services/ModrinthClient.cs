@@ -33,9 +33,10 @@ public sealed class ModrinthClient
     public const int SearchPageSize = 30;
 
     public async Task<IReadOnlyList<ModrinthHit>> SearchAsync(
-        string query, string mcVersion, LoaderType loader, int offset = 0, CancellationToken ct = default)
+        string query, string mcVersion, LoaderType loader, ContentKind kind = ContentKind.Mod,
+        int offset = 0, CancellationToken ct = default)
     {
-        var facets = $"[[\"project_type:mod\"],[\"versions:{mcVersion}\"],[\"categories:{LoaderName(loader)}\"]]";
+        var facets = BuildFacets(mcVersion, loader, kind);
         var url = $"{BaseUrl}/search?limit={SearchPageSize}&offset={offset}" +
                   $"&query={Uri.EscapeDataString(query)}&facets={Uri.EscapeDataString(facets)}";
 
@@ -44,24 +45,26 @@ public sealed class ModrinthClient
         return response?.Hits ?? new List<ModrinthHit>();
     }
 
-    /// <summary>All project versions compatible with the MC version + loader (newest first).</summary>
+    /// <summary>All project versions compatible with the MC version (and loader, for mods). Newest first.</summary>
     public async Task<IReadOnlyList<ModrinthVersion>> GetVersionsAsync(
-        string projectId, string mcVersion, LoaderType loader, CancellationToken ct = default)
+        string projectId, string mcVersion, LoaderType loader, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
     {
-        var loaders = $"[\"{LoaderName(loader)}\"]";
         var versions = $"[\"{mcVersion}\"]";
         var url = $"{BaseUrl}/project/{Uri.EscapeDataString(projectId)}/version" +
-                  $"?loaders={Uri.EscapeDataString(loaders)}&game_versions={Uri.EscapeDataString(versions)}";
+                  $"?game_versions={Uri.EscapeDataString(versions)}";
+        // Only mods pin the instance loader; shaders/datapacks use their own loader tags.
+        if (kind == ContentKind.Mod)
+            url += $"&loaders={Uri.EscapeDataString($"[\"{LoaderName(loader)}\"]")}";
 
         await using var stream = await _http.GetStreamAsync(url, ct).ConfigureAwait(false);
         var list = await JsonSerializer.DeserializeAsync<List<ModrinthVersion>>(stream, JsonStore.Options, ct).ConfigureAwait(false);
         return (list ?? new List<ModrinthVersion>()).Where(v => v.Files.Count > 0).ToList();
     }
 
-    /// <summary>Resolves the newest project version compatible with the MC version + loader.</summary>
+    /// <summary>Resolves the newest project version compatible with the MC version (and loader, for mods).</summary>
     public async Task<ModrinthVersion?> GetCompatibleVersionAsync(
-        string projectId, string mcVersion, LoaderType loader, CancellationToken ct = default)
-        => (await GetVersionsAsync(projectId, mcVersion, loader, ct).ConfigureAwait(false)).FirstOrDefault();
+        string projectId, string mcVersion, LoaderType loader, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
+        => (await GetVersionsAsync(projectId, mcVersion, loader, kind, ct).ConfigureAwait(false)).FirstOrDefault();
 
     /// <summary>Fetches a specific version by its id (used to satisfy pinned dependencies).</summary>
     public async Task<ModrinthVersion?> GetVersionByIdAsync(string versionId, CancellationToken ct = default)
@@ -136,6 +139,25 @@ public sealed class ModrinthClient
         await src.CopyToAsync(dst, ct).ConfigureAwait(false);
         return dest;
     }
+
+    private static string BuildFacets(string mcVersion, LoaderType loader, ContentKind kind)
+    {
+        var parts = new List<string>
+        {
+            $"[\"project_type:{ProjectType(kind)}\"]",
+            $"[\"versions:{mcVersion}\"]"
+        };
+        if (kind == ContentKind.Mod)
+            parts.Add($"[\"categories:{LoaderName(loader)}\"]");
+        return "[" + string.Join(",", parts) + "]";
+    }
+
+    private static string ProjectType(ContentKind kind) => kind switch
+    {
+        ContentKind.Shader => "shader",
+        ContentKind.Datapack => "datapack",
+        _ => "mod"
+    };
 
     private static string LoaderName(LoaderType loader) => loader switch
     {

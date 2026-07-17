@@ -253,7 +253,19 @@
 
                 <!-- =============================== MODS =============================== -->
                 <DockPanel x:Name="ModsPanel" IsVisible="False" Margin="16">
-                    <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,10">
+                    <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,10">
+                        <!-- Content type segmented control: switches Modrinth project_type + folder -->
+                        <Border Background="{DynamicResource BgElevated}" CornerRadius="10"
+                                Padding="3" HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <RadioButton x:Name="SegMods" Classes="segment" GroupName="contentseg"
+                                             Content="Mods" IsChecked="True"/>
+                                <RadioButton x:Name="SegShaders" Classes="segment" GroupName="contentseg"
+                                             Content="Shaders"/>
+                                <RadioButton x:Name="SegDatapacks" Classes="segment" GroupName="contentseg"
+                                             Content="Datapacks"/>
+                            </StackPanel>
+                        </Border>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
                             <TextBlock x:Name="ModsInstanceName" Text="—" VerticalAlignment="Center"

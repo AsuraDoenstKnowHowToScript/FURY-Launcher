@@ -200,6 +200,35 @@
         <Setter Property="RenderTransform" Value="translateX(20px)"/>
     </Style>
 
+    <!-- Segmented control: RadioButtons re-templated as pills inside a rounded track.
+         The checked pill fills with the accent; nothing state-driven is set inline. -->
+    <Style Selector="RadioButton.segment">
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Pill" CornerRadius="8" Padding="16,6" Background="Transparent">
+                    <Border.Transitions>
+                        <Transitions>
+                            <BrushTransition Property="Background" Duration="0:0:0.14"/>
+                        </Transitions>
+                    </Border.Transitions>
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.segment:pointerover /template/ Border#Pill">
+        <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
+    </Style>
+    <Style Selector="RadioButton.segment:checked /template/ Border#Pill">
+        <Setter Property="Background" Value="{DynamicResource Accent}"/>
+    </Style>
+    <Style Selector="RadioButton.segment:checked">
+        <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
+    </Style>
+
     <!-- Card container: subtle border + a soft drop shadow so cards read as raised. -->
     <Style Selector="Border.card">
         <Setter Property="Background" Value="{DynamicResource BgSurface}"/>

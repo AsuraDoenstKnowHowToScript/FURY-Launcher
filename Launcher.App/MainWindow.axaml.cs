@@ -57,6 +57,7 @@ public partial class MainWindow : AppWindow
     private readonly ObservableCollection<ModrinthHitVm> _modrinthVms = new();
     private IReadOnlyList<ModrinthVersion> _modVersions = new List<ModrinthVersion>();
     private InstalledSignatures? _installedSigs; // what the selected instance already has, for the "Installed" tag
+    private ContentKind _contentKind = ContentKind.Mod; // Mods / Shaders / Datapacks segment
 
     // Modrinth search: debounced query, page-by-scroll, cancel-on-new-search.
     private DispatcherTimer? _searchDebounce;
@@ -149,6 +150,10 @@ public partial class MainWindow : AppWindow
         ModsFilterBox.TextChanged += (_, _) => ApplyModFilter();
         // One-shot fade as each card is realized (never replays on hover/selection).
         ModsList.ContainerPrepared += OnModContainerPrepared;
+        // Content type segment: Mods / Shaders / Datapacks.
+        SegMods.IsCheckedChanged += OnContentSegmentChanged;
+        SegShaders.IsCheckedChanged += OnContentSegmentChanged;
+        SegDatapacks.IsCheckedChanged += OnContentSegmentChanged;
         ModrinthList.ItemsSource = _modrinthVms;
         ModrinthSearchButton.Click += (_, _) => StartModrinthSearch();
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
@@ -232,7 +237,7 @@ public partial class MainWindow : AppWindow
     {
         // Tabs
         NavHome.Content = Loc.T("nav.home");
-        NavMods.Content = Loc.T("nav.mods");
+        NavMods.Content = Loc.T("nav.content");
         NavAccounts.Content = Loc.T("nav.accounts");
         NavSettings.Content = Loc.T("nav.settings");
         LblJavaSection.Text = Loc.T("settings.java");
@@ -1139,7 +1144,7 @@ public partial class MainWindow : AppWindow
             return;
         }
 
-        _mods = _core.Mods.ListMods(inst).ToList();
+        _mods = _core.Mods.ListContent(inst, _contentKind).ToList();
         foreach (var m in _mods)
             _allModVms.Add(new InstalledModVm(m) { ToggleRequested = OnModToggleRequested });
         ModsList.ItemsSource = _modVms;
@@ -1147,12 +1152,31 @@ public partial class MainWindow : AppWindow
         ModsEmptyState.IsVisible = _mods.Count == 0;
         ModsCountBadge.Text = _mods.Count.ToString();
 
-        // Resolve real names/versions/icons off-thread; the cards update in place.
-        _modEnrichCts = new CancellationTokenSource();
-        _ = EnrichModsAsync(inst, _allModVms.ToList(), _modEnrichCts.Token);
+        // Rich metadata (name/icon via hash) and the "installed" comparator are mod-only for now;
+        // shaders/datapacks list by file name.
+        if (_contentKind == ContentKind.Mod)
+        {
+            _modEnrichCts = new CancellationTokenSource();
+            _ = EnrichModsAsync(inst, _allModVms.ToList(), _modEnrichCts.Token);
+            _ = RefreshInstalledSignaturesAsync(inst);
+        }
+        else
+        {
+            _installedSigs = null;
+            MarkInstalledResults();
+        }
+    }
 
-        // Refresh the "already installed" set so search results flag duplicates.
-        _ = RefreshInstalledSignaturesAsync(inst);
+    /// <summary>Switches the content type (Mods / Shaders / Datapacks): re-lists and re-searches.</summary>
+    private void OnContentSegmentChanged(object? sender, RoutedEventArgs e)
+    {
+        var kind = SegShaders.IsChecked == true ? ContentKind.Shader
+                 : SegDatapacks.IsChecked == true ? ContentKind.Datapack
+                 : ContentKind.Mod;
+        if (kind == _contentKind) return;
+        _contentKind = kind;
+        RefreshMods();
+        StartModrinthSearch();
     }
 
     /// <summary>Plays a one-shot fade-in on a freshly realized mod card (no replay on interaction).</summary>
@@ -1251,7 +1275,8 @@ public partial class MainWindow : AppWindow
     private void UpdateModsAvailability()
     {
         var inst = SelectedModInstance();
-        var isVanilla = inst != null && inst.Loader == LoaderType.Vanilla;
+        // Only mods need a loader; shaders/datapacks are fine on a Vanilla instance.
+        var isVanilla = inst != null && inst.Loader == LoaderType.Vanilla && _contentKind == ContentKind.Mod;
 
         ModsVanillaPanel.IsVisible = isVanilla;
         AddModButton.IsEnabled = !isVanilla;
@@ -1325,16 +1350,18 @@ public partial class MainWindow : AppWindow
         var inst = SelectedModInstance();
         if (inst == null) { Notify(Loc.T("mods.selectinstancetab")); return; }
 
+        // Mods are .jar; shaders/datapacks are .zip.
+        var pattern = _contentKind == ContentKind.Mod ? "*.jar" : "*.zip";
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = Loc.T("picker.mod"),
             AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType(Loc.T("filetype.jar")) { Patterns = new[] { "*.jar" } } }
+            FileTypeFilter = new[] { new FilePickerFileType(pattern) { Patterns = new[] { pattern } } }
         });
         var path = files.FirstOrDefault()?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
 
-        await _core.Mods.AddModAsync(inst, path);
+        await _core.Mods.AddContentAsync(inst, path, _contentKind);
         RefreshMods();
         Notify(Loc.T("mods.added", System.IO.Path.GetFileName(path)));
     });
@@ -1345,12 +1372,13 @@ public partial class MainWindow : AppWindow
         var inst = SelectedModInstance();
         if (inst == null || sender is not Control { DataContext: InstalledModVm vm }) return Task.CompletedTask;
 
-        _core.Mods.RemoveMod(inst, vm.FileName);
+        _core.Mods.RemoveMod(inst, vm.FileName, _contentKind);
         _allModVms.Remove(vm);
         _modVms.Remove(vm); // in-place removal; the ItemsControl drops only this card
         ModsCountBadge.Text = _allModVms.Count.ToString();
         ModsEmptyState.IsVisible = _allModVms.Count == 0;
-        _ = RefreshInstalledSignaturesAsync(inst); // search results un-mark this mod
+        if (_contentKind == ContentKind.Mod)
+            _ = RefreshInstalledSignaturesAsync(inst); // search results un-mark this mod
         Notify(Loc.T("mods.removed"));
         return Task.CompletedTask;
     });
@@ -1369,7 +1397,7 @@ public partial class MainWindow : AppWindow
         {
             try
             {
-                vm.UpdateFileName(_core.Mods.ToggleMod(inst, vm.FileName));
+                vm.UpdateFileName(_core.Mods.ToggleMod(inst, vm.FileName, _contentKind));
             }
             catch (Exception ex)
             {
@@ -1409,7 +1437,7 @@ public partial class MainWindow : AppWindow
         ModrinthStatus.Text = Loc.T("mods.searching");
         try
         {
-            var page = await _core.Mods.SearchModrinthAsync(inst, _modrinthQuery, _modrinthOffset, ct);
+            var page = await _core.Mods.SearchModrinthAsync(inst, _modrinthQuery, _contentKind, _modrinthOffset, ct);
             if (ct.IsCancellationRequested) return;
 
             foreach (var hit in page)
@@ -1480,7 +1508,7 @@ public partial class MainWindow : AppWindow
         ModrinthStatus.Text = Loc.T("mods.downloading", vm.Title);
         try
         {
-            var installed = await _core.Mods.InstallFromModrinthAsync(inst, vm.ProjectId);
+            var installed = await _core.Mods.InstallFromModrinthAsync(inst, vm.ProjectId, _contentKind);
             RefreshMods();
             ModrinthStatus.Text = Loc.T("mods.installedcount", installed.Count);
             vm.Installed = true; // card shows a check instead of the button
@@ -1500,7 +1528,7 @@ public partial class MainWindow : AppWindow
             return;
         }
 
-        _modVersions = await _core.Mods.GetModrinthVersionsAsync(inst, _modrinthVms[idx].ProjectId);
+        _modVersions = await _core.Mods.GetModrinthVersionsAsync(inst, _modrinthVms[idx].ProjectId, _contentKind);
         ModrinthVersionCombo.ItemsSource = _modVersions.Select(v => v.Display).ToList();
         if (_modVersions.Count > 0) ModrinthVersionCombo.SelectedIndex = 0;
     });
@@ -1514,7 +1542,7 @@ public partial class MainWindow : AppWindow
         var version = _modVersions[vIdx];
         ModrinthStatus.Text = Loc.T("mods.downloading", version.Display);
         var log = new Progress<string>(f => AppendLog("[mod] " + f));
-        var installed = await _core.Mods.InstallVersionAsync(inst, version, log);
+        var installed = await _core.Mods.InstallVersionAsync(inst, version, _contentKind, log);
         RefreshMods();
         ModrinthStatus.Text = Loc.T("mods.installedcount", installed.Count);
     });
