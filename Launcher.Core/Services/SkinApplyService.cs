@@ -97,7 +97,7 @@ public sealed class SkinApplyService
         }
 
         log?.Report("[skin] Baixando CustomSkinLoader (Modrinth, compativel com a versao/loader)...");
-        var installed = await _mods.InstallFromModrinthAsync(instance, CslSlug, ct).ConfigureAwait(false);
+        var installed = await _mods.InstallFromModrinthAsync(instance, CslSlug, ContentKind.Mod, ct).ConfigureAwait(false);
         log?.Report("[skin] Instalado: " + string.Join(", ", installed));
     }
 

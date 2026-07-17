@@ -45,4 +45,14 @@ public sealed class LauncherPaths
     public string InstanceMinecraft(Instance i) => Path.Combine(InstanceDir(i), ".minecraft");
     public string InstanceModsDir(Instance i) => Path.Combine(InstanceMinecraft(i), "mods");
     public string InstanceConfigDir(Instance i) => Path.Combine(InstanceMinecraft(i), "config");
+    public string InstanceShaderpacksDir(Instance i) => Path.Combine(InstanceMinecraft(i), "shaderpacks");
+    public string InstanceDatapacksDir(Instance i) => Path.Combine(InstanceMinecraft(i), "datapacks");
+
+    /// <summary>The destination folder for a content kind (mods / shaderpacks / datapacks).</summary>
+    public string InstanceContentDir(Instance i, ContentKind kind) => kind switch
+    {
+        ContentKind.Shader => InstanceShaderpacksDir(i),
+        ContentKind.Datapack => InstanceDatapacksDir(i),
+        _ => InstanceModsDir(i)
+    };
 }

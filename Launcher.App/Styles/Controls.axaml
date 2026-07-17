@@ -153,13 +153,100 @@
         <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
     </Style>
 
-    <!-- Card container -->
+    <!-- Custom sliding toggle (ToggleButton.switch): a track + a knob that slides with a
+         TransformOperationsTransition, so the on/off flip is always smooth. Only the track
+         colour and the knob position change by state; nothing that changes is set inline
+         (inline template values would override the :checked style setters). -->
+    <Style Selector="ToggleButton.switch">
+        <Setter Property="Width" Value="44"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Track" CornerRadius="12" BorderThickness="1">
+                    <Border.Transitions>
+                        <Transitions>
+                            <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.18"/>
+                        </Transitions>
+                    </Border.Transitions>
+                    <Border Name="Knob" Width="18" Height="18" CornerRadius="9"
+                            HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,0,0,0"
+                            Background="#ECEAF3">
+                        <Border.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform"
+                                                               Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                            </Transitions>
+                        </Border.Transitions>
+                    </Border>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="ToggleButton.switch /template/ Border#Track">
+        <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
+    </Style>
+    <Style Selector="ToggleButton.switch:checked /template/ Border#Track">
+        <Setter Property="Background" Value="{DynamicResource Accent}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+    </Style>
+    <Style Selector="ToggleButton.switch /template/ Border#Knob">
+        <Setter Property="RenderTransform" Value="translateX(0px)"/>
+    </Style>
+    <Style Selector="ToggleButton.switch:checked /template/ Border#Knob">
+        <Setter Property="RenderTransform" Value="translateX(20px)"/>
+    </Style>
+
+    <!-- Segmented control: RadioButtons re-templated as pills inside a rounded track.
+         The checked pill fills with the accent; nothing state-driven is set inline. -->
+    <Style Selector="RadioButton.segment">
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Pill" CornerRadius="8" Padding="16,6" Background="Transparent">
+                    <Border.Transitions>
+                        <Transitions>
+                            <BrushTransition Property="Background" Duration="0:0:0.14"/>
+                        </Transitions>
+                    </Border.Transitions>
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.segment:pointerover /template/ Border#Pill">
+        <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
+    </Style>
+    <Style Selector="RadioButton.segment:checked /template/ Border#Pill">
+        <Setter Property="Background" Value="{DynamicResource Accent}"/>
+    </Style>
+    <Style Selector="RadioButton.segment:checked">
+        <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
+    </Style>
+
+    <!-- Card container: subtle border + a soft drop shadow so cards read as raised. -->
     <Style Selector="Border.card">
         <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusLg}"/>
         <Setter Property="Padding" Value="16"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #40000000"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.14"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <!-- Lift a card a touch more when the pointer is over it (inside a hoverable list). -->
+    <Style Selector="ListBoxItem:pointerover Border.card">
+        <Setter Property="BoxShadow" Value="0 4 14 0 #55000000"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
     </Style>
 
 </Styles>

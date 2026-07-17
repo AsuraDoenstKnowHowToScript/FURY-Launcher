@@ -6,6 +6,7 @@
 
 using System.ComponentModel;
 using Avalonia.Media.Imaging;
+using Launcher.Core.Localization;
 using Launcher.Core.Models;
 
 namespace Launcher.App.ViewModels;
@@ -52,8 +53,35 @@ public sealed class ModrinthHitVm : INotifyPropertyChanged
     public bool Installing
     {
         get => _installing;
-        set { if (_installing != value) { _installing = value; Raise(nameof(Installing)); } }
+        set { if (_installing != value) { _installing = value; Raise(nameof(Installing)); Raise(nameof(CanInstall)); } }
     }
+
+    private bool _installed;
+    /// <summary>
+    /// True once installed, or already present in the instance (matched by project id or
+    /// name). The card then shows an "Installed" tag, dims, and hides the button.
+    /// </summary>
+    public bool Installed
+    {
+        get => _installed;
+        set
+        {
+            if (_installed == value) return;
+            _installed = value;
+            Raise(nameof(Installed));
+            Raise(nameof(CanInstall));
+            Raise(nameof(CardOpacity));
+        }
+    }
+
+    /// <summary>The install button shows only while idle (not installing, not already installed).</summary>
+    public bool CanInstall => !_installing && !_installed;
+
+    /// <summary>Dims the card when the mod is already installed.</summary>
+    public double CardOpacity => _installed ? 0.55 : 1.0;
+
+    /// <summary>Localized "Installed" tag text.</summary>
+    public string InstalledLabel => Loc.T("mods.installedlabel");
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void Raise(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
