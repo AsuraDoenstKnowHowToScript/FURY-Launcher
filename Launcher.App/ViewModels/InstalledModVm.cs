@@ -32,21 +32,35 @@ public sealed class InstalledModVm : INotifyPropertyChanged
     /// <summary>Current on-disk file name; changes when the mod is enabled/disabled.</summary>
     public string FileName => _fileName;
 
+    /// <summary>
+    /// Performs the heavy enable/disable (renames the jar) when the switch flips. Set by
+    /// the UI. Runs from the <see cref="Enabled"/> setter, so the ToggleSwitch animates
+    /// natively and the list is never reloaded.
+    /// </summary>
+    public Action<InstalledModVm, bool>? ToggleRequested;
+
     private bool _enabled;
     public bool Enabled
     {
         get => _enabled;
-        private set { if (_enabled != value) { _enabled = value; Raise(nameof(Enabled)); } }
+        set
+        {
+            if (_enabled == value) return;
+            _enabled = value;
+            Raise(nameof(Enabled));
+            ToggleRequested?.Invoke(this, value); // rename the file; never reloads the collection
+        }
     }
 
-    /// <summary>
-    /// Updates state after a toggle in place (no list rebuild), so the switch animates
-    /// smoothly instead of flickering.
-    /// </summary>
-    public void SetToggled(string newFileName)
+    /// <summary>Records the on-disk name after a successful toggle (no re-trigger).</summary>
+    public void UpdateFileName(string fileName) => _fileName = fileName;
+
+    /// <summary>Reverts the enabled flag without running <see cref="ToggleRequested"/> again.</summary>
+    public void SetEnabledSilently(bool value)
     {
-        _fileName = newFileName;
-        Enabled = !newFileName.EndsWith(ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase);
+        if (_enabled == value) return;
+        _enabled = value;
+        Raise(nameof(Enabled));
     }
 
     private string _title;

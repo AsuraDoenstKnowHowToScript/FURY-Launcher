@@ -148,6 +148,8 @@ public partial class MainWindow : AppWindow
         AddModButton.Click += OnAddMod;
         RemoveModButton.Click += OnRemoveMod;
         ModsFilterBox.TextChanged += (_, _) => ApplyModFilter();
+        // One-shot fade as each card is realized (never replays on hover/selection).
+        ModsList.ContainerPrepared += OnModContainerPrepared;
         ModrinthList.ItemsSource = _modrinthVms;
         ModrinthSearchButton.Click += (_, _) => StartModrinthSearch();
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
@@ -1140,7 +1142,8 @@ public partial class MainWindow : AppWindow
         }
 
         _mods = _core.Mods.ListMods(inst).ToList();
-        foreach (var m in _mods) _allModVms.Add(new InstalledModVm(m));
+        foreach (var m in _mods)
+            _allModVms.Add(new InstalledModVm(m) { ToggleRequested = OnModToggleRequested });
         ModsList.ItemsSource = _modVms;
         ApplyModFilter();
         ModsEmptyState.IsVisible = _mods.Count == 0;
@@ -1152,6 +1155,31 @@ public partial class MainWindow : AppWindow
 
         // Refresh the "already installed" set so search results flag duplicates.
         _ = RefreshInstalledSignaturesAsync(inst);
+    }
+
+    /// <summary>Plays a one-shot fade-in on a freshly realized mod card (no replay on interaction).</summary>
+    private static void OnModContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+    {
+        var anim = new Avalonia.Animation.Animation
+        {
+            Duration = TimeSpan.FromMilliseconds(220),
+            Easing = new Avalonia.Animation.Easings.CubicEaseOut(),
+            FillMode = Avalonia.Animation.FillMode.Forward,
+            Children =
+            {
+                new Avalonia.Animation.KeyFrame
+                {
+                    Cue = new Avalonia.Animation.Cue(0d),
+                    Setters = { new Avalonia.Styling.Setter(Visual.OpacityProperty, 0d) }
+                },
+                new Avalonia.Animation.KeyFrame
+                {
+                    Cue = new Avalonia.Animation.Cue(1d),
+                    Setters = { new Avalonia.Styling.Setter(Visual.OpacityProperty, 1d) }
+                }
+            }
+        };
+        _ = anim.RunAsync(e.Container);
     }
 
     /// <summary>Filters the shown mods by the header search box (name or file name). No reload of the source.</summary>
@@ -1325,19 +1353,25 @@ public partial class MainWindow : AppWindow
         return Task.CompletedTask;
     });
 
-    /// <summary>The per-card switch enables/disables a mod directly (renames the jar).</summary>
-    private async void OnModToggleSwitch(object? sender, RoutedEventArgs e) => await SafeAsync(() =>
+    /// <summary>
+    /// Runs from the item VM's Enabled setter when the switch flips: renames the jar in
+    /// place and never reloads the list, so the ToggleSwitch keeps its native animation.
+    /// </summary>
+    private void OnModToggleRequested(InstalledModVm vm, bool enabled)
     {
         var inst = SelectedModInstance();
-        if (inst == null || sender is not ToggleSwitch { DataContext: InstalledModVm vm })
-            return Task.CompletedTask;
-
-        // Toggle in place: rename the jar and update just this card, so the switch
-        // animates smoothly instead of rebuilding the whole list (which flickered).
-        var newName = _core.Mods.ToggleMod(inst, vm.FileName);
-        vm.SetToggled(newName);
-        return Task.CompletedTask;
-    });
+        if (inst == null) return;
+        try
+        {
+            vm.UpdateFileName(_core.Mods.ToggleMod(inst, vm.FileName));
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[mods] toggle failed", ex);
+            vm.SetEnabledSilently(!enabled); // revert the switch on failure
+            Notify(Loc.T("status.error", ex.Message));
+        }
+    }
 
     /// <summary>Begins a fresh Modrinth search: cancels the previous one, clears results, loads page 0.</summary>
     private void StartModrinthSearch()

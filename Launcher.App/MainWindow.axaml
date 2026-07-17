@@ -295,23 +295,12 @@
                                          behaviors:SmoothScroll.Enabled="True"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.Styles>
+                                        <!-- Entrance animation runs once per container in code (ContainerPrepared),
+                                             not here, so hover/selection pseudo-classes never replay it. -->
                                         <Style Selector="ListBoxItem">
                                             <Setter Property="Padding" Value="0"/>
                                             <Setter Property="Margin" Value="0,0,0,8"/>
                                             <Setter Property="Background" Value="Transparent"/>
-                                            <!-- Entrance: fade + slide up as cards appear (refresh, filter, tab switch). -->
-                                            <Style.Animations>
-                                                <Animation Duration="0:0:0.28" Easing="CubicEaseOut" FillMode="Forward">
-                                                    <KeyFrame Cue="0%">
-                                                        <Setter Property="Opacity" Value="0"/>
-                                                        <Setter Property="TranslateTransform.Y" Value="18"/>
-                                                    </KeyFrame>
-                                                    <KeyFrame Cue="100%">
-                                                        <Setter Property="Opacity" Value="1"/>
-                                                        <Setter Property="TranslateTransform.Y" Value="0"/>
-                                                    </KeyFrame>
-                                                </Animation>
-                                            </Style.Animations>
                                         </Style>
                                         <Style Selector="ListBoxItem:selected Border.card">
                                             <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
@@ -349,7 +338,7 @@
                                                     </StackPanel>
                                                     <ToggleSwitch Grid.Column="4" VerticalAlignment="Center"
                                                                   OnContent="" OffContent=""
-                                                                  IsChecked="{Binding Enabled, Mode=OneWay}" Click="OnModToggleSwitch"/>
+                                                                  IsChecked="{Binding Enabled}"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
