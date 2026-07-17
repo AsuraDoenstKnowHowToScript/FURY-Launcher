@@ -294,7 +294,9 @@ public partial class MainWindow : AppWindow
         ModrinthEmptyText.Text = Loc.T("mods.searchprompt");
 
         // Skin tab: same profile/nick wording as the Play tab.
-        LblSkinProfile.Text = Loc.T("label.profile");
+        LblSkinAccountHeader.Text = Loc.T("skins.account");
+        LblSkinProfileHeader.Text = Loc.T("skins.profile");
+        LblSkinAppearanceHeader.Text = Loc.T("skins.appearance");
         NewProfileButton.Content = Loc.T("btn.new");
         DeleteProfileButton.Content = Loc.T("btn.deleteprofile");
         LblProfileName.Text = Loc.T("label.nick");

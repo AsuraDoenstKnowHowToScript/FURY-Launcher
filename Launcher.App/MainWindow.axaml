@@ -458,61 +458,113 @@
                 </DockPanel>
 
                 <!-- =============================== ACCOUNTS (login + skin) =============================== -->
-                <ScrollViewer x:Name="AccountsPanel" IsVisible="False">
-                    <StackPanel Margin="16" Spacing="10">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Name="MicrosoftLoginButton" Classes="primary" Content="Microsoft login"/>
-                            <Button x:Name="MicrosoftLogoutButton" Classes="secondary" Content="Log out"/>
-                            <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)"
-                                       Foreground="{DynamicResource TextSecondary}"/>
-                        </StackPanel>
+                <ScrollViewer x:Name="AccountsPanel" IsVisible="False"
+                              behaviors:SmoothScroll.Enabled="True">
+                    <StackPanel Margin="24" Spacing="16" MaxWidth="940" HorizontalAlignment="Left">
 
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Name="LblSkinProfile" Text="Profile:" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="SkinProfileCombo" Width="200"/>
-                            <Button x:Name="NewProfileButton" Content="New"/>
-                            <Button x:Name="DeleteProfileButton" Classes="secondary" Content="Delete"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Name="LblProfileName" Text="Nick:" VerticalAlignment="Center"/>
-                            <TextBox x:Name="ProfileNameBox" Width="180"/>
-                            <CheckBox x:Name="SlimCheck" Content="Slim model (Alex)"/>
-                            <Button x:Name="SaveProfileButton" Content="Save profile"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Button x:Name="ChooseSkinButton" Content="Choose skin (PNG)"/>
-                            <Button x:Name="ChooseCapeButton" Content="Choose cape"/>
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock x:Name="LblApplyInstance" Text="Apply in-game (offline) on instance:" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="SkinInstanceCombo" Width="240"/>
-                            <Button x:Name="ApplySkinButton" Content="Apply in-game"/>
-                        </StackPanel>
-
-                        <Border Classes="card" Margin="0,4,0,0">
-                            <StackPanel Orientation="Horizontal" Spacing="20">
-                                <StackPanel Spacing="4">
-                                    <TextBlock x:Name="LblSkinPreview" Text="Skin (raw PNG)"/>
-                                    <Image x:Name="SkinImage" Width="128" Height="128"
-                                           Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
-                                </StackPanel>
-                                <StackPanel Spacing="4">
-                                    <TextBlock x:Name="LblFacePreview" Text="Face (8x8)"/>
-                                    <Image x:Name="FaceImage" Width="128" Height="128"
-                                           Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
-                                </StackPanel>
-                                <StackPanel Spacing="4">
-                                    <TextBlock x:Name="LblCapePreview" Text="Cape"/>
-                                    <Image x:Name="CapeImage" Width="80" Height="128"
-                                           Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                        <!-- Microsoft account -->
+                        <Border Classes="card">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Name="LblSkinAccountHeader" Classes="Subtitle" Text="Account"/>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button x:Name="MicrosoftLoginButton" Classes="primary" Content="Microsoft login"/>
+                                    <Button x:Name="MicrosoftLogoutButton" Classes="secondary" Content="Log out"/>
+                                    <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)"
+                                               Foreground="{DynamicResource TextSecondary}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
-                        <TextBlock x:Name="SkinStatus" Text="" TextWrapping="Wrap"/>
-                        <TextBlock x:Name="LblSkinHelp1" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text=""/>
-                        <TextBlock x:Name="LblSkinHelp2" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text=""/>
+                        <!-- Offline profile + skin/cape -->
+                        <Border Classes="card">
+                            <Grid ColumnDefinitions="*,28,Auto">
+                                <StackPanel Grid.Column="0" Spacing="16">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock x:Name="LblSkinProfileHeader" Classes="Subtitle" Text="Profile"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <ComboBox x:Name="SkinProfileCombo" Width="200"/>
+                                            <Button x:Name="NewProfileButton" Content="New"/>
+                                            <Button x:Name="DeleteProfileButton" Classes="secondary" Content="Delete"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock x:Name="LblProfileName" Text="Nick:" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="ProfileNameBox" Width="180"/>
+                                            <CheckBox x:Name="SlimCheck" Content="Slim model (Alex)" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <Button x:Name="SaveProfileButton" Classes="primary" Content="Save profile"
+                                                HorizontalAlignment="Left"/>
+                                    </StackPanel>
+
+                                    <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                                    <StackPanel Spacing="8">
+                                        <TextBlock x:Name="LblSkinAppearanceHeader" Classes="Subtitle" Text="Skin and cape"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="ChooseSkinButton" Content="Choose skin (PNG)"/>
+                                            <Button x:Name="ChooseCapeButton" Classes="secondary" Content="Choose cape"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                                    <StackPanel Spacing="6">
+                                        <TextBlock x:Name="LblApplyInstance" Text="Apply in-game (offline) on instance:"
+                                                   TextWrapping="Wrap"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <ComboBox x:Name="SkinInstanceCombo" Width="240"/>
+                                            <Button x:Name="ApplySkinButton" Classes="primary" Content="Apply in-game"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <TextBlock x:Name="SkinStatus" Text="" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+
+                                <!-- Live previews -->
+                                <Border Grid.Column="2" Background="{DynamicResource BgElevated}" CornerRadius="10"
+                                        Padding="18" VerticalAlignment="Top">
+                                    <StackPanel Spacing="14" HorizontalAlignment="Center">
+                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                            <TextBlock x:Name="LblFacePreview" Text="Face (8x8)"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                            <Border CornerRadius="8" ClipToBounds="True"
+                                                    Background="{DynamicResource BgSurface}">
+                                                <Image x:Name="FaceImage" Width="120" Height="120"
+                                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+                                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                                <TextBlock x:Name="LblSkinPreview" Text="Skin (raw PNG)"
+                                                           HorizontalAlignment="Center"
+                                                           Foreground="{DynamicResource TextSecondary}"/>
+                                                <Image x:Name="SkinImage" Width="96" Height="96"
+                                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                                            </StackPanel>
+                                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                                <TextBlock x:Name="LblCapePreview" Text="Cape"
+                                                           HorizontalAlignment="Center"
+                                                           Foreground="{DynamicResource TextSecondary}"/>
+                                                <Image x:Name="CapeImage" Width="60" Height="96"
+                                                       Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- How it works -->
+                        <Border Classes="card">
+                            <StackPanel Spacing="6">
+                                <TextBlock x:Name="LblSkinHelp1" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondary}" Text=""/>
+                                <TextBlock x:Name="LblSkinHelp2" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextMuted}" Text=""/>
+                            </StackPanel>
+                        </Border>
+
                     </StackPanel>
                 </ScrollViewer>
 
