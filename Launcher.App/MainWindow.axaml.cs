@@ -148,8 +148,9 @@ public partial class MainWindow : AppWindow
         RefreshModsButton.Click += (_, _) => RefreshMods();
         AddModButton.Click += OnAddMod;
         ModsFilterBox.TextChanged += (_, _) => ApplyModFilter();
-        // One-shot fade as each card is realized (never replays on hover/selection).
+        // One-shot fade as each card is realized (installed list + search results).
         ModsList.ContainerPrepared += OnModContainerPrepared;
+        ModrinthList.ContainerPrepared += OnModContainerPrepared;
         // Content type segment: Mods / Shaders / Datapacks.
         SegMods.IsCheckedChanged += OnContentSegmentChanged;
         SegShaders.IsCheckedChanged += OnContentSegmentChanged;

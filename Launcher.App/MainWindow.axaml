@@ -377,6 +377,7 @@
                             </StackPanel>
                             <Grid>
                                 <ListBox x:Name="ModrinthList" Background="Transparent" BorderThickness="0" Padding="0"
+                                         behaviors:SmoothScroll.Enabled="True"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <ListBox.Styles>
                                         <Style Selector="ListBoxItem">
