@@ -282,7 +282,7 @@ public partial class MainWindow : AppWindow
         // Mods tab
         LblModInstance.Text = Loc.T("label.instance");
         RefreshModsButton.Content = Loc.T("btn.refresh");
-        LblInstalledMods.Text = Loc.T("nav.mods");
+        UpdateContentTitle();
         ModsFilterBox.Watermark = Loc.T("mods.filter");
         ModsEmptyText.Text = Loc.T("mods.noinstalled");
         AddModButton.Content = Loc.T("btn.addjar");
@@ -1128,6 +1128,7 @@ public partial class MainWindow : AppWindow
     private void RefreshMods()
     {
         UpdateModsAvailability();
+        UpdateContentTitle();
 
         var inst = SelectedModInstance();
         ModsInstanceName.Text = inst?.Name ?? "—";
@@ -1152,20 +1153,21 @@ public partial class MainWindow : AppWindow
         ModsEmptyState.IsVisible = _mods.Count == 0;
         ModsCountBadge.Text = _mods.Count.ToString();
 
-        // Rich metadata (name/icon via hash) and the "installed" comparator are mod-only for now;
-        // shaders/datapacks list by file name.
-        if (_contentKind == ContentKind.Mod)
-        {
-            _modEnrichCts = new CancellationTokenSource();
-            _ = EnrichModsAsync(inst, _allModVms.ToList(), _modEnrichCts.Token);
-            _ = RefreshInstalledSignaturesAsync(inst);
-        }
-        else
-        {
-            _installedSigs = null;
-            MarkInstalledResults();
-        }
+        // Resolve real names/icons off-thread (Modrinth hash lookup works for zips too),
+        // and refresh the "already installed" set for the search comparator.
+        _modEnrichCts = new CancellationTokenSource();
+        _ = EnrichModsAsync(inst, _allModVms.ToList(), _modEnrichCts.Token);
+        _ = RefreshInstalledSignaturesAsync(inst);
     }
+
+    /// <summary>Sets the installed-list header to the selected content type.</summary>
+    private void UpdateContentTitle()
+        => LblInstalledMods.Text = _contentKind switch
+        {
+            ContentKind.Shader => "Shaders",
+            ContentKind.Datapack => "Datapacks",
+            _ => "Mods"
+        };
 
     /// <summary>Switches the content type (Mods / Shaders / Datapacks): re-lists and re-searches.</summary>
     private void OnContentSegmentChanged(object? sender, RoutedEventArgs e)
@@ -1223,7 +1225,7 @@ public partial class MainWindow : AppWindow
     {
         try
         {
-            _installedSigs = await _core.ModMetadata.GetInstalledSignaturesAsync(inst);
+            _installedSigs = await _core.ModMetadata.GetInstalledSignaturesAsync(inst, _contentKind);
             MarkInstalledResults();
         }
         catch (Exception ex) { CrashLog.Write("[mods] computing installed signatures failed", ex); }
@@ -1249,7 +1251,7 @@ public partial class MainWindow : AppWindow
                 if (ct.IsCancellationRequested) return;
                 // Resolves from the index, or identifies the jar on Modrinth by hash and
                 // caches it, so manual/CurseForge mods get a real name, version and icon.
-                var info = await _core.ModMetadata.ResolveWithOnlineAsync(inst, vm.Item, ct);
+                var info = await _core.ModMetadata.ResolveWithOnlineAsync(inst, vm.Item, _contentKind, ct);
                 Bitmap? icon = null;
                 if (info.IconPath is { } iconPath)
                     icon = await Task.Run(() => TryLoadBitmap(iconPath), ct);
@@ -1377,8 +1379,7 @@ public partial class MainWindow : AppWindow
         _modVms.Remove(vm); // in-place removal; the ItemsControl drops only this card
         ModsCountBadge.Text = _allModVms.Count.ToString();
         ModsEmptyState.IsVisible = _allModVms.Count == 0;
-        if (_contentKind == ContentKind.Mod)
-            _ = RefreshInstalledSignaturesAsync(inst); // search results un-mark this mod
+        _ = RefreshInstalledSignaturesAsync(inst); // search results un-mark this item
         Notify(Loc.T("mods.removed"));
         return Task.CompletedTask;
     });

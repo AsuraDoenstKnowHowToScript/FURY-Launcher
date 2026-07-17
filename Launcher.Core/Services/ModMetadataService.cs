@@ -32,13 +32,13 @@ public sealed class ModMetadataService
         _modrinth = modrinth;
     }
 
-    private string IndexPath(Instance instance) => Path.Combine(_paths.InstanceModsDir(instance), IndexFile);
-    private static string CacheDir(string modsDir) => Path.Combine(modsDir, CacheFolder);
+    private string IndexPath(Instance instance, ContentKind kind) => Path.Combine(_paths.InstanceContentDir(instance, kind), IndexFile);
+    private static string CacheDir(string contentDir) => Path.Combine(contentDir, CacheFolder);
 
-    /// <summary>Loads the per-instance metadata index (file name → entry), case-insensitive.</summary>
-    public async Task<Dictionary<string, ModIndexEntry>> LoadIndexAsync(Instance instance)
+    /// <summary>Loads the per-instance, per-kind metadata index (file name → entry), case-insensitive.</summary>
+    public async Task<Dictionary<string, ModIndexEntry>> LoadIndexAsync(Instance instance, ContentKind kind = ContentKind.Mod)
     {
-        var raw = await JsonStore.ReadAsync<Dictionary<string, ModIndexEntry>>(IndexPath(instance)).ConfigureAwait(false);
+        var raw = await JsonStore.ReadAsync<Dictionary<string, ModIndexEntry>>(IndexPath(instance, kind)).ConfigureAwait(false);
         return raw == null
             ? new Dictionary<string, ModIndexEntry>(StringComparer.OrdinalIgnoreCase)
             : new Dictionary<string, ModIndexEntry>(raw, StringComparer.OrdinalIgnoreCase);
@@ -49,11 +49,11 @@ public sealed class ModMetadataService
     /// (title, description, icon), caches the icon locally, and records it in the index.
     /// Best-effort: any failure is logged and skipped so the install itself never breaks.
     /// </summary>
-    public async Task RecordInstallAsync(Instance instance, string fileName, ModrinthVersion version, CancellationToken ct = default)
+    public async Task RecordInstallAsync(Instance instance, string fileName, ModrinthVersion version, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
     {
         try
         {
-            var index = await LoadIndexAsync(instance).ConfigureAwait(false);
+            var index = await LoadIndexAsync(instance, kind).ConfigureAwait(false);
             var entry = new ModIndexEntry
             {
                 ProjectId = version.ProjectId,
@@ -71,12 +71,12 @@ public sealed class ModMetadataService
                     entry.Description = project.Description;
                     entry.IconUrl = project.IconUrl;
                     if (!string.IsNullOrWhiteSpace(project.IconUrl))
-                        entry.IconFile = await TryCacheIconAsync(instance, version.ProjectId!, project.IconUrl!, ct).ConfigureAwait(false);
+                        entry.IconFile = await TryCacheIconAsync(instance, kind, version.ProjectId!, project.IconUrl!, ct).ConfigureAwait(false);
                 }
             }
 
             index[fileName] = entry;
-            await JsonStore.WriteAsync(IndexPath(instance), index).ConfigureAwait(false);
+            await JsonStore.WriteAsync(IndexPath(instance, kind), index).ConfigureAwait(false);
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception ex) { CrashLog.Write("[mods] recording install metadata failed", ex); }
@@ -89,24 +89,24 @@ public sealed class ModMetadataService
     /// the jar/file-name fallback) is written back, so this only hits the network once per
     /// mod. Fully async; safe to call off the UI thread.
     /// </summary>
-    public async Task<ModDisplayInfo> ResolveWithOnlineAsync(Instance instance, ModItem item, CancellationToken ct = default)
+    public async Task<ModDisplayInfo> ResolveWithOnlineAsync(Instance instance, ModItem item, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
     {
-        var index = await LoadIndexAsync(instance).ConfigureAwait(false);
+        var index = await LoadIndexAsync(instance, kind).ConfigureAwait(false);
 
         // Already known from a previous resolve/install: use it, no network.
         if (index.TryGetValue(item.DisplayName, out var known) && !string.IsNullOrWhiteSpace(known.Title))
-            return Resolve(instance, item, index);
+            return Resolve(instance, item, index, kind);
 
-        // Try to identify the jar on Modrinth by content hash.
+        // Try to identify the file on Modrinth by content hash (works for zips too).
         try
         {
             var hash = await Task.Run(() => ComputeSha512(item.FullPath), ct).ConfigureAwait(false);
             var version = hash == null ? null : await _modrinth.GetVersionByHashAsync(hash, ct).ConfigureAwait(false);
             if (version != null)
             {
-                await RecordInstallAsync(instance, item.DisplayName, version, ct).ConfigureAwait(false);
-                index = await LoadIndexAsync(instance).ConfigureAwait(false);
-                return Resolve(instance, item, index);
+                await RecordInstallAsync(instance, item.DisplayName, version, kind, ct).ConfigureAwait(false);
+                index = await LoadIndexAsync(instance, kind).ConfigureAwait(false);
+                return Resolve(instance, item, index, kind);
             }
         }
         catch (OperationCanceledException) { throw; }
@@ -114,11 +114,11 @@ public sealed class ModMetadataService
 
         // Not on Modrinth: fall back to the jar/file name, and cache it so the next
         // refresh does not hash and query the network again.
-        var info = await Task.Run(() => Resolve(instance, item, index), ct).ConfigureAwait(false);
+        var info = await Task.Run(() => Resolve(instance, item, index, kind), ct).ConfigureAwait(false);
         try
         {
             index[item.DisplayName] = new ModIndexEntry { Title = info.Title, Version = info.Version, Description = info.Description };
-            await JsonStore.WriteAsync(IndexPath(instance), index).ConfigureAwait(false);
+            await JsonStore.WriteAsync(IndexPath(instance, kind), index).ConfigureAwait(false);
         }
         catch (Exception ex) { CrashLog.Write("[mods] caching resolved metadata failed", ex); }
         return info;
@@ -139,9 +139,9 @@ public sealed class ModMetadataService
     /// Resolves display metadata for one installed mod, trying the index, then the jar
     /// manifest, then a cleaned file name. Does jar I/O, so call it off the UI thread.
     /// </summary>
-    public ModDisplayInfo Resolve(Instance instance, ModItem item, IReadOnlyDictionary<string, ModIndexEntry> index)
+    public ModDisplayInfo Resolve(Instance instance, ModItem item, IReadOnlyDictionary<string, ModIndexEntry> index, ContentKind kind = ContentKind.Mod)
     {
-        var modsDir = _paths.InstanceModsDir(instance);
+        var modsDir = _paths.InstanceContentDir(instance, kind);
         var key = item.DisplayName; // the enabled file name (index is keyed by that)
 
         if (index.TryGetValue(key, out var e) && !string.IsNullOrWhiteSpace(e.Title))
@@ -170,13 +170,13 @@ public sealed class ModMetadataService
     /// results can flag duplicates. Reads the index, then parses only the jars the index
     /// does not cover. Off-thread for the jar work.
     /// </summary>
-    public async Task<InstalledSignatures> GetInstalledSignaturesAsync(Instance instance)
+    public async Task<InstalledSignatures> GetInstalledSignaturesAsync(Instance instance, ContentKind kind = ContentKind.Mod)
     {
-        var index = await LoadIndexAsync(instance).ConfigureAwait(false);
-        return await Task.Run(() => BuildSignatures(instance, index)).ConfigureAwait(false);
+        var index = await LoadIndexAsync(instance, kind).ConfigureAwait(false);
+        return await Task.Run(() => BuildSignatures(instance, index, kind)).ConfigureAwait(false);
     }
 
-    private InstalledSignatures BuildSignatures(Instance instance, Dictionary<string, ModIndexEntry> index)
+    private InstalledSignatures BuildSignatures(Instance instance, Dictionary<string, ModIndexEntry> index, ContentKind kind)
     {
         var projectIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var names = new HashSet<string>();
@@ -187,20 +187,22 @@ public sealed class ModMetadataService
             if (!string.IsNullOrWhiteSpace(e.Title)) names.Add(InstalledSignatures.Normalize(e.Title!));
         }
 
-        var modsDir = _paths.InstanceModsDir(instance);
-        if (Directory.Exists(modsDir))
+        var contentDir = _paths.InstanceContentDir(instance, kind);
+        var ext = kind == ContentKind.Mod ? ".jar" : ".zip";
+        if (Directory.Exists(contentDir))
         {
-            foreach (var path in Directory.EnumerateFiles(modsDir))
+            foreach (var path in Directory.EnumerateFiles(contentDir))
             {
                 var file = Path.GetFileName(path);
-                if (!IsJarFile(file)) continue;
+                if (!file.EndsWith(ext, StringComparison.OrdinalIgnoreCase)
+                    && !file.EndsWith(ext + ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase)) continue;
 
                 var key = file.EndsWith(ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase)
                     ? file[..^ModItem.DisabledSuffix.Length]
                     : file;
                 if (index.ContainsKey(key)) continue; // already accounted for by the index
 
-                var jar = TryReadJar(path, CacheDir(modsDir));
+                var jar = TryReadJar(path, CacheDir(contentDir));
                 if (jar != null && !string.IsNullOrWhiteSpace(jar.Title))
                     names.Add(InstalledSignatures.Normalize(jar.Title));
             }
@@ -209,18 +211,14 @@ public sealed class ModMetadataService
         return new InstalledSignatures(projectIds, names);
     }
 
-    private static bool IsJarFile(string name)
-        => name.EndsWith(".jar", StringComparison.OrdinalIgnoreCase)
-           || name.EndsWith(".jar" + ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase);
-
-    private async Task<string?> TryCacheIconAsync(Instance instance, string projectId, string url, CancellationToken ct)
+    private async Task<string?> TryCacheIconAsync(Instance instance, ContentKind kind, string projectId, string url, CancellationToken ct)
     {
         try
         {
             var ext = Path.GetExtension(new Uri(url).AbsolutePath);
             if (string.IsNullOrEmpty(ext) || ext.Length > 5) ext = ".png";
             var fileName = Sanitize(projectId) + ext;
-            var dest = Path.Combine(CacheDir(_paths.InstanceModsDir(instance)), fileName);
+            var dest = Path.Combine(CacheDir(_paths.InstanceContentDir(instance, kind)), fileName);
             await _modrinth.DownloadFileAsync(url, dest, ct).ConfigureAwait(false);
             return fileName;
         }

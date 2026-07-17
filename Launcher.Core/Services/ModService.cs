@@ -133,11 +133,13 @@ public sealed class ModService
         }
         else
         {
-            // Shaders/datapacks: just the primary file, no dependency graph, no mod index.
+            // Shaders/datapacks: just the primary file, no dependency graph.
             var path = await _modrinth.DownloadAsync(version, targetDir, ct).ConfigureAwait(false);
             var name = Path.GetFileName(path);
             installed.Add(name);
             log?.Report(name);
+            // Record name/icon so the installed list shows them nicely (kind-scoped index).
+            await _metadata.RecordInstallAsync(instance, name, version, kind, ct).ConfigureAwait(false);
         }
 
         return installed;
@@ -157,7 +159,7 @@ public sealed class ModService
         log?.Report(name);
 
         // Remember the pretty name/version/icon so the list never shows the raw file name.
-        await _metadata.RecordInstallAsync(instance, name, version, ct).ConfigureAwait(false);
+        await _metadata.RecordInstallAsync(instance, name, version, ContentKind.Mod, ct).ConfigureAwait(false);
 
         foreach (var dep in version.Dependencies ?? new List<ModrinthDependency>())
         {
