@@ -52,8 +52,19 @@ public sealed class ModrinthHitVm : INotifyPropertyChanged
     public bool Installing
     {
         get => _installing;
-        set { if (_installing != value) { _installing = value; Raise(nameof(Installing)); } }
+        set { if (_installing != value) { _installing = value; Raise(nameof(Installing)); Raise(nameof(CanInstall)); } }
     }
+
+    private bool _installed;
+    /// <summary>True once installed, so the card shows a check instead of the button.</summary>
+    public bool Installed
+    {
+        get => _installed;
+        set { if (_installed != value) { _installed = value; Raise(nameof(Installed)); Raise(nameof(CanInstall)); } }
+    }
+
+    /// <summary>The install button shows only while idle (not installing, not already installed).</summary>
+    public bool CanInstall => !_installing && !_installed;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void Raise(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

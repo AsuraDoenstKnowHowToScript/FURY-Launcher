@@ -168,9 +168,11 @@
                                                     <TextBlock Classes="Subtitle" Text="{Binding Name}"
                                                                TextTrimming="CharacterEllipsis"/>
                                                     <Border Background="{DynamicResource BgElevated}" CornerRadius="4"
+                                                            BorderThickness="1"
+                                                            BorderBrush="{Binding Loader, Converter={StaticResource LoaderColor}}"
                                                             Padding="6,2" HorizontalAlignment="Left">
                                                         <TextBlock Classes="Caption"
-                                                                   Foreground="{DynamicResource TextSecondary}"
+                                                                   Foreground="{Binding Loader, Converter={StaticResource LoaderColor}}"
                                                                    Text="{Binding Loader}"/>
                                                     </Border>
                                                     <TextBlock Classes="Caption" Foreground="{DynamicResource TextMuted}"
@@ -386,10 +388,18 @@
                                                         <TextBlock Classes="Caption" Foreground="{DynamicResource TextMuted}"
                                                                    Text="{Binding DownloadsText}"/>
                                                     </StackPanel>
-                                                    <Button Grid.Column="4" Classes="primary" x:Name="InstallHitButton"
-                                                            VerticalAlignment="Center" Content="Install"
-                                                            IsEnabled="{Binding !Installing}"
-                                                            Click="OnModrinthInstallClick"/>
+                                                    <Panel Grid.Column="4" VerticalAlignment="Center" MinWidth="72">
+                                                        <Button Classes="primary" HorizontalAlignment="Center"
+                                                                Content="Install" IsVisible="{Binding CanInstall}"
+                                                                Click="OnModrinthInstallClick"/>
+                                                        <ProgressBar Width="70" Height="4" IsIndeterminate="True"
+                                                                     VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                                     IsVisible="{Binding Installing}"/>
+                                                        <icon:PackIconLucide Kind="Check" Width="24" Height="24"
+                                                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                             Foreground="{DynamicResource Success}"
+                                                                             IsVisible="{Binding Installed}"/>
+                                                    </Panel>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>

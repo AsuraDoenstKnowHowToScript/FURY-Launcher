@@ -1392,6 +1392,7 @@ public partial class MainWindow : AppWindow
             var installed = await _core.Mods.InstallFromModrinthAsync(inst, vm.ProjectId);
             RefreshMods();
             ModrinthStatus.Text = Loc.T("mods.installedcount", installed.Count);
+            vm.Installed = true; // card shows a check instead of the button
         }
         finally { vm.Installing = false; }
     });

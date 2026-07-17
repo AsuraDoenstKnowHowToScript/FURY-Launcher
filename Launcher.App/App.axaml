@@ -1,12 +1,14 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:conv="using:Launcher.App.Converters"
              x:Class="Launcher.App.App"
              RequestedThemeVariant="Dark">
 
     <!-- Design tokens (colours/radii/spacing/fonts) available app-wide. -->
     <Application.Resources>
         <ResourceDictionary>
+            <conv:LoaderColorConverter x:Key="LoaderColor"/>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Styles/Tokens.axaml"/>
             </ResourceDictionary.MergedDictionaries>
