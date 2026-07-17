@@ -160,7 +160,7 @@ public partial class MainWindow : AppWindow
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
         ModrinthDownloadButton.Click += OnModrinthDownload;
         // Debounced search: type-to-search after a short pause; Enter searches now.
-        _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         _searchDebounce.Tick += (_, _) => { _searchDebounce!.Stop(); StartModrinthSearch(); };
         ModrinthQueryBox.TextChanged += (_, _) => { _searchDebounce!.Stop(); _searchDebounce!.Start(); };
         ModrinthQueryBox.KeyDown += (_, e) =>

@@ -14,7 +14,7 @@ namespace Launcher.Core;
 public static class AppInfo
 {
     public const string Name = "FURY Launcher";
-    public const string Version = "0.3.8-beta";
+    public const string Version = "0.4.0-beta";
 
     /// <summary>Copyright/licença exibida no título/Sobre. Software proprietário.</summary>
     public const string Copyright = "© 2026 Suny. Todos os direitos reservados. Software proprietário. Consulte o LICENSE.";

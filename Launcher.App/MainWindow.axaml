@@ -143,7 +143,7 @@
 
                         <!-- Instance cards grid (fills remaining space) -->
                         <Grid>
-                            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                            <ScrollViewer behaviors:SmoothScroll.Enabled="True" HorizontalScrollBarVisibility="Disabled">
                                 <ListBox x:Name="InstancesList" Background="Transparent" BorderThickness="0" Padding="0">
                                     <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -379,6 +379,13 @@
                                 <ListBox x:Name="ModrinthList" Background="Transparent" BorderThickness="0" Padding="0"
                                          behaviors:SmoothScroll.Enabled="True"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <!-- Non-virtualized: containers are created once and never recycled,
+                                         so hover/scroll can't blink cards or replay the fade. -->
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
                                     <ListBox.Styles>
                                         <Style Selector="ListBoxItem">
                                             <Setter Property="Padding" Value="0"/>
