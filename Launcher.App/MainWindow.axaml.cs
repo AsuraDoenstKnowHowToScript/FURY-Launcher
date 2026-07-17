@@ -146,7 +146,6 @@ public partial class MainWindow : AppWindow
         ModInstanceCombo.SelectionChanged += (_, _) => RefreshMods();
         RefreshModsButton.Click += (_, _) => RefreshMods();
         AddModButton.Click += OnAddMod;
-        RemoveModButton.Click += OnRemoveMod;
         ModsFilterBox.TextChanged += (_, _) => ApplyModFilter();
         // One-shot fade as each card is realized (never replays on hover/selection).
         ModsList.ContainerPrepared += OnModContainerPrepared;
@@ -282,7 +281,6 @@ public partial class MainWindow : AppWindow
         ModsFilterBox.Watermark = Loc.T("mods.filter");
         ModsEmptyText.Text = Loc.T("mods.noinstalled");
         AddModButton.Content = Loc.T("btn.addjar");
-        RemoveModButton.Content = Loc.T("btn.remove");
         ModrinthQueryBox.Watermark = Loc.T("watermark.modrinth");
         ModrinthSearchButton.Content = Loc.T("btn.search");
         LblModVersion.Text = Loc.T("label.version");
@@ -1341,14 +1339,18 @@ public partial class MainWindow : AppWindow
         Notify(Loc.T("mods.added", System.IO.Path.GetFileName(path)));
     });
 
-    private async void OnRemoveMod(object? sender, RoutedEventArgs e) => await SafeAsync(() =>
+    /// <summary>Per-card remove: deletes the jar and drops just that card (no list reload).</summary>
+    private async void OnRemoveModClick(object? sender, RoutedEventArgs e) => await SafeAsync(() =>
     {
         var inst = SelectedModInstance();
-        var idx = ModsList.SelectedIndex;
-        if (inst == null || idx < 0 || idx >= _modVms.Count) { Notify(Loc.T("mods.selectmod")); return Task.CompletedTask; }
+        if (inst == null || sender is not Control { DataContext: InstalledModVm vm }) return Task.CompletedTask;
 
-        _core.Mods.RemoveMod(inst, _modVms[idx].FileName); // VM holds the current name (survives in-place toggles)
-        RefreshMods();
+        _core.Mods.RemoveMod(inst, vm.FileName);
+        _allModVms.Remove(vm);
+        _modVms.Remove(vm); // in-place removal; the ItemsControl drops only this card
+        ModsCountBadge.Text = _allModVms.Count.ToString();
+        ModsEmptyState.IsVisible = _allModVms.Count == 0;
+        _ = RefreshInstalledSignaturesAsync(inst); // search results un-mark this mod
         Notify(Loc.T("mods.removed"));
         return Task.CompletedTask;
     });
