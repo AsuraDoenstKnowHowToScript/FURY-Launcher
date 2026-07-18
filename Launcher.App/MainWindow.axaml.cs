@@ -271,7 +271,7 @@ public partial class MainWindow : AppWindow
         // Play tab
         LblProfileOffline.Text = Loc.T("label.profile");
         RefreshPlayAccountList();
-        MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
+        MicrosoftLoginLabel.Text = Loc.T("btn.mslogin");
         MicrosoftLogoutButton.Content = Loc.T("btn.mslogout");
         PlayButtonLabel.Text = Loc.T("btn.play");
         StopButton.Content = Loc.T("btn.stop");
@@ -300,6 +300,7 @@ public partial class MainWindow : AppWindow
         NewProfileButton.Content = Loc.T("btn.new");
         DeleteProfileButton.Content = Loc.T("btn.deleteprofile");
         LblProfileName.Text = Loc.T("label.nick");
+        LblNickHint.Text = Loc.T("skins.nickhint");
         SlimCheck.Content = Loc.T("check.slim");
         SaveProfileButton.Content = Loc.T("btn.saveprofile");
         ChooseSkinButton.Content = Loc.T("btn.chooseskin");
@@ -615,9 +616,17 @@ public partial class MainWindow : AppWindow
     private async void OnSaveProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = Loc.T("skin.selectorcreate"); return; }
+        if (p == null) { SkinStatus.Text = Loc.T("skin.selectorcreate"); ShowToast(Loc.T("skin.selectorcreate"), error: true); return; }
 
-        var newName = string.IsNullOrWhiteSpace(ProfileNameBox.Text) ? p.Name : ProfileNameBox.Text!.Trim();
+        var newName = ProfileNameBox.Text?.Trim() ?? "";
+        if (newName.Length == 0)
+        {
+            // The nick is the offline identity; never let a profile be saved without one.
+            SkinStatus.Text = Loc.T("skin.nickrequired");
+            ShowToast(Loc.T("skin.nickrequired"), error: true);
+            ProfileNameBox.Focus();
+            return;
+        }
         var nameChanged = !string.Equals(newName, p.Name, StringComparison.Ordinal);
 
         // Warn (once) that changing an offline nick changes the identity/UUID and can lose
@@ -1791,6 +1800,34 @@ public partial class MainWindow : AppWindow
     {
         PlayStatus.Text = message;
         AppendLog(Loc.T("log.info") + message);
+        ShowToast(message);
+    }
+
+    private static readonly IBrush ToastAccentBrush = new SolidColorBrush(Color.Parse("#6D28D9"));
+    private static readonly IBrush ToastDangerBrush = new SolidColorBrush(Color.Parse("#E5484D"));
+    private CancellationTokenSource? _toastCts;
+
+    /// <summary>Shows a brief animated toast (fade + slide) at the bottom of the window.</summary>
+    private async void ShowToast(string message, bool error = false)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return;
+        _toastCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _toastCts = cts;
+
+        ToastText.Text = message;
+        var brush = error ? ToastDangerBrush : ToastAccentBrush;
+        ToastBorder.BorderBrush = brush;
+        ToastIcon.Foreground = brush;
+
+        ToastBorder.Opacity = 1;   // transitions animate opacity + slide
+        ToastTransform.Y = 0;
+        try { await Task.Delay(error ? 4500 : 2600, cts.Token); }
+        catch (TaskCanceledException) { return; }
+        if (cts.IsCancellationRequested) return;
+
+        ToastBorder.Opacity = 0;
+        ToastTransform.Y = 24;
     }
 
     /// <summary>Runs an async handler, surfacing any error to the log (never swallowed).</summary>
@@ -1807,6 +1844,7 @@ public partial class MainWindow : AppWindow
             {
                 AppendLog(Loc.T("log.error") + ex.Message);
                 PlayStatus.Text = Loc.T("status.error", ex.Message);
+                ShowToast(ex.Message, error: true);
                 // Surface the log so the error is never silent.
                 if (LogDrawer != null) LogDrawer.IsExpanded = true;
             });

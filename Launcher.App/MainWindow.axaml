@@ -15,6 +15,7 @@
         Title="FURY Launcher">
 
     <!-- Visible text is set from Launcher.Core.Localization at runtime (ApplyLanguage). -->
+    <Grid>
     <DockPanel>
 
         <!-- Auto-update banner: hidden until a newer release is found on GitHub. -->
@@ -467,7 +468,19 @@
                             <StackPanel Spacing="10">
                                 <TextBlock x:Name="LblSkinAccountHeader" Classes="Subtitle" Text="Account"/>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Button x:Name="MicrosoftLoginButton" Classes="primary" Content="Microsoft login"/>
+                                    <Button x:Name="MicrosoftLoginButton" Classes="primary">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <Grid Width="15" Height="15" ColumnDefinitions="7,7" RowDefinitions="7,7"
+                                                  ColumnSpacing="1" RowSpacing="1">
+                                                <Border Grid.Row="0" Grid.Column="0" Background="#F25022"/>
+                                                <Border Grid.Row="0" Grid.Column="1" Background="#7FBA00"/>
+                                                <Border Grid.Row="1" Grid.Column="0" Background="#00A4EF"/>
+                                                <Border Grid.Row="1" Grid.Column="1" Background="#FFB900"/>
+                                            </Grid>
+                                            <TextBlock x:Name="MicrosoftLoginLabel" Text="Microsoft login"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
                                     <Button x:Name="MicrosoftLogoutButton" Classes="secondary" Content="Log out"/>
                                     <TextBlock x:Name="AccountStatus" VerticalAlignment="Center" Text="(offline)"
                                                Foreground="{DynamicResource TextSecondary}"/>
@@ -480,7 +493,13 @@
                             <Grid ColumnDefinitions="*,28,Auto">
                                 <StackPanel Grid.Column="0" Spacing="16">
                                     <StackPanel Spacing="8">
-                                        <TextBlock x:Name="LblSkinProfileHeader" Classes="Subtitle" Text="Profile"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <icon:PackIconLucide Kind="User" Width="18" Height="18"
+                                                                 VerticalAlignment="Center"
+                                                                 Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock x:Name="LblSkinProfileHeader" Classes="Subtitle"
+                                                       Text="Profile" VerticalAlignment="Center"/>
+                                        </StackPanel>
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <ComboBox x:Name="SkinProfileCombo" Width="200"/>
                                             <Button x:Name="NewProfileButton" Content="New"/>
@@ -488,9 +507,11 @@
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Spacing="8">
                                             <TextBlock x:Name="LblProfileName" Text="Nick:" VerticalAlignment="Center"/>
-                                            <TextBox x:Name="ProfileNameBox" Width="180"/>
+                                            <TextBox x:Name="ProfileNameBox" Width="200"/>
                                             <CheckBox x:Name="SlimCheck" Content="Slim model (Alex)" VerticalAlignment="Center"/>
                                         </StackPanel>
+                                        <TextBlock x:Name="LblNickHint" Classes="Caption" Text="" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextMuted}"/>
                                         <Button x:Name="SaveProfileButton" Classes="primary" Content="Save profile"
                                                 HorizontalAlignment="Left"/>
                                     </StackPanel>
@@ -521,34 +542,38 @@
                                 </StackPanel>
 
                                 <!-- Live previews -->
-                                <Border Grid.Column="2" Background="{DynamicResource BgElevated}" CornerRadius="10"
+                                <Border Grid.Column="2" Background="{DynamicResource BgElevated}" CornerRadius="12"
                                         Padding="18" VerticalAlignment="Top">
-                                    <StackPanel Spacing="14" HorizontalAlignment="Center">
+                                    <StackPanel Spacing="16" HorizontalAlignment="Center">
                                         <StackPanel Spacing="6" HorizontalAlignment="Center">
                                             <TextBlock x:Name="LblFacePreview" Text="Face (8x8)"
                                                        HorizontalAlignment="Center"
                                                        Foreground="{DynamicResource TextSecondary}"/>
-                                            <Border CornerRadius="8" ClipToBounds="True"
+                                            <Border CornerRadius="10" ClipToBounds="True" Padding="6"
                                                     Background="{DynamicResource BgSurface}">
-                                                <Image x:Name="FaceImage" Width="120" Height="120"
+                                                <Image x:Name="FaceImage" Width="132" Height="132"
                                                        Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
                                             </Border>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
-                                            <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                                <TextBlock x:Name="LblSkinPreview" Text="Skin (raw PNG)"
-                                                           HorizontalAlignment="Center"
-                                                           Foreground="{DynamicResource TextSecondary}"/>
-                                                <Image x:Name="SkinImage" Width="96" Height="96"
+                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                            <TextBlock x:Name="LblCapePreview" Text="Cape"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                            <Border CornerRadius="10" ClipToBounds="True" Padding="6"
+                                                    Background="{DynamicResource BgSurface}">
+                                                <Image x:Name="CapeImage" Width="150" Height="76"
                                                        Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
-                                            </StackPanel>
-                                            <StackPanel Spacing="6" HorizontalAlignment="Center">
-                                                <TextBlock x:Name="LblCapePreview" Text="Cape"
-                                                           HorizontalAlignment="Center"
-                                                           Foreground="{DynamicResource TextSecondary}"/>
-                                                <Image x:Name="CapeImage" Width="60" Height="96"
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                            <TextBlock x:Name="LblSkinPreview" Text="Skin (raw PNG)"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                            <Border CornerRadius="10" ClipToBounds="True" Padding="6"
+                                                    Background="{DynamicResource BgSurface}">
+                                                <Image x:Name="SkinImage" Width="120" Height="120"
                                                        Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None"/>
-                                            </StackPanel>
+                                            </Border>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
@@ -600,4 +625,33 @@
             </Grid>
         </uic:NavigationView>
     </DockPanel>
+
+        <!-- Animated toast: brief confirmations / errors, fade + slide from the bottom. -->
+        <Border x:Name="ToastBorder" IsHitTestVisible="False" Opacity="0"
+                VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,30"
+                Background="{DynamicResource BgElevated}" BorderThickness="1"
+                BorderBrush="{DynamicResource Accent}" CornerRadius="10" Padding="16,11"
+                MaxWidth="560" BoxShadow="0 8 26 0 #70000000">
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="ToastTransform" Y="24">
+                    <TranslateTransform.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Y" Duration="0:0:0.24" Easing="CubicEaseOut"/>
+                        </Transitions>
+                    </TranslateTransform.Transitions>
+                </TranslateTransform>
+            </Border.RenderTransform>
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.24"/>
+                </Transitions>
+            </Border.Transitions>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <icon:PackIconLucide x:Name="ToastIcon" Kind="Info" Width="18" Height="18"
+                                     VerticalAlignment="Center" Foreground="{DynamicResource Accent}"/>
+                <TextBlock x:Name="ToastText" VerticalAlignment="Center" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextPrimary}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </ui:AppWindow>
