@@ -125,10 +125,10 @@ public sealed class ModrinthClient
         await src.CopyToAsync(dst, ct).ConfigureAwait(false);
     }
 
-    /// <summary>Downloads a version's primary file into <paramref name="targetDir"/>. Returns the saved path.</summary>
-    public async Task<string> DownloadAsync(ModrinthVersion version, string targetDir, CancellationToken ct = default)
+    /// <summary>Downloads a version's file into <paramref name="targetDir"/>. Returns the saved path.</summary>
+    public async Task<string> DownloadAsync(ModrinthVersion version, string targetDir, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
     {
-        var file = version.Files.FirstOrDefault(f => f.Primary) ?? version.Files.FirstOrDefault()
+        var file = SelectDownloadFile(version, kind)
             ?? throw new InvalidOperationException("Selected Modrinth version has no downloadable file.");
 
         Directory.CreateDirectory(targetDir);
@@ -138,6 +138,23 @@ public sealed class ModrinthClient
         await using var dst = File.Create(dest);
         await src.CopyToAsync(dst, ct).ConfigureAwait(false);
         return dest;
+    }
+
+    /// <summary>
+    /// Picks the file to download. Datapacks/shaders ship as .zip; a project that is both
+    /// a mod and a datapack can mark its .jar primary, so prefer a .zip for those kinds
+    /// (otherwise the .jar lands in the folder and never shows in the datapack list).
+    /// </summary>
+    private static ModrinthFile? SelectDownloadFile(ModrinthVersion version, ContentKind kind)
+    {
+        if (kind != ContentKind.Mod)
+        {
+            static bool IsZip(ModrinthFile f) => f.Filename.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+            var zip = version.Files.FirstOrDefault(f => f.Primary && IsZip(f))
+                   ?? version.Files.FirstOrDefault(IsZip);
+            if (zip != null) return zip;
+        }
+        return version.Files.FirstOrDefault(f => f.Primary) ?? version.Files.FirstOrDefault();
     }
 
     private static string BuildFacets(string mcVersion, LoaderType loader, ContentKind kind)

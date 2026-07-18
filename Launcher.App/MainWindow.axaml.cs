@@ -1396,19 +1396,18 @@ public partial class MainWindow : AppWindow
     });
 
     /// <summary>Per-card remove: deletes the jar and drops just that card (no list reload).</summary>
-    private async void OnRemoveModClick(object? sender, RoutedEventArgs e) => await SafeAsync(() =>
+    private async void OnRemoveModClick(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var inst = SelectedModInstance();
-        if (inst == null || sender is not Control { DataContext: InstalledModVm vm }) return Task.CompletedTask;
+        if (inst == null || sender is not Control { DataContext: InstalledModVm vm }) return;
 
-        _core.Mods.RemoveMod(inst, vm.FileName, _contentKind);
+        await _core.Mods.RemoveContentAsync(inst, vm.FileName, _contentKind);
         _allModVms.Remove(vm);
         _modVms.Remove(vm); // in-place removal; the ItemsControl drops only this card
         ModsCountBadge.Text = _allModVms.Count.ToString();
         ModsEmptyState.IsVisible = _allModVms.Count == 0;
-        _ = RefreshInstalledSignaturesAsync(inst); // search results un-mark this item
+        await RefreshInstalledSignaturesAsync(inst); // search results un-mark this item
         Notify(Loc.T("mods.removed"));
-        return Task.CompletedTask;
     });
 
     /// <summary>
