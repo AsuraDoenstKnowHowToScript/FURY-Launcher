@@ -34,8 +34,12 @@
             </Grid>
         </Border>
 
+        <!-- Toggle button hidden: its glyph comes from a symbol font that tofus on
+             Windows 10, and the content is set locally in the template so a style
+             override can't win. A 4-item pane reads fine always-open. -->
         <uic:NavigationView x:Name="NavView" PaneDisplayMode="Left" OpenPaneLength="220"
-                            IsSettingsVisible="False" IsBackButtonVisible="False">
+                            IsSettingsVisible="False" IsBackButtonVisible="False"
+                            IsPaneToggleButtonVisible="False">
 
             <uic:NavigationView.PaneHeader>
                 <StackPanel Margin="8,10,8,14" Spacing="0">
