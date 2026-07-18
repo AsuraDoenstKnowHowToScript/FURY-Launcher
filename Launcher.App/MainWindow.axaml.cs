@@ -252,7 +252,7 @@ public partial class MainWindow : AppWindow
         OpenFolderButton.Content = Loc.T("btn.folder");
         CancelInstanceButton.Content = Loc.T("btn.cancel");
         RefreshInstancesButton.Content = Loc.T("btn.refresh");
-        DeleteInstanceButton.Content = Loc.T("btn.delete");
+        DeleteInstanceButton.Header = Loc.T("btn.delete");
         LblName.Text = Loc.T("field.name");
         LblMcVersion.Text = Loc.T("field.mcversion");
         LblLoader.Text = Loc.T("field.loader");
@@ -264,9 +264,10 @@ public partial class MainWindow : AppWindow
         SaveInstanceButton.Content = Loc.T("btn.saveedit");
         LblSecGeneral.Text = Loc.T("section.general");
         LblSecMemory.Text = Loc.T("section.memoryjava");
-        ExportPackButton.Content = Loc.T("btn.exportpack");
-        ImportPackButton.Content = Loc.T("btn.importpack");
-        ImportMrpackButton.Content = Loc.T("btn.importmrpack");
+        ExportPackButton.Header = Loc.T("btn.exportpack");
+        ImportButtonLabel.Text = Loc.T("btn.import");
+        ImportPackButton.Header = Loc.T("btn.importpack");
+        ImportMrpackButton.Header = Loc.T("btn.importmrpack");
 
         // Play tab
         LblProfileOffline.Text = Loc.T("label.profile");
@@ -737,10 +738,12 @@ public partial class MainWindow : AppWindow
     {
         if (PlayInstanceCombo.ItemsSource != null) PlayInstanceCombo.SelectedIndex = idx;
         if (ModInstanceCombo.ItemsSource != null) ModInstanceCombo.SelectedIndex = idx;
+        if (SkinInstanceCombo.ItemsSource != null) SkinInstanceCombo.SelectedIndex = idx;
 
         var inst = idx >= 0 && idx < _instances.Count ? _instances[idx] : null;
         _selected.Current = inst;
         ModsInstanceName.Text = inst?.Name ?? "—";
+        SkinInstanceName.Text = inst?.Name ?? "—";
 
         // Follow the selection: show this instance's log session and reflect whether
         // it is currently running (it may have been launched in the background).

@@ -83,8 +83,19 @@
                             <TextBlock Grid.Column="0" x:Name="LblInstances" Classes="Title"
                                        Text="Instances" VerticalAlignment="Center"/>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                                <Button x:Name="ImportPackButton" Classes="secondary" Content="Import .frpack"/>
-                                <Button x:Name="ImportMrpackButton" Classes="secondary" Content="Import .mrpack"/>
+                                <Button x:Name="ImportButton" Classes="secondary">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock x:Name="ImportButtonLabel" Text="Import" VerticalAlignment="Center"/>
+                                        <TextBlock Text="&#x25BE;" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                    <Button.Flyout>
+                                        <MenuFlyout>
+                                            <MenuItem x:Name="ImportPackButton" Header="Import .frpack"/>
+                                            <MenuItem x:Name="ImportMrpackButton" Header="Import .mrpack"/>
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
                                 <Button x:Name="RefreshInstancesButton" Classes="secondary" Content="Refresh"/>
                                 <Button x:Name="AddInstanceButton" Classes="primary">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -106,11 +117,20 @@
                                                    Foreground="{DynamicResource TextSecondary}" Text=""/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <!-- Frequent utilities stay visible; rare/destructive go in the overflow. -->
                                         <Button x:Name="EditInstanceButton" Classes="secondary" Content="Edit" MinHeight="48"/>
                                         <Button x:Name="OpenFolderButton" Classes="secondary" Content="Folder" MinHeight="48"/>
-                                        <Button x:Name="ExportPackButton" Classes="secondary" Content="Export" MinHeight="48"/>
-                                        <Button x:Name="DeleteInstanceButton" Classes="secondary" Content="Delete" MinHeight="48"/>
-                                        <Button x:Name="StopButton" Classes="secondary" Content="Stop" MinHeight="48"/>
+                                        <Button x:Name="MoreActionsButton" Classes="secondary" MinHeight="48"
+                                                Content="&#x2026;" Padding="14,0" ToolTip.Tip="More">
+                                            <Button.Flyout>
+                                                <MenuFlyout>
+                                                    <MenuItem x:Name="ExportPackButton" Header="Export"/>
+                                                    <MenuItem x:Name="DeleteInstanceButton" Header="Delete"/>
+                                                </MenuFlyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                        <!-- Play cluster: separated from utilities so PLAY reads as the primary action. -->
+                                        <Button x:Name="StopButton" Classes="secondary" Content="Stop" MinHeight="48" Margin="16,0,0,0"/>
                                         <Button x:Name="PlayButton" Classes="primary" MinHeight="48" Padding="34,0">
                                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                                 <icon:PackIconLucide Kind="Play" Width="20" Height="20" VerticalAlignment="Center"
@@ -121,7 +141,7 @@
                                     </StackPanel>
                                 </Grid>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock x:Name="LblProfileOffline" Text="Profile:" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="LblProfileOffline" Text="Play as:" VerticalAlignment="Center"/>
                                     <ComboBox x:Name="OfflineProfileCombo" Width="220"/>
                                     <!-- Hidden: kept in sync with the card grid so play logic is unchanged. -->
                                     <ComboBox x:Name="PlayInstanceCombo" IsVisible="False" Width="0"/>
@@ -253,7 +273,7 @@
                 </Grid>
 
                 <!-- =============================== MODS =============================== -->
-                <DockPanel x:Name="ModsPanel" IsVisible="False" Margin="16">
+                <DockPanel x:Name="ModsPanel" IsVisible="False" Margin="24">
                     <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,10">
                         <!-- Content type segmented control: switches Modrinth project_type + folder -->
                         <Border Background="{DynamicResource BgElevated}" CornerRadius="10"
@@ -271,7 +291,7 @@
                             <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
                             <TextBlock x:Name="ModsInstanceName" Text="—" VerticalAlignment="Center"
                                        Foreground="{DynamicResource TextSecondary}"/>
-                            <Button x:Name="RefreshModsButton" Content="Refresh"/>
+                            <Button x:Name="RefreshModsButton" Classes="secondary" Content="Refresh"/>
                             <ComboBox x:Name="ModInstanceCombo" IsVisible="False" Width="0"/>
                         </StackPanel>
                         <StackPanel x:Name="ModsVanillaPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
@@ -282,23 +302,24 @@
                     </StackPanel>
 
                     <Grid ColumnDefinitions="*,12,*">
-                        <Border Grid.Column="0" Background="#17151F" BorderBrush="#221F2E"
+                        <Border Grid.Column="0" Background="{DynamicResource BgSurface}"
+                                BorderBrush="{DynamicResource BorderSubtle}"
                                 BorderThickness="1" CornerRadius="12">
                             <DockPanel>
                                 <!-- Header: title + purple count badge + filter box -->
                                 <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,Auto,*" Margin="14,12">
                                     <TextBlock x:Name="LblInstalledMods" Grid.Column="0" Classes="Subtitle"
                                                Text="Mods" VerticalAlignment="Center"/>
-                                    <Border Grid.Column="1" Background="{DynamicResource Accent}" CornerRadius="10"
+                                    <Border Grid.Column="1" Background="{DynamicResource BgElevated}" CornerRadius="10"
                                             Padding="8,1" Margin="8,0,0,0" VerticalAlignment="Center">
                                         <TextBlock x:Name="ModsCountBadge" Classes="Caption" Text="0"
-                                                   Foreground="{DynamicResource OnAccent}"/>
+                                                   Foreground="{DynamicResource TextSecondary}"/>
                                     </Border>
                                     <TextBox Grid.Column="2" x:Name="ModsFilterBox" MaxWidth="220"
                                              HorizontalAlignment="Right" Margin="12,0,0,0"
                                              Watermark="Filter installed..."/>
                                 </Grid>
-                                <Border DockPanel.Dock="Top" Height="1" Background="#221F2E"/>
+                                <Border DockPanel.Dock="Top" Height="1" Background="{DynamicResource BorderSubtle}"/>
                                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="14,10,14,12">
                                     <Button x:Name="AddModButton" Content="Add jar"/>
                                 </StackPanel>
@@ -374,7 +395,7 @@
                             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
                                 <TextBlock x:Name="LblModVersion" Text="Version:" VerticalAlignment="Center"/>
                                 <ComboBox x:Name="ModrinthVersionCombo" Width="230"/>
-                                <Button x:Name="ModrinthDownloadButton" Classes="secondary" Content="Download to instance"/>
+                                <Button x:Name="ModrinthDownloadButton" Classes="ghost" Content="Download to instance"/>
                             </StackPanel>
                             <Grid>
                                 <ListBox x:Name="ModrinthList" Background="Transparent" BorderThickness="0" Padding="0"
@@ -531,9 +552,12 @@
                                     <StackPanel Spacing="6">
                                         <TextBlock x:Name="LblApplyInstance" Text="Apply in-game (offline) on instance:"
                                                    TextWrapping="Wrap"/>
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <ComboBox x:Name="SkinInstanceCombo" Width="240"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock x:Name="SkinInstanceName" Text="—" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
                                             <Button x:Name="ApplySkinButton" Classes="primary" Content="Apply in-game"/>
+                                            <!-- Hidden: driven by the Home selection so skin applies to the same instance. -->
+                                            <ComboBox x:Name="SkinInstanceCombo" IsVisible="False" Width="0"/>
                                         </StackPanel>
                                     </StackPanel>
 
@@ -595,7 +619,7 @@
 
                 <!-- =============================== SETTINGS (about + prefs) =============================== -->
                 <ScrollViewer x:Name="SettingsPanel" IsVisible="False">
-                    <StackPanel Margin="16" Spacing="8">
+                    <StackPanel Margin="24" Spacing="8">
                         <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"/>
                         <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version" Foreground="{DynamicResource TextSecondary}"/>
                         <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text="" Margin="0,6,0,0"/>
