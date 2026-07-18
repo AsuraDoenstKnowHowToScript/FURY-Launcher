@@ -1,0 +1,115 @@
+name: Release
+
+# Builds the Windows self-contained single-file .exe and publishes a GitHub
+# Release with it attached. Run it from the Actions tab ("Run workflow") or via
+# the API; set the version (without the leading v).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without the leading v (e.g. 0.4.0)"
+        required: true
+        default: "0.4.0"
+      prerelease:
+        description: "Mark as a pre-release (beta)?"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore FURY.sln
+
+      - name: Publish (win-x64, self-contained, single file)
+        run: >
+          dotnet publish Launcher.App/Launcher.App.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none -p:DebugSymbols=false
+          -o dist/win-x64
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $zip = "FURY-Launcher-v${{ github.event.inputs.version }}-win-x64.zip"
+          Compress-Archive -Path dist/win-x64/* -DestinationPath $zip -Force
+          "ASSET=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Release notes
+        shell: bash
+        run: |
+          cat > release-notes.md <<'EOF'
+          The first stable release. This build focuses on reliability and a cleaner,
+          more consistent interface, with a large batch of fixes across Java, mods,
+          logs and skins.
+
+          ## Highlights
+
+          **Content, not just mods.** The Mods tab is now **Content**, with a Mods /
+          Shaders / Datapacks switch, since an instance manages more than jars. Each
+          type installs to the right folder and searches the right category on
+          Modrinth. Modpacks are coming in a future build.
+
+          **Accounts.** The Skins tab is now **Accounts** for clarity. Offline
+          profiles make the in-game nick explicit and required, and the skin and cape
+          previews are larger.
+
+          **Java, sorted.** Most Java-related issues are fixed, including detection of
+          real runtimes and a per-instance Java option, so versions that need a
+          specific runtime just work.
+
+          **Independent logs.** Each instance keeps its own log, so running more than
+          one version no longer mixes their output.
+
+          **Skins and capes offline.** On offline accounts, CustomSkinLoader is
+          installed automatically so your skin shows in game, capes included, and they
+          now render correctly with elytras.
+
+          **One file.** The old release unpacked a huge number of files. The build is
+          now a single self-contained `.exe`.
+
+          ## Also in this release
+          - Mod dependency resolution fixed for version-specific cases.
+          - Datapacks and shaders now download the correct file and list correctly;
+            removing content clears its installed mark.
+          - Interface pass: consistent spacing and buttons, a clearer instance panel
+            with Play front and center, an Import menu, and icons that render reliably.
+
+          ## Known limitations
+          - Datapacks can be managed from the launcher but do not yet load in game on
+            their own. That arrives in 0.5.0.
+
+          ## How to run
+          Download the zip below, unzip, run `FURY Launcher.exe`. Windows 10/11
+          (64-bit), self-contained: no .NET install required.
+
+          ## Credits
+          Welcome to our first contributor, **@pocoyo**, joining as lead designer.
+          EOF
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          FLAGS="--latest"
+          if [ "${{ github.event.inputs.prerelease }}" = "true" ]; then FLAGS="--prerelease"; fi
+          gh release create "v${{ github.event.inputs.version }}" "$ASSET" \
+            --title "FURY Launcher v${{ github.event.inputs.version }}" \
+            --notes-file release-notes.md \
+            --target "${{ github.sha }}" \
+            $FLAGS
