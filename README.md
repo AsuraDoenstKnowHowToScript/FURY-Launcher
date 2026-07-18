@@ -4,20 +4,20 @@ FURY Launcher is a Minecraft launcher for Windows. It manages isolated instances
 
 [![Release](https://img.shields.io/github/v/release/AsuraDoenstKnowHowToScript/FURY-Launcher?include_prereleases&label=release&color=brightgreen)](../../releases)
 [![Downloads](https://img.shields.io/github/downloads/AsuraDoenstKnowHowToScript/FURY-Launcher/total?color=blue)](../../releases)
-[![Status](https://img.shields.io/badge/status-beta-yellow)](../../releases)
+[![Status](https://img.shields.io/badge/status-stable-brightgreen)](../../releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6)](#supported-systems)
 [![Languages](https://img.shields.io/badge/languages-5-purple)](#languages)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
 ## Current version
 
-The latest build is `v0.4.0-beta`. It is under active development but stable for daily use. Download it from the [Releases](../../releases) page.
+The latest build is `v0.4.0`, the first stable release. Download it from the [Releases](../../releases) page.
 
 ## Versions
 
 | Channel | Version | Notes |
 | --- | --- | --- |
-| Beta (latest) | `v0.4.0-beta` | Recommended build |
+| Stable (latest) | `v0.4.0` | Recommended build |
 | Beta | `v0.3.8-beta` | Previous build |
 | Pre-alpha | `v0.2.0-pre-alpha` | Early and unstable |
 
