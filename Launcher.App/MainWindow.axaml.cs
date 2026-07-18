@@ -1831,9 +1831,7 @@ public partial class MainWindow : AppWindow
         _toastCts = cts;
 
         ToastText.Text = message;
-        var brush = error ? ToastDangerBrush : ToastAccentBrush;
-        ToastBorder.BorderBrush = brush;
-        ToastIcon.Foreground = brush;
+        ToastBorder.BorderBrush = error ? ToastDangerBrush : ToastAccentBrush;
 
         // The slide transform is named in XAML but Avalonia only generates fields for
         // controls, not transforms, so reach it through RenderTransform instead.

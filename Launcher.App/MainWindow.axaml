@@ -99,8 +99,7 @@
                                 <Button x:Name="RefreshInstancesButton" Classes="secondary" Content="Refresh"/>
                                 <Button x:Name="AddInstanceButton" Classes="primary">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <icon:PackIconLucide Kind="Plus" Width="16" Height="16" VerticalAlignment="Center"
-                                                             Foreground="{DynamicResource OnAccent}"/>
+                                        <Image Width="16" Height="16" VerticalAlignment="Center" Source="{icon:LucideImage Kind=Plus, Brush={StaticResource OnAccent}}"/>
                                         <TextBlock x:Name="AddInstanceLabel" Text="New instance" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
@@ -133,8 +132,7 @@
                                         <Button x:Name="StopButton" Classes="secondary" Content="Stop" MinHeight="48" Margin="16,0,0,0"/>
                                         <Button x:Name="PlayButton" Classes="primary" MinHeight="48" Padding="34,0">
                                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                                <icon:PackIconLucide Kind="Play" Width="20" Height="20" VerticalAlignment="Center"
-                                                                     Foreground="{DynamicResource OnAccent}"/>
+                                                <Image Width="20" Height="20" VerticalAlignment="Center" Source="{icon:LucideImage Kind=Play, Brush={StaticResource OnAccent}}"/>
                                                 <TextBlock x:Name="PlayButtonLabel" Text="PLAY" FontSize="18" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
@@ -207,8 +205,8 @@
                             </ScrollViewer>
                             <StackPanel x:Name="InstancesEmptyState" IsVisible="False"
                                         VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
-                                <icon:PackIconLucide Kind="LayoutGrid" Width="40" Height="40"
-                                                     HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
+                                <Image Width="40" Height="40"
+                                                     HorizontalAlignment="Center" Source="{icon:LucideImage Kind=LayoutGrid, Brush={StaticResource TextMuted}}"/>
                                 <TextBlock x:Name="EmptyStateText" Text="No instances yet"
                                            HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
                                 <Button x:Name="EmptyStateNewButton" Classes="primary" Content="＋ New instance"
@@ -338,10 +336,9 @@
                                                                 VerticalAlignment="Center"
                                                                 Background="{DynamicResource BgElevated}" ClipToBounds="True">
                                                             <Panel>
-                                                                <icon:PackIconLucide Kind="Package" Width="22" Height="22"
+                                                                <Image Width="22" Height="22"
                                                                                      HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                                     Foreground="{DynamicResource TextMuted}"
-                                                                                     IsVisible="{Binding !HasIcon}"/>
+                                                                                     IsVisible="{Binding !HasIcon}" Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
                                                                 <Image Source="{Binding Icon}" Stretch="UniformToFill"
                                                                        IsVisible="{Binding HasIcon}"/>
                                                             </Panel>
@@ -364,8 +361,7 @@
                                                                       IsChecked="{Binding Enabled}"/>
                                                         <Button Grid.Column="6" Classes="ghost" VerticalAlignment="Center"
                                                                 Padding="8" Click="OnRemoveModClick" ToolTip.Tip="Remove">
-                                                            <icon:PackIconLucide Kind="Trash2" Width="16" Height="16"
-                                                                                 Foreground="{DynamicResource TextMuted}"/>
+                                                            <Image Width="16" Height="16" Source="{icon:LucideImage Kind=Trash2, Brush={StaticResource TextMuted}}"/>
                                                         </Button>
                                                     </Grid>
                                                 </Border>
@@ -375,8 +371,8 @@
                                 </ScrollViewer>
                                 <StackPanel x:Name="ModsEmptyState" IsVisible="False"
                                             VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
-                                    <icon:PackIconLucide Kind="Package" Width="30" Height="30"
-                                                         HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
+                                    <Image Width="30" Height="30"
+                                                         HorizontalAlignment="Center" Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
                                     <TextBlock x:Name="ModsEmptyText" HorizontalAlignment="Center"
                                                Foreground="{DynamicResource TextSecondary}" Text="No mods installed"/>
                                 </StackPanel>
@@ -425,10 +421,9 @@
                                                     <Border Grid.Column="0" Width="48" Height="48" CornerRadius="6"
                                                             Background="{DynamicResource BgElevated}" ClipToBounds="True">
                                                         <Panel>
-                                                            <icon:PackIconLucide Kind="Package" Width="22" Height="22"
+                                                            <Image Width="22" Height="22"
                                                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                                 Foreground="{DynamicResource TextMuted}"
-                                                                                 IsVisible="{Binding !HasIcon}"/>
+                                                                                 IsVisible="{Binding !HasIcon}" Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
                                                             <Image Source="{Binding Icon}" Stretch="UniformToFill"
                                                                    IsVisible="{Binding HasIcon}"/>
                                                         </Panel>
@@ -454,9 +449,8 @@
                                                                      IsVisible="{Binding Installing}"/>
                                                         <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding Installed}"
                                                                     HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                            <icon:PackIconLucide Kind="Check" Width="16" Height="16"
-                                                                                 VerticalAlignment="Center"
-                                                                                 Foreground="{DynamicResource Success}"/>
+                                                            <Image Width="16" Height="16"
+                                                                                 VerticalAlignment="Center" Source="{icon:LucideImage Kind=Check, Brush={StaticResource Success}}"/>
                                                             <TextBlock Classes="Caption" Text="{Binding InstalledLabel}"
                                                                        VerticalAlignment="Center"
                                                                        Foreground="{DynamicResource Success}"/>
@@ -469,8 +463,8 @@
                                 </ListBox>
                                 <StackPanel x:Name="ModrinthEmptyState" IsVisible="False"
                                             VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
-                                    <icon:PackIconLucide Kind="Package" Width="34" Height="34"
-                                                         HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
+                                    <Image Width="34" Height="34"
+                                                         HorizontalAlignment="Center" Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
                                     <TextBlock x:Name="ModrinthEmptyText" HorizontalAlignment="Center"
                                                Foreground="{DynamicResource TextSecondary}" Text="Search for mods"/>
                                 </StackPanel>
@@ -482,7 +476,7 @@
                 <!-- =============================== ACCOUNTS (login + skin) =============================== -->
                 <ScrollViewer x:Name="AccountsPanel" IsVisible="False"
                               behaviors:SmoothScroll.Enabled="True">
-                    <StackPanel Margin="24" Spacing="16" MaxWidth="940" HorizontalAlignment="Left">
+                    <StackPanel Margin="24" Spacing="16" HorizontalAlignment="Stretch">
 
                         <!-- Microsoft account -->
                         <Border Classes="card">
@@ -514,9 +508,8 @@
                                 <StackPanel Grid.Column="0" Spacing="16">
                                     <StackPanel Spacing="8">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <icon:PackIconLucide Kind="User" Width="18" Height="18"
-                                                                 VerticalAlignment="Center"
-                                                                 Foreground="{DynamicResource TextSecondary}"/>
+                                            <Image Width="18" Height="18"
+                                                                 VerticalAlignment="Center" Source="{icon:LucideImage Kind=User, Brush={StaticResource TextSecondary}}"/>
                                             <TextBlock x:Name="LblSkinProfileHeader" Classes="Subtitle"
                                                        Text="Profile" VerticalAlignment="Center"/>
                                         </StackPanel>
@@ -670,8 +663,8 @@
                 </Transitions>
             </Border.Transitions>
             <StackPanel Orientation="Horizontal" Spacing="10">
-                <icon:PackIconLucide x:Name="ToastIcon" Kind="Info" Width="18" Height="18"
-                                     VerticalAlignment="Center" Foreground="{DynamicResource Accent}"/>
+                <Image x:Name="ToastIcon" Width="18" Height="18"
+                                     VerticalAlignment="Center" Source="{icon:LucideImage Kind=Info, Brush={StaticResource Accent}}"/>
                 <TextBlock x:Name="ToastText" VerticalAlignment="Center" TextWrapping="Wrap"
                            Foreground="{DynamicResource TextPrimary}"/>
             </StackPanel>
