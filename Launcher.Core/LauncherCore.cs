@@ -4,6 +4,7 @@
 // autorização por escrito. Consulte o arquivo LICENSE.
 // "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
+using System.Net;
 using Launcher.Core.Services;
 
 namespace Launcher.Core;
@@ -35,7 +36,22 @@ public sealed class LauncherCore : IDisposable
     public LauncherCore(string? root = null)
     {
         Paths = new LauncherPaths(root);
-        _http = new HttpClient();
+        // Tuned for low-latency Modrinth calls: request gzip/brotli so the search
+        // JSON arrives compressed, keep pooled connections warm, and prefer HTTP/2
+        // so search + icon requests multiplex over one connection instead of each
+        // paying a fresh TLS handshake.
+        _http = new HttpClient(new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.All,
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
+            PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+            EnableMultipleHttp2Connections = true,
+            ConnectTimeout = TimeSpan.FromSeconds(10),
+        })
+        {
+            DefaultRequestVersion = HttpVersion.Version20,
+            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower,
+        };
 
         Instances = new InstanceService(Paths);
         Auth = new AuthManager(Paths);

@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without the leading v (e.g. 0.4.0)"
+        description: "Version without the leading v (e.g. 0.4.1)"
         required: true
-        default: "0.4.0"
+        default: "0.4.1"
       prerelease:
         description: "Mark as a pre-release (beta)?"
         type: boolean
@@ -58,52 +58,22 @@ jobs:
         shell: bash
         run: |
           cat > release-notes.md <<'EOF'
-          The first stable release. This build focuses on reliability and a cleaner,
-          more consistent interface, with a large batch of fixes across Java, mods,
-          logs and skins.
+          A patch release focused on content search speed.
 
-          ## Highlights
+          ## Faster content search
+          Searching mods, shaders and datapacks is noticeably quicker:
 
-          **Content, not just mods.** The Mods tab is now **Content**, with a Mods /
-          Shaders / Datapacks switch, since an instance manages more than jars. Each
-          type installs to the right folder and searches the right category on
-          Modrinth. Modpacks are coming in a future build.
-
-          **Accounts.** The Skins tab is now **Accounts** for clarity. Offline
-          profiles make the in-game nick explicit and required, and the skin and cape
-          previews are larger.
-
-          **Java, sorted.** Most Java-related issues are fixed, including detection of
-          real runtimes and a per-instance Java option, so versions that need a
-          specific runtime just work.
-
-          **Independent logs.** Each instance keeps its own log, so running more than
-          one version no longer mixes their output.
-
-          **Skins and capes offline.** On offline accounts, CustomSkinLoader is
-          installed automatically so your skin shows in game, capes included, and they
-          now render correctly with elytras.
-
-          **One file.** The old release unpacked a huge number of files. The build is
-          now a single self-contained `.exe`.
-
-          ## Also in this release
-          - Mod dependency resolution fixed for version-specific cases.
-          - Datapacks and shaders now download the correct file and list correctly;
-            removing content clears its installed mark.
-          - Interface pass: consistent spacing and buttons, a clearer instance panel
-            with Play front and center, an Import menu, and icons that render reliably.
-
-          ## Known limitations
-          - Datapacks can be managed from the launcher but do not yet load in game on
-            their own. That arrives in 0.5.0.
+          - Requests now negotiate **HTTP/2** and ask for **compression**, so search
+            results arrive on a smaller, warmer connection instead of paying a fresh
+            handshake and downloading uncompressed JSON.
+          - The type-to-search delay is shorter, so results start loading sooner
+            after you stop typing.
+          - Thumbnail downloads are throttled so they no longer compete with the
+            search and next-page requests for bandwidth.
 
           ## How to run
           Download the zip below, unzip, run `FURY Launcher.exe`. Windows 10/11
           (64-bit), self-contained: no .NET install required.
-
-          ## Credits
-          Welcome to our first contributor, **@pocoyo**, joining as lead designer.
           EOF
 
       - name: Create release

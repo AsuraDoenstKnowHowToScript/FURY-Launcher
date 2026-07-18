@@ -68,6 +68,9 @@ public partial class MainWindow : AppWindow
     private bool _modrinthLoading;
     private static readonly HttpClient _iconHttp = new() { Timeout = TimeSpan.FromSeconds(15) };
     private static readonly Dictionary<string, Bitmap> _iconCache = new();
+    // Cap concurrent icon downloads so 30 result thumbnails don't starve the
+    // bandwidth the search/next-page requests need.
+    private static readonly SemaphoreSlim _iconGate = new(6);
 
     private Instance? _editing;      // instance selected for editing (Instances tab)
     private MSession? _msSession;    // cached Microsoft session after login
@@ -159,7 +162,7 @@ public partial class MainWindow : AppWindow
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
         ModrinthDownloadButton.Click += OnModrinthDownload;
         // Debounced search: type-to-search after a short pause; Enter searches now.
-        _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
         _searchDebounce.Tick += (_, _) => { _searchDebounce!.Stop(); StartModrinthSearch(); };
         ModrinthQueryBox.TextChanged += (_, _) => { _searchDebounce!.Stop(); _searchDebounce!.Start(); };
         ModrinthQueryBox.KeyDown += (_, e) =>
@@ -1507,9 +1510,14 @@ public partial class MainWindow : AppWindow
     {
         var url = vm.IconUrl;
         if (string.IsNullOrWhiteSpace(url)) return;
+        if (_iconCache.TryGetValue(url, out var cached)) { vm.Icon = cached; return; }
+
+        try { await _iconGate.WaitAsync(ct).ConfigureAwait(false); }
+        catch (OperationCanceledException) { return; }
         try
         {
-            if (_iconCache.TryGetValue(url, out var cached)) { vm.Icon = cached; return; }
+            // Re-check: another card with the same icon may have fetched it while we waited.
+            if (_iconCache.TryGetValue(url, out var now)) { await Dispatcher.UIThread.InvokeAsync(() => vm.Icon = now); return; }
 
             var bytes = await _iconHttp.GetByteArrayAsync(url, ct).ConfigureAwait(false);
             if (ct.IsCancellationRequested) return;
@@ -1521,7 +1529,9 @@ public partial class MainWindow : AppWindow
                 vm.Icon = bmp;
             });
         }
+        catch (OperationCanceledException) { /* superseded by a newer search */ }
         catch { /* icon is decorative; a missing one just keeps the placeholder */ }
+        finally { _iconGate.Release(); }
     }
 
     /// <summary>Per-card one-click install: newest compatible version + required dependencies.</summary>
