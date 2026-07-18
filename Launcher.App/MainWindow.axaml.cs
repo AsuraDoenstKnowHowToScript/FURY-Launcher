@@ -122,7 +122,6 @@ public partial class MainWindow : AppWindow
         InstancesList.SelectionChanged += OnInstanceSelected;
         InstancesList.DoubleTapped += OnInstanceDoubleTapped;
         RefreshInstancesButton.Click += async (_, _) => await SafeAsync(RefreshInstancesAsync);
-        DeleteInstanceButton.Click += OnDeleteInstance;
         AddInstanceButton.Click += (_, _) => OpenInstanceDialog(isNew: true);
         EditInstanceButton.Click += (_, _) => OpenInstanceDialog(isNew: false);
         CancelInstanceButton.Click += (_, _) => InstanceOverlay.IsVisible = false;
@@ -175,9 +174,8 @@ public partial class MainWindow : AppWindow
         NavView.SelectedItem = NavHome;
 
         // --- modpack (.frpack) + skin profiles ---
-        ExportPackButton.Click += OnExportPack;
-        ImportPackButton.Click += OnImportPack;
-        ImportMrpackButton.Click += OnImportMrpack;
+        // Import/Export/Delete Click handlers are wired in XAML (they live inside
+        // flyouts, a separate namescope, so no code-behind field is generated).
         SkinProfileCombo.SelectionChanged += OnSkinProfileSelected;
         NewProfileButton.Click += OnNewProfile;
         SaveProfileButton.Click += OnSaveProfile;
@@ -252,7 +250,6 @@ public partial class MainWindow : AppWindow
         OpenFolderButton.Content = Loc.T("btn.folder");
         CancelInstanceButton.Content = Loc.T("btn.cancel");
         RefreshInstancesButton.Content = Loc.T("btn.refresh");
-        DeleteInstanceButton.Header = Loc.T("btn.delete");
         LblName.Text = Loc.T("field.name");
         LblMcVersion.Text = Loc.T("field.mcversion");
         LblLoader.Text = Loc.T("field.loader");
@@ -264,10 +261,11 @@ public partial class MainWindow : AppWindow
         SaveInstanceButton.Content = Loc.T("btn.saveedit");
         LblSecGeneral.Text = Loc.T("section.general");
         LblSecMemory.Text = Loc.T("section.memoryjava");
-        ExportPackButton.Header = Loc.T("btn.exportpack");
         ImportButtonLabel.Text = Loc.T("btn.import");
-        ImportPackButton.Header = Loc.T("btn.importpack");
-        ImportMrpackButton.Header = Loc.T("btn.importmrpack");
+        // Flyout menu items have no code-behind field (popup namescope): set headers
+        // by walking each named parent button's flyout.
+        SetFlyoutHeaders(ImportButton, Loc.T("btn.importpack"), Loc.T("btn.importmrpack"));
+        SetFlyoutHeaders(MoreActionsButton, Loc.T("btn.exportpack"), Loc.T("btn.delete"));
 
         // Play tab
         LblProfileOffline.Text = Loc.T("label.profile");
@@ -330,6 +328,20 @@ public partial class MainWindow : AppWindow
         // Re-evaluate Vanilla-dependent enable/disable + tooltips with the (new) language.
         UpdateModsAvailability();
         RefreshUpdateBanner();
+    }
+
+    /// <summary>Sets a button's MenuFlyout item headers in order (flyout items get no
+    /// generated code-behind field, so they are reached through the parent button).</summary>
+    private static void SetFlyoutHeaders(Button host, params string[] headers)
+    {
+        if (host.Flyout is not MenuFlyout mf) return;
+        int i = 0;
+        foreach (var item in mf.Items)
+        {
+            if (i >= headers.Length) break;
+            if (item is MenuItem mi) mi.Header = headers[i];
+            i++;
+        }
     }
 
     /// <summary>Left-nav navigation: show the chosen section, hide the rest.</summary>
