@@ -82,6 +82,21 @@ public sealed class ModMetadataService
         catch (Exception ex) { CrashLog.Write("[mods] recording install metadata failed", ex); }
     }
 
+    /// <summary>Drops an entry from the install index so the item stops showing as installed.</summary>
+    public async Task RemoveFromIndexAsync(Instance instance, string fileName, ContentKind kind = ContentKind.Mod)
+    {
+        try
+        {
+            var index = await LoadIndexAsync(instance, kind).ConfigureAwait(false);
+            var key = fileName.EndsWith(ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase)
+                ? fileName[..^ModItem.DisabledSuffix.Length]
+                : fileName;
+            if (index.Remove(key))
+                await JsonStore.WriteAsync(IndexPath(instance, kind), index).ConfigureAwait(false);
+        }
+        catch (Exception ex) { CrashLog.Write("[mods] removing install metadata failed", ex); }
+    }
+
     /// <summary>
     /// Resolves display metadata, upgrading unknown mods via Modrinth when possible: if the
     /// index has no entry, the jar is matched to a Modrinth version by SHA-512 hash to pull

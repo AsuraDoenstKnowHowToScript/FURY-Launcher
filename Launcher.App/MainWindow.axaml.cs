@@ -122,7 +122,6 @@ public partial class MainWindow : AppWindow
         InstancesList.SelectionChanged += OnInstanceSelected;
         InstancesList.DoubleTapped += OnInstanceDoubleTapped;
         RefreshInstancesButton.Click += async (_, _) => await SafeAsync(RefreshInstancesAsync);
-        DeleteInstanceButton.Click += OnDeleteInstance;
         AddInstanceButton.Click += (_, _) => OpenInstanceDialog(isNew: true);
         EditInstanceButton.Click += (_, _) => OpenInstanceDialog(isNew: false);
         CancelInstanceButton.Click += (_, _) => InstanceOverlay.IsVisible = false;
@@ -148,8 +147,9 @@ public partial class MainWindow : AppWindow
         RefreshModsButton.Click += (_, _) => RefreshMods();
         AddModButton.Click += OnAddMod;
         ModsFilterBox.TextChanged += (_, _) => ApplyModFilter();
-        // One-shot fade as each card is realized (never replays on hover/selection).
+        // One-shot fade as each card is realized (installed list + search results).
         ModsList.ContainerPrepared += OnModContainerPrepared;
+        ModrinthList.ContainerPrepared += OnModContainerPrepared;
         // Content type segment: Mods / Shaders / Datapacks.
         SegMods.IsCheckedChanged += OnContentSegmentChanged;
         SegShaders.IsCheckedChanged += OnContentSegmentChanged;
@@ -159,7 +159,7 @@ public partial class MainWindow : AppWindow
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
         ModrinthDownloadButton.Click += OnModrinthDownload;
         // Debounced search: type-to-search after a short pause; Enter searches now.
-        _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _searchDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         _searchDebounce.Tick += (_, _) => { _searchDebounce!.Stop(); StartModrinthSearch(); };
         ModrinthQueryBox.TextChanged += (_, _) => { _searchDebounce!.Stop(); _searchDebounce!.Start(); };
         ModrinthQueryBox.KeyDown += (_, e) =>
@@ -174,9 +174,8 @@ public partial class MainWindow : AppWindow
         NavView.SelectedItem = NavHome;
 
         // --- modpack (.frpack) + skin profiles ---
-        ExportPackButton.Click += OnExportPack;
-        ImportPackButton.Click += OnImportPack;
-        ImportMrpackButton.Click += OnImportMrpack;
+        // Import/Export/Delete Click handlers are wired in XAML (they live inside
+        // flyouts, a separate namescope, so no code-behind field is generated).
         SkinProfileCombo.SelectionChanged += OnSkinProfileSelected;
         NewProfileButton.Click += OnNewProfile;
         SaveProfileButton.Click += OnSaveProfile;
@@ -251,7 +250,6 @@ public partial class MainWindow : AppWindow
         OpenFolderButton.Content = Loc.T("btn.folder");
         CancelInstanceButton.Content = Loc.T("btn.cancel");
         RefreshInstancesButton.Content = Loc.T("btn.refresh");
-        DeleteInstanceButton.Content = Loc.T("btn.delete");
         LblName.Text = Loc.T("field.name");
         LblMcVersion.Text = Loc.T("field.mcversion");
         LblLoader.Text = Loc.T("field.loader");
@@ -263,14 +261,16 @@ public partial class MainWindow : AppWindow
         SaveInstanceButton.Content = Loc.T("btn.saveedit");
         LblSecGeneral.Text = Loc.T("section.general");
         LblSecMemory.Text = Loc.T("section.memoryjava");
-        ExportPackButton.Content = Loc.T("btn.exportpack");
-        ImportPackButton.Content = Loc.T("btn.importpack");
-        ImportMrpackButton.Content = Loc.T("btn.importmrpack");
+        ImportButtonLabel.Text = Loc.T("btn.import");
+        // Flyout menu items have no code-behind field (popup namescope): set headers
+        // by walking each named parent button's flyout.
+        SetFlyoutHeaders(ImportButton, Loc.T("btn.importpack"), Loc.T("btn.importmrpack"));
+        SetFlyoutHeaders(MoreActionsButton, Loc.T("btn.exportpack"), Loc.T("btn.delete"));
 
         // Play tab
         LblProfileOffline.Text = Loc.T("label.profile");
         RefreshPlayAccountList();
-        MicrosoftLoginButton.Content = Loc.T("btn.mslogin");
+        MicrosoftLoginLabel.Text = Loc.T("btn.mslogin");
         MicrosoftLogoutButton.Content = Loc.T("btn.mslogout");
         PlayButtonLabel.Text = Loc.T("btn.play");
         StopButton.Content = Loc.T("btn.stop");
@@ -293,10 +293,13 @@ public partial class MainWindow : AppWindow
         ModrinthEmptyText.Text = Loc.T("mods.searchprompt");
 
         // Skin tab: same profile/nick wording as the Play tab.
-        LblSkinProfile.Text = Loc.T("label.profile");
+        LblSkinAccountHeader.Text = Loc.T("skins.account");
+        LblSkinProfileHeader.Text = Loc.T("skins.profile");
+        LblSkinAppearanceHeader.Text = Loc.T("skins.appearance");
         NewProfileButton.Content = Loc.T("btn.new");
         DeleteProfileButton.Content = Loc.T("btn.deleteprofile");
         LblProfileName.Text = Loc.T("label.nick");
+        LblNickHint.Text = Loc.T("skins.nickhint");
         SlimCheck.Content = Loc.T("check.slim");
         SaveProfileButton.Content = Loc.T("btn.saveprofile");
         ChooseSkinButton.Content = Loc.T("btn.chooseskin");
@@ -325,6 +328,20 @@ public partial class MainWindow : AppWindow
         // Re-evaluate Vanilla-dependent enable/disable + tooltips with the (new) language.
         UpdateModsAvailability();
         RefreshUpdateBanner();
+    }
+
+    /// <summary>Sets a button's MenuFlyout item headers in order (flyout items get no
+    /// generated code-behind field, so they are reached through the parent button).</summary>
+    private static void SetFlyoutHeaders(Button host, params string[] headers)
+    {
+        if (host.Flyout is not MenuFlyout mf) return;
+        int i = 0;
+        foreach (var item in mf.Items)
+        {
+            if (i >= headers.Length) break;
+            if (item is MenuItem mi) mi.Header = headers[i];
+            i++;
+        }
     }
 
     /// <summary>Left-nav navigation: show the chosen section, hide the rest.</summary>
@@ -612,9 +629,17 @@ public partial class MainWindow : AppWindow
     private async void OnSaveProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = Loc.T("skin.selectorcreate"); return; }
+        if (p == null) { SkinStatus.Text = Loc.T("skin.selectorcreate"); ShowToast(Loc.T("skin.selectorcreate"), error: true); return; }
 
-        var newName = string.IsNullOrWhiteSpace(ProfileNameBox.Text) ? p.Name : ProfileNameBox.Text!.Trim();
+        var newName = ProfileNameBox.Text?.Trim() ?? "";
+        if (newName.Length == 0)
+        {
+            // The nick is the offline identity; never let a profile be saved without one.
+            SkinStatus.Text = Loc.T("skin.nickrequired");
+            ShowToast(Loc.T("skin.nickrequired"), error: true);
+            ProfileNameBox.Focus();
+            return;
+        }
         var nameChanged = !string.Equals(newName, p.Name, StringComparison.Ordinal);
 
         // Warn (once) that changing an offline nick changes the identity/UUID and can lose
@@ -725,10 +750,12 @@ public partial class MainWindow : AppWindow
     {
         if (PlayInstanceCombo.ItemsSource != null) PlayInstanceCombo.SelectedIndex = idx;
         if (ModInstanceCombo.ItemsSource != null) ModInstanceCombo.SelectedIndex = idx;
+        if (SkinInstanceCombo.ItemsSource != null) SkinInstanceCombo.SelectedIndex = idx;
 
         var inst = idx >= 0 && idx < _instances.Count ? _instances[idx] : null;
         _selected.Current = inst;
         ModsInstanceName.Text = inst?.Name ?? "—";
+        SkinInstanceName.Text = inst?.Name ?? "—";
 
         // Follow the selection: show this instance's log session and reflect whether
         // it is currently running (it may have been launched in the background).
@@ -1369,19 +1396,18 @@ public partial class MainWindow : AppWindow
     });
 
     /// <summary>Per-card remove: deletes the jar and drops just that card (no list reload).</summary>
-    private async void OnRemoveModClick(object? sender, RoutedEventArgs e) => await SafeAsync(() =>
+    private async void OnRemoveModClick(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
         var inst = SelectedModInstance();
-        if (inst == null || sender is not Control { DataContext: InstalledModVm vm }) return Task.CompletedTask;
+        if (inst == null || sender is not Control { DataContext: InstalledModVm vm }) return;
 
-        _core.Mods.RemoveMod(inst, vm.FileName, _contentKind);
+        await _core.Mods.RemoveContentAsync(inst, vm.FileName, _contentKind);
         _allModVms.Remove(vm);
         _modVms.Remove(vm); // in-place removal; the ItemsControl drops only this card
         ModsCountBadge.Text = _allModVms.Count.ToString();
         ModsEmptyState.IsVisible = _allModVms.Count == 0;
-        _ = RefreshInstalledSignaturesAsync(inst); // search results un-mark this item
+        await RefreshInstalledSignaturesAsync(inst); // search results un-mark this item
         Notify(Loc.T("mods.removed"));
-        return Task.CompletedTask;
     });
 
     /// <summary>
@@ -1788,6 +1814,36 @@ public partial class MainWindow : AppWindow
     {
         PlayStatus.Text = message;
         AppendLog(Loc.T("log.info") + message);
+        ShowToast(message);
+    }
+
+    private static readonly IBrush ToastAccentBrush = new SolidColorBrush(Color.Parse("#6D28D9"));
+    private static readonly IBrush ToastDangerBrush = new SolidColorBrush(Color.Parse("#E5484D"));
+    private CancellationTokenSource? _toastCts;
+
+    /// <summary>Shows a brief animated toast (fade + slide) at the bottom of the window.</summary>
+    private async void ShowToast(string message, bool error = false)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return;
+        _toastCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _toastCts = cts;
+
+        ToastText.Text = message;
+        ToastBorder.BorderBrush = error ? ToastDangerBrush : ToastAccentBrush;
+
+        // The slide transform is named in XAML but Avalonia only generates fields for
+        // controls, not transforms, so reach it through RenderTransform instead.
+        var slide = ToastBorder.RenderTransform as TranslateTransform;
+
+        ToastBorder.Opacity = 1;   // transitions animate opacity + slide
+        if (slide != null) slide.Y = 0;
+        try { await Task.Delay(error ? 4500 : 2600, cts.Token); }
+        catch (TaskCanceledException) { return; }
+        if (cts.IsCancellationRequested) return;
+
+        ToastBorder.Opacity = 0;
+        if (slide != null) slide.Y = 24;
     }
 
     /// <summary>Runs an async handler, surfacing any error to the log (never swallowed).</summary>
@@ -1804,6 +1860,7 @@ public partial class MainWindow : AppWindow
             {
                 AppendLog(Loc.T("log.error") + ex.Message);
                 PlayStatus.Text = Loc.T("status.error", ex.Message);
+                ShowToast(ex.Message, error: true);
                 // Surface the log so the error is never silent.
                 if (LogDrawer != null) LogDrawer.IsExpanded = true;
             });

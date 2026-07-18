@@ -6,7 +6,7 @@ FURY Launcher is in beta and updates frequently. Only the latest release receive
 
 | Version | Supported |
 | --- | --- |
-| Latest beta (0.3.x) | Yes |
+| Latest beta (0.4.x) | Yes |
 | Older pre-releases | No |
 
 Please update to the newest build on the [Releases](../../releases) page before reporting.

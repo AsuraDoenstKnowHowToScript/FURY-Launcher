@@ -72,6 +72,15 @@ public sealed class ModService
             File.Delete(path);
     }
 
+    /// <summary>Removes a content file and clears its install-index entry (so the search list
+    /// stops marking it as installed).</summary>
+    public async Task RemoveContentAsync(Instance instance, string fileName, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        RemoveMod(instance, fileName, kind);
+        await _metadata.RemoveFromIndexAsync(instance, fileName, kind).ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Enables/disables an item by renaming between <c>.ext</c> and <c>.ext.disabled</c>.
     /// Returns the new file name so the caller can update state without a full reload.
@@ -133,8 +142,8 @@ public sealed class ModService
         }
         else
         {
-            // Shaders/datapacks: just the primary file, no dependency graph.
-            var path = await _modrinth.DownloadAsync(version, targetDir, ct).ConfigureAwait(false);
+            // Shaders/datapacks: just the .zip file, no dependency graph.
+            var path = await _modrinth.DownloadAsync(version, targetDir, kind, ct).ConfigureAwait(false);
             var name = Path.GetFileName(path);
             installed.Add(name);
             log?.Report(name);
@@ -153,7 +162,7 @@ public sealed class ModService
         if (version.ProjectId != null && !handled.Add(version.ProjectId))
             return;
 
-        var path = await _modrinth.DownloadAsync(version, modsDir, ct).ConfigureAwait(false);
+        var path = await _modrinth.DownloadAsync(version, modsDir, ContentKind.Mod, ct).ConfigureAwait(false);
         var name = Path.GetFileName(path);
         installed.Add(name);
         log?.Report(name);
