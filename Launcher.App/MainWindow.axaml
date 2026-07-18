@@ -657,7 +657,7 @@
                 BorderBrush="{DynamicResource Accent}" CornerRadius="10" Padding="16,11"
                 MaxWidth="560" BoxShadow="0 8 26 0 #70000000">
             <Border.RenderTransform>
-                <TranslateTransform x:Name="ToastTransform" Y="24">
+                <TranslateTransform Y="24">
                     <TranslateTransform.Transitions>
                         <Transitions>
                             <DoubleTransition Property="Y" Duration="0:0:0.24" Easing="CubicEaseOut"/>

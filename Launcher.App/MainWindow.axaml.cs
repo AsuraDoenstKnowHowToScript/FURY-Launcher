@@ -1823,14 +1823,18 @@ public partial class MainWindow : AppWindow
         ToastBorder.BorderBrush = brush;
         ToastIcon.Foreground = brush;
 
+        // The slide transform is named in XAML but Avalonia only generates fields for
+        // controls, not transforms, so reach it through RenderTransform instead.
+        var slide = ToastBorder.RenderTransform as TranslateTransform;
+
         ToastBorder.Opacity = 1;   // transitions animate opacity + slide
-        ToastTransform.Y = 0;
+        if (slide != null) slide.Y = 0;
         try { await Task.Delay(error ? 4500 : 2600, cts.Token); }
         catch (TaskCanceledException) { return; }
         if (cts.IsCancellationRequested) return;
 
         ToastBorder.Opacity = 0;
-        ToastTransform.Y = 24;
+        if (slide != null) slide.Y = 24;
     }
 
     /// <summary>Runs an async handler, surfacing any error to the log (never swallowed).</summary>
