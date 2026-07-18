@@ -38,9 +38,14 @@ jobs:
           -c Release -r win-x64 --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:IncludeAllContentForSelfExtract=true
           -p:EnableCompressionInSingleFile=true
           -p:DebugType=none -p:DebugSymbols=false
           -o dist/win-x64
+
+      - name: Show published files
+        shell: pwsh
+        run: Get-ChildItem dist/win-x64 | Select-Object Name, Length | Format-Table -AutoSize
 
       - name: Package
         shell: pwsh
@@ -108,6 +113,8 @@ jobs:
         run: |
           FLAGS="--latest"
           if [ "${{ github.event.inputs.prerelease }}" = "true" ]; then FLAGS="--prerelease"; fi
+          # Idempotent: drop any existing release + tag for this version, then recreate.
+          gh release delete "v${{ github.event.inputs.version }}" --yes --cleanup-tag 2>/dev/null || true
           gh release create "v${{ github.event.inputs.version }}" "$ASSET" \
             --title "FURY Launcher v${{ github.event.inputs.version }}" \
             --notes-file release-notes.md \
