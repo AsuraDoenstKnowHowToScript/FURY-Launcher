@@ -11,15 +11,15 @@ FURY Launcher is a Minecraft launcher for Windows. It manages isolated instances
 
 ## Current version
 
-The latest build is `v0.4.1`. Download it from the [Releases](../../releases) page.
+The latest build is `v0.4.2`. Download it from the [Releases](../../releases) page.
 
 ## Versions
 
 | Channel | Version | Notes |
 | --- | --- | --- |
-| Stable (latest) | `v0.4.1` | Recommended build |
+| Stable (latest) | `v0.4.2` | Recommended build |
+| Stable | `v0.4.1` | Faster search |
 | Stable | `v0.4.0` | First stable release |
-| Beta | `v0.3.8-beta` | Previous build |
 
 The release badge above always points to the newest published build.
 
@@ -41,7 +41,7 @@ You can create as many instances as you need, and each one stays fully isolated:
 
 Sign in with a Microsoft account through an embedded window, without a browser tab or any copy and paste, or play offline by typing a nick. Microsoft accounts and offline profiles share the same picker.
 
-Manage mods per instance: add, remove, and toggle jars, or search Modrinth, pick a version, and install it. Any required dependencies are pulled in automatically.
+Manage mods per instance: add, remove, and toggle jars, or search Modrinth and CurseForge, pick a version, and install it. Any required dependencies are pulled in automatically. Installing a mod that conflicts with one you already have (Sodium vs Embeddium, Iris vs Oculus) warns you and offers to replace it. CurseForge search needs an API key configured at build time.
 
 Install Forge and NeoForge straight from Maven, with no ad links or extra browser steps.
 

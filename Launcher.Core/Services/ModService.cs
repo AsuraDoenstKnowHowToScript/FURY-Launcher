@@ -18,13 +18,18 @@ public sealed class ModService
     private readonly LauncherPaths _paths;
     private readonly ModrinthClient _modrinth;
     private readonly ModMetadataService _metadata;
+    private readonly CurseForgeClient _curseforge;
 
-    public ModService(LauncherPaths paths, ModrinthClient modrinth, ModMetadataService metadata)
+    public ModService(LauncherPaths paths, ModrinthClient modrinth, ModMetadataService metadata, CurseForgeClient curseforge)
     {
         _paths = paths;
         _modrinth = modrinth;
         _metadata = metadata;
+        _curseforge = curseforge;
     }
+
+    /// <summary>Whether the CurseForge source is usable (an API key is configured).</summary>
+    public bool CurseForgeAvailable => _curseforge.HasKey;
 
     /// <summary>Jars for mods, zips for shaders/datapacks.</summary>
     private static string ContentExtension(ContentKind kind) => kind == ContentKind.Mod ? ".jar" : ".zip";
@@ -203,6 +208,84 @@ public sealed class ModService
 
             if (depVersion != null)
                 await InstallWithDepsAsync(instance, depVersion, modsDir, installed, handled, log, ct).ConfigureAwait(false);
+        }
+    }
+
+    // ============================ SOURCE-AWARE (Modrinth / CurseForge) ============================
+
+    /// <summary>Searches the chosen source; results are the same shape either way.</summary>
+    public Task<IReadOnlyList<ModrinthHit>> SearchContentAsync(
+        Instance instance, string query, ContentSource source, ContentKind kind = ContentKind.Mod, int offset = 0, CancellationToken ct = default)
+        => source == ContentSource.CurseForge
+            ? _curseforge.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct)
+            : _modrinth.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct);
+
+    /// <summary>Lists a project's compatible versions from the chosen source.</summary>
+    public Task<IReadOnlyList<ModrinthVersion>> GetContentVersionsAsync(
+        Instance instance, string projectId, ContentSource source, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
+        => source == ContentSource.CurseForge
+            ? _curseforge.GetVersionsAsync(projectId, instance.McVersion, instance.Loader, kind, ct)
+            : _modrinth.GetVersionsAsync(projectId, instance.McVersion, instance.Loader, kind, ct);
+
+    /// <summary>Installs the newest compatible version of a project from the chosen source.</summary>
+    public Task<IReadOnlyList<string>> InstallProjectFromSourceAsync(
+        Instance instance, string projectId, ContentSource source, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
+        => source == ContentSource.CurseForge
+            ? InstallCurseForgeAsync(instance, projectId, kind, null, ct)
+            : InstallFromModrinthAsync(instance, projectId, kind, ct);
+
+    /// <summary>Installs a specific version from the chosen source.</summary>
+    public Task<IReadOnlyList<string>> InstallVersionFromSourceAsync(
+        Instance instance, ModrinthVersion version, ContentSource source, ContentKind kind = ContentKind.Mod,
+        IProgress<string>? log = null, CancellationToken ct = default)
+        => source == ContentSource.CurseForge
+            ? InstallCurseForgeVersionAsync(instance, version, kind, log, ct)
+            : InstallVersionAsync(instance, version, kind, log, ct);
+
+    private async Task<IReadOnlyList<string>> InstallCurseForgeAsync(
+        Instance instance, string projectId, ContentKind kind, IProgress<string>? log, CancellationToken ct)
+    {
+        var version = await _curseforge.GetCompatibleVersionAsync(projectId, instance.McVersion, instance.Loader, kind, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException($"No compatible version was found on CurseForge for {instance.McVersion}.");
+        return await InstallCurseForgeVersionAsync(instance, version, kind, log, ct).ConfigureAwait(false);
+    }
+
+    private async Task<IReadOnlyList<string>> InstallCurseForgeVersionAsync(
+        Instance instance, ModrinthVersion version, ContentKind kind, IProgress<string>? log, CancellationToken ct)
+    {
+        var targetDir = _paths.InstanceContentDir(instance, kind);
+        Directory.CreateDirectory(targetDir);
+        var installed = new List<string>();
+        var handled = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        await CfInstallWithDepsAsync(instance, version, targetDir, installed, handled, kind, log, ct).ConfigureAwait(false);
+        return installed;
+    }
+
+    private async Task CfInstallWithDepsAsync(
+        Instance instance, ModrinthVersion version, string targetDir,
+        List<string> installed, HashSet<string> handled, ContentKind kind, IProgress<string>? log, CancellationToken ct)
+    {
+        if (version.ProjectId != null && !handled.Add(version.ProjectId)) return;
+        if (version.Files.Count == 0 || string.IsNullOrEmpty(version.Files[0].Url)) return; // API-blocked file
+
+        var path = await _modrinth.DownloadAsync(version, targetDir, kind, ct).ConfigureAwait(false);
+        var name = Path.GetFileName(path);
+        installed.Add(name);
+        log?.Report(name);
+
+        // CurseForge metadata comes from CurseForge, never a Modrinth lookup.
+        var mod = version.ProjectId != null ? await _curseforge.GetModAsync(version.ProjectId, ct).ConfigureAwait(false) : null;
+        await _metadata.RecordInstallDirectAsync(
+            instance, name, version.ProjectId, mod?.Title ?? version.Name, mod?.Description, mod?.IconUrl, version.VersionNumber, kind, ct).ConfigureAwait(false);
+
+        if (kind != ContentKind.Mod) return; // deps only make sense for mods
+        foreach (var dep in version.Dependencies ?? new List<ModrinthDependency>())
+        {
+            ct.ThrowIfCancellationRequested();
+            if (string.IsNullOrEmpty(dep.ProjectId) || handled.Contains(dep.ProjectId)) continue;
+            var depVersion = await _curseforge.GetCompatibleVersionAsync(dep.ProjectId, instance.McVersion, instance.Loader, kind, ct).ConfigureAwait(false);
+            if (depVersion != null)
+                await CfInstallWithDepsAsync(instance, depVersion, targetDir, installed, handled, kind, log, ct).ConfigureAwait(false);
         }
     }
 }

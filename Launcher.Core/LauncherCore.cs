@@ -59,7 +59,9 @@ public sealed class LauncherCore : IDisposable
         Game = new GameLauncher(Paths, new LoaderInstaller(_http), Instances, Logs);
         var modrinth = new ModrinthClient(_http);
         ModMetadata = new ModMetadataService(Paths, modrinth);
-        Mods = new ModService(Paths, modrinth, ModMetadata);
+        // CurseForge key: env var, then embedded (CI), then a per-machine file. Empty = source off.
+        var curseforge = new CurseForgeClient(_http, CurseForgeKey.Resolve(Paths.CurseForgeKeyFile));
+        Mods = new ModService(Paths, modrinth, ModMetadata, curseforge);
         Packs = new PackService(Paths, Instances);
         Mrpacks = new MrpackService(_http, Paths, Instances);
         Profiles = new ProfileService(Paths);

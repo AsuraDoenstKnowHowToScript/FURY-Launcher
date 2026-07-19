@@ -17,4 +17,11 @@
     <PackageReference Include="XboxAuthNet.Game" Version="1.4.1" />
   </ItemGroup>
 
+  <!-- CurseForge API key, embedded by CI from a secret. The wildcard matches nothing
+       when the file is absent (local/dev builds), so the source just stays disabled.
+       curseforge.key is git-ignored and never committed. -->
+  <ItemGroup>
+    <EmbeddedResource Include="curseforge.key" Condition="Exists('curseforge.key')" />
+  </ItemGroup>
+
 </Project>

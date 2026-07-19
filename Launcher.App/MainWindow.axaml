@@ -385,6 +385,24 @@
                         </Border>
 
                         <DockPanel Grid.Column="2">
+                            <!-- Search source: Modrinth / CurseForge. CurseForge is disabled without an API key. -->
+                            <Border DockPanel.Dock="Top" Background="{DynamicResource BgElevated}" CornerRadius="10"
+                                    Padding="3" HorizontalAlignment="Left" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" Spacing="2">
+                                    <RadioButton x:Name="SrcModrinth" Classes="segment" GroupName="contentsrc" IsChecked="True">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Border Width="12" Height="12" CornerRadius="3" Background="#1BD96A"/>
+                                            <TextBlock Text="Modrinth" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                    <RadioButton x:Name="SrcCurseForge" Classes="segment" GroupName="contentsrc">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Border Width="12" Height="12" CornerRadius="3" Background="#F16436"/>
+                                            <TextBlock Text="CurseForge" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                </StackPanel>
+                            </Border>
                             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
                                 <TextBox x:Name="ModrinthQueryBox" Width="240" Watermark="Search Modrinth..."/>
                                 <Button x:Name="ModrinthSearchButton" Classes="secondary" Content="Search"/>

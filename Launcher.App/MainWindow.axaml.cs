@@ -58,6 +58,7 @@ public partial class MainWindow : AppWindow
     private IReadOnlyList<ModrinthVersion> _modVersions = new List<ModrinthVersion>();
     private InstalledSignatures? _installedSigs; // what the selected instance already has, for the "Installed" tag
     private ContentKind _contentKind = ContentKind.Mod; // Mods / Shaders / Datapacks segment
+    private ContentSource _contentSource = ContentSource.Modrinth; // Modrinth / CurseForge browser source
 
     // Modrinth search: debounced query, page-by-scroll, cancel-on-new-search.
     private DispatcherTimer? _searchDebounce;
@@ -157,6 +158,14 @@ public partial class MainWindow : AppWindow
         SegMods.IsCheckedChanged += OnContentSegmentChanged;
         SegShaders.IsCheckedChanged += OnContentSegmentChanged;
         SegDatapacks.IsCheckedChanged += OnContentSegmentChanged;
+        // Search source: Modrinth / CurseForge (CurseForge disabled without an API key).
+        SrcModrinth.IsCheckedChanged += OnSourceChanged;
+        SrcCurseForge.IsCheckedChanged += OnSourceChanged;
+        if (!_core.Mods.CurseForgeAvailable)
+        {
+            SrcCurseForge.IsEnabled = false;
+            ToolTip.SetTip(SrcCurseForge, Loc.T("source.curseforgeoff"));
+        }
         ModrinthList.ItemsSource = _modrinthVms;
         ModrinthSearchButton.Click += (_, _) => StartModrinthSearch();
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
@@ -1211,6 +1220,17 @@ public partial class MainWindow : AppWindow
         StartModrinthSearch();
     }
 
+    /// <summary>Switches the search source (Modrinth / CurseForge) and re-runs the search.</summary>
+    private void OnSourceChanged(object? sender, RoutedEventArgs e)
+    {
+        var source = SrcCurseForge.IsChecked == true ? ContentSource.CurseForge : ContentSource.Modrinth;
+        if (source == _contentSource) return;
+        _contentSource = source;
+        ModrinthQueryBox.Watermark = source == ContentSource.CurseForge
+            ? Loc.T("watermark.curseforge") : Loc.T("watermark.modrinth");
+        StartModrinthSearch();
+    }
+
     /// <summary>Plays a one-shot fade-in on a freshly realized mod card (no replay on interaction).</summary>
     private static void OnModContainerPrepared(object? sender, ContainerPreparedEventArgs e)
     {
@@ -1493,7 +1513,7 @@ public partial class MainWindow : AppWindow
         ModrinthStatus.Text = Loc.T("mods.searching");
         try
         {
-            var page = await _core.Mods.SearchModrinthAsync(inst, _modrinthQuery, _contentKind, _modrinthOffset, ct);
+            var page = await _core.Mods.SearchContentAsync(inst, _modrinthQuery, _contentSource, _contentKind, _modrinthOffset, ct);
             if (ct.IsCancellationRequested) return;
 
             foreach (var hit in page)
@@ -1572,7 +1592,7 @@ public partial class MainWindow : AppWindow
         ModrinthStatus.Text = Loc.T("mods.downloading", vm.Title);
         try
         {
-            var installed = await _core.Mods.InstallFromModrinthAsync(inst, vm.ProjectId, _contentKind);
+            var installed = await _core.Mods.InstallProjectFromSourceAsync(inst, vm.ProjectId, _contentSource, _contentKind);
             RefreshMods();
             ModrinthStatus.Text = Loc.T("mods.installedcount", installed.Count);
             vm.Installed = true; // card shows a check instead of the button
@@ -1592,7 +1612,7 @@ public partial class MainWindow : AppWindow
             return;
         }
 
-        _modVersions = await _core.Mods.GetModrinthVersionsAsync(inst, _modrinthVms[idx].ProjectId, _contentKind);
+        _modVersions = await _core.Mods.GetContentVersionsAsync(inst, _modrinthVms[idx].ProjectId, _contentSource, _contentKind);
         ModrinthVersionCombo.ItemsSource = _modVersions.Select(v => v.Display).ToList();
         if (_modVersions.Count > 0) ModrinthVersionCombo.SelectedIndex = 0;
     });
@@ -1608,7 +1628,7 @@ public partial class MainWindow : AppWindow
         var version = _modVersions[vIdx];
         ModrinthStatus.Text = Loc.T("mods.downloading", version.Display);
         var log = new Progress<string>(f => AppendLog("[mod] " + f));
-        var installed = await _core.Mods.InstallVersionAsync(inst, version, _contentKind, log);
+        var installed = await _core.Mods.InstallVersionFromSourceAsync(inst, version, _contentSource, _contentKind, log);
         RefreshMods();
         ModrinthStatus.Text = Loc.T("mods.installedcount", installed.Count);
     });

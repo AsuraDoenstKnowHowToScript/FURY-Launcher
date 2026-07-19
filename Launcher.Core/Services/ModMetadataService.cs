@@ -82,6 +82,33 @@ public sealed class ModMetadataService
         catch (Exception ex) { CrashLog.Write("[mods] recording install metadata failed", ex); }
     }
 
+    /// <summary>Records install metadata from values already in hand (e.g. CurseForge),
+    /// caching the icon, without any Modrinth lookup.</summary>
+    public async Task RecordInstallDirectAsync(
+        Instance instance, string fileName, string? projectId, string? title, string? description,
+        string? iconUrl, string? version, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
+    {
+        try
+        {
+            var index = await LoadIndexAsync(instance, kind).ConfigureAwait(false);
+            var entry = new ModIndexEntry
+            {
+                ProjectId = projectId,
+                Version = version,
+                Title = string.IsNullOrWhiteSpace(title) ? null : title,
+                Description = description,
+                IconUrl = iconUrl
+            };
+            if (!string.IsNullOrWhiteSpace(iconUrl))
+                entry.IconFile = await TryCacheIconAsync(instance, kind, projectId ?? fileName, iconUrl!, ct).ConfigureAwait(false);
+
+            index[fileName] = entry;
+            await JsonStore.WriteAsync(IndexPath(instance, kind), index).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex) { CrashLog.Write("[mods] recording CurseForge install metadata failed", ex); }
+    }
+
     /// <summary>Drops an entry from the install index so the item stops showing as installed.</summary>
     public async Task RemoveFromIndexAsync(Instance instance, string fileName, ContentKind kind = ContentKind.Mod)
     {

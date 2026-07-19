@@ -37,6 +37,9 @@ public sealed class LauncherPaths
     /// <summary>Small dismissible UI preferences.</summary>
     public string SettingsFile => Path.Combine(Root, "settings.json");
 
+    /// <summary>Optional per-machine CurseForge API key (never committed).</summary>
+    public string CurseForgeKeyFile => Path.Combine(Root, "curseforge.key");
+
     /// <summary>Stored skin/cape image files.</summary>
     public string AppearanceDir => Path.Combine(Root, "appearances");
 

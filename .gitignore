@@ -13,3 +13,7 @@ HANDOFF.md
 # OS junk
 Thumbs.db
 .DS_Store
+
+# CurseForge API key (injected by CI from a secret; never commit)
+curseforge.key
+**/curseforge.key
