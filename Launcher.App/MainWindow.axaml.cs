@@ -134,6 +134,8 @@ public partial class MainWindow : AppWindow
         SaveInstanceButton.Click += OnSaveInstance;
         BrowseJavaButton.Click += OnBrowseJava;
         DetectJavaButton.Click += async (_, _) => await SafeAsync(DetectJavaAsync);
+        OpenLogsFolderButton.Click += (_, _) => OpenLogsFolder();
+        CopyLogButton.Click += async (_, _) => await CopyLogAsync();
         DefaultJavaCombo.SelectionChanged += OnDefaultJavaChanged;
         JavaCombo.SelectionChanged += OnInstanceJavaChanged;
 
@@ -250,6 +252,9 @@ public partial class MainWindow : AppWindow
         NavAccounts.Content = Loc.T("nav.accounts");
         NavSettings.Content = Loc.T("nav.settings");
         LblJavaSection.Text = Loc.T("settings.java");
+        LblLogsSection.Text = Loc.T("settings.logs");
+        OpenLogsFolderButton.Content = Loc.T("btn.openfolder");
+        CopyLogButton.Content = Loc.T("btn.copy");
         DetectJavaButton.Content = Loc.T("btn.detectjava");
         RebuildJavaCombos(); // refresh the "Auto" label in the current language
 
@@ -406,16 +411,42 @@ public partial class MainWindow : AppWindow
             status = _pendingStatus; _pendingStatus = null;
         }
 
-        if (prog is { } p) DownloadProgress.Value = p;
+        if (prog is { } p)
+        {
+            DownloadProgress.Value = p;
+            DownloadPercent.Text = p is > 0 and < 1 ? $"{p * 100:0}%" : "";
+        }
         if (status != null) PlayStatus.Text = status;
 
         if (logBatch.Length > 0)
         {
             foreach (var line in logBatch) _logLines.AddLast(line);
             while (_logLines.Count > MaxLogLines) _logLines.RemoveFirst();
-            LogBox.Text = string.Join(Environment.NewLine, _logLines);
-            LogBox.CaretIndex = LogBox.Text.Length;
+            RenderLog(string.Join(Environment.NewLine, _logLines));
         }
+    }
+
+    /// <summary>Mirrors the session log to both the Home drawer and the Settings Logs tab.</summary>
+    private void RenderLog(string text)
+    {
+        LogBox.Text = text;
+        LogBox.CaretIndex = text.Length;
+        SettingsLogBox.Text = text;
+        SettingsLogBox.CaretIndex = text.Length;
+    }
+
+    /// <summary>Opens the folder that holds crash.log (next to the executable).</summary>
+    private void OpenLogsFolder()
+    {
+        try { Process.Start(new ProcessStartInfo { FileName = AppContext.BaseDirectory, UseShellExecute = true }); }
+        catch (Exception ex) { AppendLog(Loc.T("log.info") + ex.Message); }
+    }
+
+    /// <summary>Copies the current log text to the clipboard.</summary>
+    private async Task CopyLogAsync()
+    {
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard != null) await clipboard.SetTextAsync(SettingsLogBox.Text ?? "");
     }
 
     private async Task InitAsync()
@@ -1074,6 +1105,7 @@ public partial class MainWindow : AppWindow
         PlayButton.IsEnabled = false;
         PlayButtonLabel.Text = Loc.T("play.preparing");
         DownloadProgress.Value = 0;
+        DownloadPercent.Text = "";
         PlayStatus.Text = Loc.T("play.preparing");
         try
         {
@@ -1142,8 +1174,7 @@ public partial class MainWindow : AppWindow
         _logLines.Clear();
         foreach (var l in session.Snapshot()) _logLines.AddLast(l);
         while (_logLines.Count > MaxLogLines) _logLines.RemoveFirst();
-        LogBox.Text = string.Join(Environment.NewLine, _logLines);
-        LogBox.CaretIndex = LogBox.Text.Length;
+        RenderLog(string.Join(Environment.NewLine, _logLines));
     }
 
     /// <summary>Reflects a running/stopped state on the Play/Stop controls.</summary>

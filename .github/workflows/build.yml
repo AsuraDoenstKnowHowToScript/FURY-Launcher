@@ -1,0 +1,31 @@
+name: Build
+
+# Compile-only check. Runs on every push to main and on demand. Does NOT publish
+# a release — it only verifies the solution builds, so work-in-progress can be
+# checked without shipping anything.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - "**/*.md"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore FURY.sln
+
+      - name: Build
+        run: dotnet build FURY.sln -c Release --no-restore

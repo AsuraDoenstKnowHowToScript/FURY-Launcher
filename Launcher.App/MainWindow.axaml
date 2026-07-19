@@ -148,7 +148,12 @@
                                     <!-- Hidden: kept in sync with the card grid so play logic is unchanged. -->
                                     <ComboBox x:Name="PlayInstanceCombo" IsVisible="False" Width="0"/>
                                 </StackPanel>
-                                <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="6"/>
+                                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                    <ProgressBar Grid.Column="0" x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="8"/>
+                                    <TextBlock Grid.Column="1" x:Name="DownloadPercent" Classes="Caption" Text=""
+                                               MinWidth="40" TextAlignment="Right" VerticalAlignment="Center"
+                                               Margin="10,0,0,0" Foreground="{DynamicResource TextSecondary}"/>
+                                </Grid>
                                 <TextBlock x:Name="PlayStatus" Classes="Caption" Text="" TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextSecondary}"/>
                             </StackPanel>
@@ -166,7 +171,7 @@
 
                         <!-- Instance cards grid (fills remaining space) -->
                         <Grid>
-                            <ScrollViewer behaviors:SmoothScroll.Enabled="True" HorizontalScrollBarVisibility="Disabled">
+                            <ScrollViewer behaviors:SmoothScroll.Enabled="True" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
                                 <ListBox x:Name="InstancesList" Background="Transparent" BorderThickness="0" Padding="0">
                                     <ListBox.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -330,7 +335,7 @@
                                      created once and never recycled, so hover/toggle can't blink it. -->
                                 <ScrollViewer behaviors:SmoothScroll.Enabled="True"
                                               HorizontalScrollBarVisibility="Disabled"
-                                              VerticalScrollBarVisibility="Auto">
+                                              VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
                                     <ItemsControl x:Name="ModsList" Background="Transparent">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:InstalledModVm">
@@ -418,7 +423,7 @@
                                 <Button x:Name="ModrinthDownloadButton" Classes="ghost" Content="Download to instance"/>
                             </StackPanel>
                             <Grid>
-                                <ListBox x:Name="ModrinthList" Background="Transparent" BorderThickness="0" Padding="0"
+                                <ListBox x:Name="ModrinthList" Background="Transparent" BorderThickness="0" Padding="0,0,8,0"
                                          behaviors:SmoothScroll.Enabled="True"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                     <!-- Non-virtualized: containers are created once and never recycled,
@@ -658,6 +663,23 @@
                             </StackPanel>
                             <TextBlock x:Name="JavaStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
                             <TextBlock x:Name="JavaOracleWarn" Text="" TextWrapping="Wrap" IsVisible="False" Foreground="{DynamicResource Warning}"/>
+                        </StackPanel>
+
+                        <!-- Logs: mirrors the session log and points at the crash.log folder. -->
+                        <StackPanel Spacing="6" Margin="0,20,0,0">
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <TextBlock Grid.Column="0" x:Name="LblLogsSection" Classes="Subtitle" Text="Logs"
+                                           VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" x:Name="OpenLogsFolderButton" Classes="secondary"
+                                        Content="Open folder" Margin="0,0,6,0"/>
+                                <Button Grid.Column="2" x:Name="CopyLogButton" Classes="secondary" Content="Copy"/>
+                            </Grid>
+                            <Border Background="{DynamicResource BgSurface}" BorderBrush="{DynamicResource BorderSubtle}"
+                                    BorderThickness="1" CornerRadius="8">
+                                <TextBox x:Name="SettingsLogBox" Classes="Mono" Height="260" AcceptsReturn="True"
+                                         IsReadOnly="True" TextWrapping="NoWrap" Background="Transparent"
+                                         BorderThickness="0" VerticalContentAlignment="Top"/>
+                            </Border>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
