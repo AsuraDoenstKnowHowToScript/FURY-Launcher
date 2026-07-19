@@ -30,11 +30,16 @@ jobs:
           dotnet-version: "8.0.x"
 
       # Writes the CurseForge API key from a repo secret so it is embedded in the build.
-      # If the secret is unset the file is empty and the CurseForge source stays disabled.
+      # The secret is passed through an environment variable, NOT interpolated into the
+      # script: CurseForge keys are bcrypt strings ($2a$10$...) and inlining them lets bash
+      # re-expand the $ sequences and corrupt the key. Reading it from $CF_KEY keeps it
+      # intact. If the secret is unset the file is empty and the source stays disabled.
       # The key file is git-ignored and never committed.
       - name: Embed CurseForge key
         shell: bash
-        run: printf '%s' "${{ secrets.CURSEFORGE_API_KEY }}" > Launcher.Core/curseforge.key
+        env:
+          CF_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: printf '%s' "$CF_KEY" > Launcher.Core/curseforge.key
 
       - name: Restore
         run: dotnet restore FURY.sln

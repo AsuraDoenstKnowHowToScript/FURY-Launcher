@@ -56,20 +56,48 @@ public sealed class CurseForgeClient
         return req;
     }
 
+    /// <summary>Fails loud in the right place: a missing or obviously-too-short key is auth,
+    /// never a mysterious empty result later.</summary>
+    private void EnsureUsableKey()
+    {
+        if (string.IsNullOrWhiteSpace(_key) || _key.Length < CurseForgeKey.MinPlausibleLength)
+            throw new ContentSourceException(ContentSourceErrorKind.Auth, "CurseForge");
+    }
+
     private async Task<T?> GetAsync<T>(string url, CancellationToken ct)
     {
         using var req = Request(url);
-        using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
-        resp.EnsureSuccessStatusCode();
-        await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-        return await JsonSerializer.DeserializeAsync<T>(stream, JsonStore.Options, ct).ConfigureAwait(false);
+        HttpResponseMessage resp;
+        try
+        {
+            resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException ex)
+        {
+            // URL + key presence/length only — NEVER the key value.
+            CrashLog.Write($"[curseforge] GET {url} -> network error (key present={HasKey}, len={_key.Length})");
+            throw new ContentSourceException(ContentSourceErrorKind.Network, "CurseForge", null, ex);
+        }
+
+        using (resp)
+        {
+            var code = (int)resp.StatusCode;
+            CrashLog.Write($"[curseforge] GET {url} -> {code} (key present={HasKey}, len={_key.Length})");
+            if (code is 401 or 403)
+                throw new ContentSourceException(ContentSourceErrorKind.Auth, "CurseForge", code);
+            if (!resp.IsSuccessStatusCode)
+                throw new ContentSourceException(ContentSourceErrorKind.Server, "CurseForge", code);
+
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            return await JsonSerializer.DeserializeAsync<T>(stream, JsonStore.Options, ct).ConfigureAwait(false);
+        }
     }
 
     public async Task<IReadOnlyList<ModrinthHit>> SearchAsync(
         string query, string mcVersion, LoaderType loader, ContentKind kind = ContentKind.Mod,
         int offset = 0, CancellationToken ct = default)
     {
-        if (!HasKey) return new List<ModrinthHit>();
+        EnsureUsableKey();
 
         var url = $"{BaseUrl}/mods/search?gameId={MinecraftGameId}&classId={ClassId(kind)}" +
                   $"&sortField=2&sortOrder=desc&pageSize={SearchPageSize}&index={offset}" +
@@ -89,7 +117,7 @@ public sealed class CurseForgeClient
     public async Task<IReadOnlyList<ModrinthVersion>> GetVersionsAsync(
         string projectId, string mcVersion, LoaderType loader, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
     {
-        if (!HasKey) return new List<ModrinthVersion>();
+        EnsureUsableKey();
 
         var url = $"{BaseUrl}/mods/{Uri.EscapeDataString(projectId)}/files" +
                   $"?gameVersion={Uri.EscapeDataString(mcVersion)}&pageSize=50&index=0";
@@ -110,7 +138,7 @@ public sealed class CurseForgeClient
     /// <summary>Project details (name/icon/description) to label an installed CurseForge mod.</summary>
     public async Task<ModrinthProject?> GetModAsync(string projectId, CancellationToken ct = default)
     {
-        if (!HasKey) return null;
+        EnsureUsableKey();
         var resp = await GetAsync<CfModResponse>($"{BaseUrl}/mods/{Uri.EscapeDataString(projectId)}", ct).ConfigureAwait(false);
         var m = resp?.Data;
         if (m == null) return null;

@@ -20,6 +20,12 @@ public sealed class ModService
     private readonly ModMetadataService _metadata;
     private readonly CurseForgeClient _curseforge;
 
+    // Short-lived search cache. The key includes EVERYTHING that changes the result set
+    // so switching provider / kind / version / loader / page / query never returns stale
+    // results from a previous context. Errors are never cached (they throw before caching).
+    private readonly Dictionary<string, (DateTime at, IReadOnlyList<ModrinthHit> hits)> _searchCache = new();
+    private static readonly TimeSpan SearchCacheTtl = TimeSpan.FromSeconds(60);
+
     public ModService(LauncherPaths paths, ModrinthClient modrinth, ModMetadataService metadata, CurseForgeClient curseforge)
     {
         _paths = paths;
@@ -213,12 +219,24 @@ public sealed class ModService
 
     // ============================ SOURCE-AWARE (Modrinth / CurseForge) ============================
 
-    /// <summary>Searches the chosen source; results are the same shape either way.</summary>
-    public Task<IReadOnlyList<ModrinthHit>> SearchContentAsync(
+    /// <summary>Searches the chosen source (cached briefly); results are the same shape either way.</summary>
+    public async Task<IReadOnlyList<ModrinthHit>> SearchContentAsync(
         Instance instance, string query, ContentSource source, ContentKind kind = ContentKind.Mod, int offset = 0, CancellationToken ct = default)
-        => source == ContentSource.CurseForge
-            ? _curseforge.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct)
-            : _modrinth.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct);
+    {
+        var key = string.Join('\u001f', source, kind, instance.McVersion, instance.Loader, offset, query ?? "");
+        lock (_searchCache)
+        {
+            if (_searchCache.TryGetValue(key, out var e) && DateTime.UtcNow - e.at < SearchCacheTtl)
+                return e.hits;
+        }
+
+        var hits = source == ContentSource.CurseForge
+            ? await _curseforge.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct).ConfigureAwait(false)
+            : await _modrinth.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct).ConfigureAwait(false);
+
+        lock (_searchCache) { _searchCache[key] = (DateTime.UtcNow, hits); }
+        return hits;
+    }
 
     /// <summary>Lists a project's compatible versions from the chosen source.</summary>
     public Task<IReadOnlyList<ModrinthVersion>> GetContentVersionsAsync(

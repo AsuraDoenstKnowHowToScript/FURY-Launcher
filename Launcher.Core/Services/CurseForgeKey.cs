@@ -20,9 +20,16 @@ public static class CurseForgeKey
     private static string? _cached;
     private static bool _resolved;
 
+    /// <summary>Real CurseForge keys are ~60-char bcrypt strings; anything much shorter is garbage
+    /// (e.g. a key mangled by a build script), not a key.</summary>
+    public const int MinPlausibleLength = 20;
+
     public static string Value => _cached ??= Resolve();
 
     public static bool HasKey => !string.IsNullOrWhiteSpace(Value);
+
+    /// <summary>A key is present and long enough to plausibly be real.</summary>
+    public static bool LooksValid => Value.Length >= MinPlausibleLength;
 
     /// <param name="localFile">Optional path to a per-machine key file (usually under the data root).</param>
     public static string Resolve(string? localFile = null)
@@ -46,6 +53,11 @@ public static class CurseForgeKey
     {
         _cached = v.Trim();
         _resolved = true;
+        // Fail loud in the right place: a present-but-tiny key is corruption, not a key.
+        // Log the LENGTH only — never the value.
+        if (_cached.Length > 0 && _cached.Length < MinPlausibleLength)
+            CrashLog.Write($"[curseforge] API key looks invalid: {_cached.Length} chars (expected ~60). " +
+                           "Check the CURSEFORGE_API_KEY secret / build embedding.");
         return _cached;
     }
 

@@ -298,7 +298,7 @@ public partial class MainWindow : AppWindow
         ModsFilterBox.Watermark = Loc.T("mods.filter");
         ModsEmptyText.Text = Loc.T("mods.noinstalled");
         AddModButton.Content = Loc.T("btn.addjar");
-        ModrinthQueryBox.Watermark = Loc.T("watermark.modrinth");
+        ModrinthQueryBox.Watermark = Loc.T("watermark.search", SourceName());
         ModrinthSearchButton.Content = Loc.T("btn.search");
         LblModVersion.Text = Loc.T("label.version");
         ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
@@ -1226,10 +1226,13 @@ public partial class MainWindow : AppWindow
         var source = SrcCurseForge.IsChecked == true ? ContentSource.CurseForge : ContentSource.Modrinth;
         if (source == _contentSource) return;
         _contentSource = source;
-        ModrinthQueryBox.Watermark = source == ContentSource.CurseForge
-            ? Loc.T("watermark.curseforge") : Loc.T("watermark.modrinth");
+        ModrinthQueryBox.Watermark = Loc.T("watermark.search", SourceName());
         StartModrinthSearch();
     }
+
+    /// <summary>Display name of the active search source, derived from state — never a
+    /// provider name hardcoded into an individual message.</summary>
+    private string SourceName() => _contentSource == ContentSource.CurseForge ? "CurseForge" : "Modrinth";
 
     /// <summary>Plays a one-shot fade-in on a freshly realized mod card (no replay on interaction).</summary>
     private static void OnModContainerPrepared(object? sender, ContainerPreparedEventArgs e)
@@ -1510,7 +1513,7 @@ public partial class MainWindow : AppWindow
         if (inst == null) return;
 
         _modrinthLoading = true;
-        ModrinthStatus.Text = Loc.T("mods.searching");
+        ModrinthStatus.Text = Loc.T("mods.searching", SourceName());
         try
         {
             var page = await _core.Mods.SearchContentAsync(inst, _modrinthQuery, _contentSource, _contentKind, _modrinthOffset, ct);
@@ -1527,14 +1530,32 @@ public partial class MainWindow : AppWindow
             if (page.Count < ModrinthClient.SearchPageSize) _modrinthHasMore = false;
 
             ModrinthEmptyState.IsVisible = _modrinthVms.Count == 0;
+            // Only a genuine empty result reaches here — errors throw and are shown distinctly.
             ModrinthStatus.Text = _modrinthVms.Count == 0
-                ? Loc.T("mods.noresults")
+                ? Loc.T("mods.noresults", SourceName())
                 : Loc.T("mods.results", _modrinthVms.Count);
         }
         catch (OperationCanceledException) { /* superseded by a newer search */ }
+        catch (ContentSourceException cse)
+        {
+            CrashLog.Write("[content] search failed", cse);
+            ModrinthStatus.Text = cse.Kind switch
+            {
+                ContentSourceErrorKind.Auth => Loc.T("mods.err.auth", cse.Source),
+                ContentSourceErrorKind.Network => Loc.T("mods.err.network"),
+                _ => Loc.T("status.error", cse.Message)
+            };
+        }
+        catch (HttpRequestException hre)
+        {
+            // No StatusCode => the request never reached the server (no network / DNS / TLS).
+            ModrinthStatus.Text = hre.StatusCode is null
+                ? Loc.T("mods.err.network")
+                : Loc.T("status.error", $"HTTP {(int)hre.StatusCode}");
+        }
         catch (Exception ex)
         {
-            CrashLog.Write("[modrinth] search failed", ex);
+            CrashLog.Write("[content] search failed", ex);
             ModrinthStatus.Text = Loc.T("status.error", ex.Message);
         }
         finally { _modrinthLoading = false; }
