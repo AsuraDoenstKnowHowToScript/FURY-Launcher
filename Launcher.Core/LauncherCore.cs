@@ -28,6 +28,7 @@ public sealed class LauncherCore : IDisposable
     public MrpackService Mrpacks { get; }
     public ProfileService Profiles { get; }
     public SkinApplyService Skins { get; }
+    public JavaInstaller Java { get; }
     public SettingsService Settings { get; }
     public VersionListService Versions { get; }
     public UpdateService Updates { get; }
@@ -66,6 +67,8 @@ public sealed class LauncherCore : IDisposable
         Mrpacks = new MrpackService(_http, Paths, Instances);
         Profiles = new ProfileService(Paths);
         Skins = new SkinApplyService(Paths, Mods);
+        Java = new JavaInstaller(_http, Paths);
+        JavaLocator.ManagedRoot = Paths.JavaDir; // so scans find launcher-installed JREs
         Settings = new SettingsService(Paths);
         Versions = new VersionListService(_http);
         Updates = new UpdateService(_http);

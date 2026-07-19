@@ -134,6 +134,9 @@ public partial class MainWindow : AppWindow
         SaveInstanceButton.Click += OnSaveInstance;
         BrowseJavaButton.Click += OnBrowseJava;
         DetectJavaButton.Click += async (_, _) => await SafeAsync(DetectJavaAsync);
+        JavaInstallCombo.ItemsSource = JavaInstaller.OfferedMajors.Select(m => "Java " + m).ToList();
+        JavaInstallCombo.SelectedIndex = Array.IndexOf(JavaInstaller.OfferedMajors, 17);
+        InstallJavaButton.Click += async (_, _) => await SafeAsync(InstallJavaAsync);
         OpenLogsFolderButton.Click += (_, _) => OpenLogsFolder();
         CopyLogButton.Click += async (_, _) => await CopyLogAsync();
         DefaultJavaCombo.SelectionChanged += OnDefaultJavaChanged;
@@ -252,6 +255,8 @@ public partial class MainWindow : AppWindow
         NavAccounts.Content = Loc.T("nav.accounts");
         NavSettings.Content = Loc.T("nav.settings");
         LblJavaSection.Text = Loc.T("settings.java");
+        LblInstallJava.Text = Loc.T("java.installlabel");
+        InstallJavaButton.Content = Loc.T("btn.install");
         LblLogsSection.Text = Loc.T("settings.logs");
         OpenLogsFolderButton.Content = Loc.T("btn.openfolder");
         CopyLogButton.Content = Loc.T("btn.copy");
@@ -875,6 +880,43 @@ public partial class MainWindow : AppWindow
         var stub = JavaLocator.OracleStubPath();
         JavaOracleWarn.IsVisible = stub != null;
         JavaOracleWarn.Text = stub != null ? Loc.T("java.oraclewarn") : "";
+    }
+
+    /// <summary>Downloads and installs a Temurin JRE (Adoptium), then selects it as the default.</summary>
+    private async Task InstallJavaAsync()
+    {
+        var idx = JavaInstallCombo.SelectedIndex;
+        if (idx < 0 || idx >= JavaInstaller.OfferedMajors.Length) return;
+        var major = JavaInstaller.OfferedMajors[idx];
+
+        InstallJavaButton.IsEnabled = false;
+        DownloadProgress.Value = 0;
+        DownloadPercent.Text = "";
+        JavaStatus.Text = Loc.T("java.installing", major);
+        try
+        {
+            var progress = new Progress<double>(p => Dispatcher.UIThread.Post(() =>
+            {
+                DownloadProgress.Value = p;
+                DownloadPercent.Text = p is > 0 and < 1 ? $"{p * 100:0}%" : "";
+            }));
+            var exe = await _core.Java.InstallAsync(major, progress);
+
+            await DetectJavaAsync();            // the managed folder now contains it
+            var i = IndexOfRuntime(exe);
+            if (i >= 0) DefaultJavaCombo.SelectedIndex = i + 1; // fires the save handler
+            JavaStatus.Text = Loc.T("java.installed", major);
+        }
+        catch (Exception ex)
+        {
+            JavaStatus.Text = Loc.T("java.installfail", ex.Message);
+        }
+        finally
+        {
+            InstallJavaButton.IsEnabled = true;
+            DownloadProgress.Value = 0;
+            DownloadPercent.Text = "";
+        }
     }
 
     /// <summary>(Re)fills both Java combos from the cached runtimes; index 0 is "Auto".</summary>

@@ -40,6 +40,12 @@ public sealed class LauncherPaths
     /// <summary>Optional per-machine CurseForge API key (never committed).</summary>
     public string CurseForgeKeyFile => Path.Combine(Root, "curseforge.key");
 
+    /// <summary>Root of launcher-managed Java runtimes; <c>java/&lt;major&gt;/bin/java.exe</c>.</summary>
+    public string JavaDir => Path.Combine(Root, "java");
+
+    /// <summary>Managed install folder for a given Java major version.</summary>
+    public string JavaMajorDir(int major) => Path.Combine(JavaDir, major.ToString());
+
     /// <summary>Stored skin/cape image files.</summary>
     public string AppearanceDir => Path.Combine(Root, "appearances");
 

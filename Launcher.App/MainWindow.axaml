@@ -665,6 +665,11 @@
                                 <Button x:Name="DetectJavaButton" Content="Detect / fix Java"/>
                                 <ComboBox x:Name="DefaultJavaCombo" Width="360" VerticalAlignment="Center"/>
                             </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock x:Name="LblInstallJava" Text="Install Java:" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="JavaInstallCombo" Width="140" VerticalAlignment="Center"/>
+                                <Button x:Name="InstallJavaButton" Classes="secondary" Content="Install"/>
+                            </StackPanel>
                             <TextBlock x:Name="JavaStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
                             <TextBlock x:Name="JavaOracleWarn" Text="" TextWrapping="Wrap" IsVisible="False" Foreground="{DynamicResource Warning}"/>
                         </StackPanel>

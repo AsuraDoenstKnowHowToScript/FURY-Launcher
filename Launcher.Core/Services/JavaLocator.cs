@@ -202,9 +202,13 @@ public static class JavaLocator
 
     private readonly record struct Java(string Path, int Major);
 
+    /// <summary>Root of launcher-managed JRE installs (java/&lt;major&gt;/bin/java.exe); scanned too.</summary>
+    public static string? ManagedRoot { get; set; }
+
     private static IEnumerable<Java> Discover()
     {
         var roots = new List<string>();
+        if (!string.IsNullOrEmpty(ManagedRoot)) roots.Add(ManagedRoot);
         foreach (var pf in new[]
                  {
                      Environment.GetEnvironmentVariable("ProgramFiles"),
