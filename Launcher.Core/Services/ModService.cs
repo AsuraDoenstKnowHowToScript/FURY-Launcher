@@ -81,6 +81,21 @@ public sealed class ModService
         await _metadata.RemoveFromIndexAsync(instance, fileName, kind).ConfigureAwait(false);
     }
 
+    /// <summary>Removes installed content whose file name contains <paramref name="keyword"/>
+    /// (used to swap out an incompatible equivalent). Returns how many were removed.</summary>
+    public async Task<int> RemoveByKeywordAsync(Instance instance, string keyword, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
+    {
+        keyword = keyword.ToLowerInvariant();
+        var removed = 0;
+        foreach (var item in ListContent(instance, kind))
+        {
+            if (!item.FileName.ToLowerInvariant().Contains(keyword)) continue;
+            await RemoveContentAsync(instance, item.FileName, kind, ct).ConfigureAwait(false);
+            removed++;
+        }
+        return removed;
+    }
+
     /// <summary>
     /// Enables/disables an item by renaming between <c>.ext</c> and <c>.ext.disabled</c>.
     /// Returns the new file name so the caller can update state without a full reload.

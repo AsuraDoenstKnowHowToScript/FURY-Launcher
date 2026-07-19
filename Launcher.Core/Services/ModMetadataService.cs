@@ -196,27 +196,33 @@ public sealed class ModMetadataService
         var projectIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var names = new HashSet<string>();
 
-        foreach (var e in index.Values)
-        {
-            if (!string.IsNullOrEmpty(e.ProjectId)) projectIds.Add(e.ProjectId!);
-            if (!string.IsNullOrWhiteSpace(e.Title)) names.Add(InstalledSignatures.Normalize(e.Title!));
-        }
-
         var contentDir = _paths.InstanceContentDir(instance, kind);
+        if (!Directory.Exists(contentDir))
+            return new InstalledSignatures(projectIds, names);
+
+        // Folder-driven: the "installed" set is built from the files actually present,
+        // never from stale index entries. An orphan index row (file removed, or an
+        // install that never wrote the jar) must not keep marking a mod as installed,
+        // or the search browser disagrees with the instance's mod list.
         var ext = kind == ContentKind.Mod ? ".jar" : ".zip";
-        if (Directory.Exists(contentDir))
+        foreach (var path in Directory.EnumerateFiles(contentDir))
         {
-            foreach (var path in Directory.EnumerateFiles(contentDir))
+            var file = Path.GetFileName(path);
+            if (!file.EndsWith(ext, StringComparison.OrdinalIgnoreCase)
+                && !file.EndsWith(ext + ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase)) continue;
+
+            var key = file.EndsWith(ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase)
+                ? file[..^ModItem.DisabledSuffix.Length]
+                : file;
+
+            // Prefer the index (real project id + pretty title); fall back to the jar manifest.
+            if (index.TryGetValue(key, out var e))
             {
-                var file = Path.GetFileName(path);
-                if (!file.EndsWith(ext, StringComparison.OrdinalIgnoreCase)
-                    && !file.EndsWith(ext + ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase)) continue;
-
-                var key = file.EndsWith(ModItem.DisabledSuffix, StringComparison.OrdinalIgnoreCase)
-                    ? file[..^ModItem.DisabledSuffix.Length]
-                    : file;
-                if (index.ContainsKey(key)) continue; // already accounted for by the index
-
+                if (!string.IsNullOrEmpty(e.ProjectId)) projectIds.Add(e.ProjectId!);
+                if (!string.IsNullOrWhiteSpace(e.Title)) names.Add(InstalledSignatures.Normalize(e.Title!));
+            }
+            else
+            {
                 var jar = TryReadJar(path, CacheDir(contentDir));
                 if (jar != null && !string.IsNullOrWhiteSpace(jar.Title))
                     names.Add(InstalledSignatures.Normalize(jar.Title));

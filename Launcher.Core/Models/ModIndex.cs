@@ -50,6 +50,9 @@ public sealed class InstalledSignatures
         _names = names;
     }
 
+    /// <summary>Normalized names of what is installed (for the conflict guard).</summary>
+    public IReadOnlyCollection<string> Names => _names;
+
     /// <summary>True if a project id, title or slug matches something already installed.</summary>
     public bool IsInstalled(string? projectId, string? title, string? slug)
     {

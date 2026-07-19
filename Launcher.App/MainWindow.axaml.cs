@@ -1261,6 +1261,32 @@ public partial class MainWindow : AppWindow
         catch (Exception ex) { CrashLog.Write("[mods] computing installed signatures failed", ex); }
     }
 
+    /// <summary>
+    /// Common-sense guard against installing two incompatible equivalents (Sodium/Embeddium,
+    /// Iris/Oculus, ...). Returns true to proceed. On a detected conflict, asks the user to
+    /// cancel or replace; "replace" removes the installed equivalent first.
+    /// </summary>
+    private async Task<bool> EnsureNoConflictAsync(Instance inst, ModrinthHitVm vm)
+    {
+        var sigs = _installedSigs ?? await _core.ModMetadata.GetInstalledSignaturesAsync(inst, _contentKind);
+        var conflict = ModConflicts.Find(vm.Hit.Slug, vm.Title, sigs.Names);
+        if (conflict == null) return true;
+
+        static string Pretty(string k) => k.Length == 0 ? k : char.ToUpperInvariant(k[0]) + k[1..];
+        var installedName = Pretty(conflict.Value.installed);
+        var incomingName = string.IsNullOrWhiteSpace(vm.Title) ? Pretty(conflict.Value.incoming) : vm.Title;
+
+        var replace = await ConfirmAsync(
+            Loc.T("conflict.title"),
+            Loc.T("conflict.message", incomingName, installedName),
+            Loc.T("btn.replace"), Loc.T("btn.cancel"));
+        if (!replace) return false;
+
+        await _core.Mods.RemoveByKeywordAsync(inst, conflict.Value.installed, _contentKind);
+        RefreshMods();
+        return true;
+    }
+
     /// <summary>Tags each Modrinth result the instance already has (by project id or name).</summary>
     private void MarkInstalledResults()
     {
@@ -1540,6 +1566,7 @@ public partial class MainWindow : AppWindow
         if (sender is not Control c || c.DataContext is not ModrinthHitVm vm) return;
         var inst = SelectedModInstance();
         if (inst == null) { Notify(Loc.T("common.selectinstance")); return; }
+        if (!await EnsureNoConflictAsync(inst, vm)) return;
 
         vm.Installing = true;
         ModrinthStatus.Text = Loc.T("mods.downloading", vm.Title);
@@ -1575,6 +1602,8 @@ public partial class MainWindow : AppWindow
         var inst = SelectedModInstance();
         var vIdx = ModrinthVersionCombo.SelectedIndex;
         if (inst == null || vIdx < 0 || vIdx >= _modVersions.Count) { Notify(Loc.T("mods.selectresult")); return; }
+
+        if (ModrinthList.SelectedItem is ModrinthHitVm selVm && !await EnsureNoConflictAsync(inst, selVm)) return;
 
         var version = _modVersions[vIdx];
         ModrinthStatus.Text = Loc.T("mods.downloading", version.Display);
@@ -1737,11 +1766,11 @@ public partial class MainWindow : AppWindow
     // ============================== HELPERS ==============================
 
     /// <summary>Minimal modal yes/no dialog (bare UI: no MessageBox in Avalonia).</summary>
-    private async Task<bool> ConfirmAsync(string title, string message)
+    private async Task<bool> ConfirmAsync(string title, string message, string? confirmLabel = null, string? cancelLabel = null)
     {
         var tcs = new TaskCompletionSource<bool>();
-        var yes = new Button { Content = Loc.T("btn.continue") };
-        var no = new Button { Content = Loc.T("btn.cancel") };
+        var yes = new Button { Content = confirmLabel ?? Loc.T("btn.continue") };
+        var no = new Button { Content = cancelLabel ?? Loc.T("btn.cancel") };
 
         var dialog = new Window
         {
