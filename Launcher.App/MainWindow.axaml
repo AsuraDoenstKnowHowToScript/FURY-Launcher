@@ -385,7 +385,9 @@
                         </Border>
 
                         <DockPanel Grid.Column="2">
-                            <!-- Search source: Modrinth / CurseForge. CurseForge is disabled without an API key. -->
+                            <!-- Search source. CurseForge is temporarily disabled ("coming soon")
+                                 while its integration is finished. Brand icons go here once the real
+                                 logo assets (Assets/modrinth.*, Assets/curseforge.*) are added. -->
                             <Border DockPanel.Dock="Top" Background="{DynamicResource BgElevated}" CornerRadius="10"
                                     Padding="3" HorizontalAlignment="Left" Margin="0,0,0,8">
                                 <StackPanel Orientation="Horizontal" Spacing="2">
@@ -397,8 +399,8 @@
                                     </RadioButton>
                                     <RadioButton x:Name="SrcCurseForge" Classes="segment" GroupName="contentsrc">
                                         <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                            <Border Width="12" Height="12" CornerRadius="3" Background="#F16436"/>
-                                            <TextBlock Text="CurseForge" VerticalAlignment="Center"/>
+                                            <Border Width="12" Height="12" CornerRadius="3" Background="#F16436" Opacity="0.5"/>
+                                            <TextBlock x:Name="SrcCurseForgeLabel" Text="CurseForge" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </RadioButton>
                                 </StackPanel>

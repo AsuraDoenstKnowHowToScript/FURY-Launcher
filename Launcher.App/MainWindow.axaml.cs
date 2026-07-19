@@ -158,14 +158,12 @@ public partial class MainWindow : AppWindow
         SegMods.IsCheckedChanged += OnContentSegmentChanged;
         SegShaders.IsCheckedChanged += OnContentSegmentChanged;
         SegDatapacks.IsCheckedChanged += OnContentSegmentChanged;
-        // Search source: Modrinth / CurseForge (CurseForge disabled without an API key).
+        // Search source: Modrinth is live; CurseForge is temporarily "coming soon" while
+        // its integration is finished (the client + key plumbing stay for when it returns).
         SrcModrinth.IsCheckedChanged += OnSourceChanged;
         SrcCurseForge.IsCheckedChanged += OnSourceChanged;
-        if (!_core.Mods.CurseForgeAvailable)
-        {
-            SrcCurseForge.IsEnabled = false;
-            ToolTip.SetTip(SrcCurseForge, Loc.T("source.curseforgeoff"));
-        }
+        SrcCurseForge.IsEnabled = false;
+        ToolTip.SetTip(SrcCurseForge, Loc.T("source.soon"));
         ModrinthList.ItemsSource = _modrinthVms;
         ModrinthSearchButton.Click += (_, _) => StartModrinthSearch();
         ModrinthList.SelectionChanged += OnModrinthResultSelected;
@@ -300,6 +298,7 @@ public partial class MainWindow : AppWindow
         AddModButton.Content = Loc.T("btn.addjar");
         ModrinthQueryBox.Watermark = Loc.T("watermark.search", SourceName());
         ModrinthSearchButton.Content = Loc.T("btn.search");
+        SrcCurseForgeLabel.Text = "CurseForge · " + Loc.T("source.soon");
         LblModVersion.Text = Loc.T("label.version");
         ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
         ModrinthEmptyText.Text = Loc.T("mods.searchprompt");
