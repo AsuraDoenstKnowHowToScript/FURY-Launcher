@@ -388,7 +388,40 @@ public partial class MainWindow : AppWindow
         SettingsPanel.IsVisible = ReferenceEquals(item, NavSettings);
 
         FlushVisibleLogs(); // catch a log view up if it was hidden while lines streamed
+
+        // Ease the incoming section in (one-shot; never replays on interaction).
+        var shown = HomePanel.IsVisible ? (Control)HomePanel
+                  : ModsPanel.IsVisible ? ModsPanel
+                  : AccountsPanel.IsVisible ? AccountsPanel
+                  : SettingsPanel;
+        PlayPageTransition(shown);
+
         if (ReferenceEquals(item, NavMods)) RefreshMods();
+    }
+
+    /// <summary>One-shot fade-in when a section becomes visible (same pattern as the card fade).</summary>
+    private static void PlayPageTransition(Control panel)
+    {
+        var anim = new Avalonia.Animation.Animation
+        {
+            Duration = TimeSpan.FromMilliseconds(240),
+            Easing = new Avalonia.Animation.Easings.CubicEaseOut(),
+            FillMode = Avalonia.Animation.FillMode.Forward,
+            Children =
+            {
+                new Avalonia.Animation.KeyFrame
+                {
+                    Cue = new Avalonia.Animation.Cue(0d),
+                    Setters = { new Avalonia.Styling.Setter(Visual.OpacityProperty, 0d) }
+                },
+                new Avalonia.Animation.KeyFrame
+                {
+                    Cue = new Avalonia.Animation.Cue(1d),
+                    Setters = { new Avalonia.Styling.Setter(Visual.OpacityProperty, 1d) }
+                }
+            }
+        };
+        _ = anim.RunAsync(panel);
     }
 
     private void OnLanguageChanged(object? sender, SelectionChangedEventArgs e)

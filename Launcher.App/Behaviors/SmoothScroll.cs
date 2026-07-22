@@ -29,7 +29,7 @@ public static class SmoothScroll
     private const double StepPixels = 100.0;
 
     /// <summary>Fraction of the remaining distance covered each tick (higher = snappier).</summary>
-    private const double Ease = 0.18;
+    private const double Ease = 0.22;
 
     public static readonly AttachedProperty<bool> EnabledProperty =
         AvaloniaProperty.RegisterAttached<Control, bool>("Enabled", typeof(SmoothScroll));
