@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without the leading v (e.g. 0.4.2)"
+        description: "Version without the leading v (e.g. 0.4.3-beta)"
         required: true
-        default: "0.4.2"
+        default: "0.4.3-beta"
       prerelease:
         description: "Mark as a pre-release (beta)?"
         type: boolean
@@ -70,22 +70,25 @@ jobs:
         shell: bash
         run: |
           cat > release-notes.md <<'EOF'
-          A mods-focused release: search both stores, and safer installs.
+          A beta focused on quality of life. Please report anything odd — this build
+          goes stable once it has been tested.
 
-          ## CurseForge search
-          The mod browser now has **Modrinth** and **CurseForge** side by side. Pick a
-          source and the same cards, paging and one-click install work exactly the same,
-          so a mod that only exists on one store is no longer a dead end.
+          ## Built-in Java installer
+          Settings > Java can now download and install Java for you (Eclipse Temurin
+          8, 17 or 21). No more hunting for the right version when a Minecraft
+          release needs a newer Java than the one you have. The install shows live
+          progress and is picked as the default when it finishes.
 
-          ## Incompatible-mod guard
-          Installing a mod that conflicts with one you already have (for example
-          **Sodium** vs **Embeddium**, or **Iris** vs **Oculus**) now warns you and
-          offers to cancel or replace the installed one, instead of quietly breaking the game.
+          ## Logs in Settings
+          A new Logs section in Settings mirrors the session log, with one-click
+          Copy and an Open folder button that takes you straight to `crash.log`.
 
-          ## Installed-state fix
-          A mod could show as installed in the browser but be missing from the instance's
-          mod list. The installed mark is now read straight from the mods folder, so the
-          browser and the list always agree.
+          ## Interface polish
+          - The Modrinth and CurseForge buttons now carry their real logos.
+          - CurseForge search is temporarily marked "coming soon" while its
+            integration is finished; Modrinth remains fully live.
+          - Download progress now shows a percentage.
+          - Scrollbars no longer overlap the instance and mod cards.
 
           ## How to run
           Download the zip below, unzip, run `FURY Launcher.exe`. Windows 10/11

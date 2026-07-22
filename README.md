@@ -11,15 +11,15 @@ FURY Launcher is a Minecraft launcher for Windows. It manages isolated instances
 
 ## Current version
 
-The latest build is `v0.4.2`. Download it from the [Releases](../../releases) page.
+The latest stable build is `v0.4.2`; `v0.4.3-beta` is available for testing. Download from the [Releases](../../releases) page.
 
 ## Versions
 
 | Channel | Version | Notes |
 | --- | --- | --- |
-| Stable (latest) | `v0.4.2` | Recommended build |
+| Beta (latest) | `v0.4.3-beta` | Java installer, logs tab, polish |
+| Stable | `v0.4.2` | Recommended stable build |
 | Stable | `v0.4.1` | Faster search |
-| Stable | `v0.4.0` | First stable release |
 
 The release badge above always points to the newest published build.
 
