@@ -5,27 +5,30 @@
     <!-- ============================================================
          DESIGN TOKENS: the single source of truth for colour, radius,
          spacing and type. Views must reference these via {DynamicResource};
-         no hard-coded colours anywhere. Aesthetic: dark purple on soft black.
+         no hard-coded colours anywhere. Aesthetic: dark violet on deep black,
+         depth built from layer contrast rather than hard outlines.
          ============================================================ -->
 
     <!-- Fonts (embedded; no system install needed) -->
     <FontFamily x:Key="FontUi">avares://FURY Launcher/Assets/Fonts/Outfit.ttf#Outfit</FontFamily>
     <FontFamily x:Key="FontMono">avares://FURY Launcher/Assets/Fonts/JetBrainsMono-Regular.ttf#JetBrains Mono</FontFamily>
 
-    <!-- Colours (raw) -->
-    <Color x:Key="BgBaseColor">#0F0E13</Color>
-    <Color x:Key="BgSurfaceColor">#17151E</Color>
-    <Color x:Key="BgElevatedColor">#1F1C29</Color>
-    <Color x:Key="BgInputColor">#131118</Color>
-    <Color x:Key="BorderSubtleColor">#26222F</Color>
-    <Color x:Key="BorderStrongColor">#35303F</Color>
+    <!-- Colours (raw). Four background layers, each a clear step brighter, all with a
+         faint violet cast so the purple accent feels native rather than pasted on. -->
+    <Color x:Key="BgBaseColor">#0C0B11</Color>
+    <Color x:Key="BgSurfaceColor">#16141E</Color>
+    <Color x:Key="BgElevatedColor">#211D2E</Color>
+    <Color x:Key="BgHoverColor">#282338</Color>
+    <Color x:Key="BgInputColor">#111017</Color>
+    <Color x:Key="BorderSubtleColor">#2A2637</Color>
+    <Color x:Key="BorderStrongColor">#3B3450</Color>
     <Color x:Key="AccentColor">#6D28D9</Color>
     <Color x:Key="AccentHoverColor">#7C3AED</Color>
     <Color x:Key="AccentPressedColor">#5B21B6</Color>
     <Color x:Key="OnAccentColor">#FFFFFF</Color>
-    <Color x:Key="TextPrimaryColor">#F1F0F4</Color>
-    <Color x:Key="TextSecondaryColor">#C3BFD0</Color>
-    <Color x:Key="TextMutedColor">#948EA6</Color>
+    <Color x:Key="TextPrimaryColor">#F2F1F6</Color>
+    <Color x:Key="TextSecondaryColor">#C6C2D4</Color>
+    <Color x:Key="TextMutedColor">#8F89A3</Color>
     <Color x:Key="SuccessColor">#4ADE80</Color>
     <Color x:Key="WarningColor">#FBBF24</Color>
     <Color x:Key="DangerColor">#F87171</Color>
@@ -34,6 +37,7 @@
     <SolidColorBrush x:Key="BgBase" Color="{StaticResource BgBaseColor}"/>
     <SolidColorBrush x:Key="BgSurface" Color="{StaticResource BgSurfaceColor}"/>
     <SolidColorBrush x:Key="BgElevated" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="BgHover" Color="{StaticResource BgHoverColor}"/>
     <SolidColorBrush x:Key="BgInput" Color="{StaticResource BgInputColor}"/>
     <SolidColorBrush x:Key="BorderSubtle" Color="{StaticResource BorderSubtleColor}"/>
     <SolidColorBrush x:Key="BorderStrong" Color="{StaticResource BorderStrongColor}"/>
@@ -50,10 +54,17 @@
     <SolidColorBrush x:Key="Warning" Color="{StaticResource WarningColor}"/>
     <SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}"/>
 
-    <!-- Radii -->
-    <CornerRadius x:Key="RadiusSm">4</CornerRadius>
-    <CornerRadius x:Key="RadiusMd">8</CornerRadius>
-    <CornerRadius x:Key="RadiusLg">12</CornerRadius>
+    <!-- The FURY wordmark: a soft violet sweep, the one place the brand gets to glow. -->
+    <LinearGradientBrush x:Key="BrandGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#A78BFA"/>
+        <GradientStop Offset="1" Color="#7C3AED"/>
+    </LinearGradientBrush>
+
+    <!-- Radii: roomier corners, closer to a modern web card than a desktop widget. -->
+    <CornerRadius x:Key="RadiusSm">6</CornerRadius>
+    <CornerRadius x:Key="RadiusMd">10</CornerRadius>
+    <CornerRadius x:Key="RadiusLg">14</CornerRadius>
+    <CornerRadius x:Key="RadiusPill">999</CornerRadius>
 
     <!-- Spacing scale (base 4) -->
     <sys:Double x:Key="Space1">4</sys:Double>
@@ -62,5 +73,13 @@
     <sys:Double x:Key="Space4">16</sys:Double>
     <sys:Double x:Key="Space6">24</sys:Double>
     <sys:Double x:Key="Space8">32</sys:Double>
+
+    <!-- Theme overrides: give the nav pane its own (slightly deeper) layer so the
+         sidebar reads as chrome and the content as the page. Unknown keys are ignored
+         by the theme, so these are safe no-ops on other platforms/themes. -->
+    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#100E16"/>
+    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#100E16"/>
+    <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent"/>
+    <sys:Double x:Key="ScrollBarSize">10</sys:Double>
 
 </ResourceDictionary>
