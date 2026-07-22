@@ -110,8 +110,17 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Hero: the selected instance + the big PLAY button (bottom band) -->
-                        <Border DockPanel.Dock="Bottom" Classes="card" x:Name="HeroCard" Margin="0,16,0,0">
+                        <!-- Hero: the selected instance + the big PLAY button, promoted to a top
+                             banner so playing is the first thing the page is about. The violet
+                             sweep is inline so it beats the card style's flat background. -->
+                        <Border DockPanel.Dock="Top" Classes="card" x:Name="HeroCard" Margin="0,0,0,16" Padding="20,18">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                    <GradientStop Offset="0" Color="#2B1E4E"/>
+                                    <GradientStop Offset="0.5" Color="#1C1728"/>
+                                    <GradientStop Offset="1" Color="#16141E"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
                             <StackPanel Spacing="12">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
@@ -192,7 +201,7 @@
                                     </ListBox.Styles>
                                     <ListBox.ItemTemplate>
                                         <DataTemplate x:DataType="models:Instance">
-                                            <Border Classes="card" Width="196" Padding="14">
+                                            <Border Classes="card" Width="212" Padding="16">
                                                 <StackPanel Spacing="8">
                                                     <TextBlock Classes="Subtitle" Text="{Binding Name}"
                                                                TextTrimming="CharacterEllipsis"/>
@@ -226,8 +235,8 @@
 
                     <!-- Create / edit instance overlay (hidden until +New or Edit) -->
                     <Grid x:Name="InstanceOverlay" IsVisible="False" Background="#B3000000">
-                        <Border Classes="card" Width="480" MaxHeight="640"
-                                VerticalAlignment="Center" HorizontalAlignment="Center" Padding="22">
+                        <Border Classes="card" Width="520" MaxHeight="660"
+                                VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Top" x:Name="OverlayTitle" Classes="Title"
                                            Text="New instance" Margin="0,0,0,14"/>
@@ -281,26 +290,30 @@
 
                 <!-- =============================== MODS =============================== -->
                 <DockPanel x:Name="ModsPanel" IsVisible="False" Margin="24">
-                    <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,10">
-                        <!-- Content type segmented control: switches Modrinth project_type + folder -->
-                        <Border Background="{DynamicResource BgElevated}" CornerRadius="10"
-                                Padding="3" HorizontalAlignment="Left">
-                            <StackPanel Orientation="Horizontal" Spacing="2">
-                                <RadioButton x:Name="SegMods" Classes="segment" GroupName="contentseg"
-                                             Content="Mods" IsChecked="True"/>
-                                <RadioButton x:Name="SegShaders" Classes="segment" GroupName="contentseg"
-                                             Content="Shaders"/>
-                                <RadioButton x:Name="SegDatapacks" Classes="segment" GroupName="contentseg"
-                                             Content="Datapacks"/>
+                    <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,12">
+                        <!-- One toolbar row: content-type segments on the left, the instance
+                             context on the right — no stacked rows eating vertical space. -->
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0" Background="{DynamicResource BgElevated}" CornerRadius="12"
+                                    Padding="3" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" Spacing="2">
+                                    <RadioButton x:Name="SegMods" Classes="segment" GroupName="contentseg"
+                                                 Content="Mods" IsChecked="True"/>
+                                    <RadioButton x:Name="SegShaders" Classes="segment" GroupName="contentseg"
+                                                 Content="Shaders"/>
+                                    <RadioButton x:Name="SegDatapacks" Classes="segment" GroupName="contentseg"
+                                                 Content="Datapacks"/>
+                                </StackPanel>
+                            </Border>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock x:Name="ModsInstanceName" Text="—" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                                <Button x:Name="RefreshModsButton" Classes="secondary" Content="Refresh"/>
+                                <ComboBox x:Name="ModInstanceCombo" IsVisible="False" Width="0"/>
                             </StackPanel>
-                        </Border>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="ModsInstanceName" Text="—" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource TextSecondary}"/>
-                            <Button x:Name="RefreshModsButton" Classes="secondary" Content="Refresh"/>
-                            <ComboBox x:Name="ModInstanceCombo" IsVisible="False" Width="0"/>
-                        </StackPanel>
+                        </Grid>
                         <StackPanel x:Name="ModsVanillaPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
                             <TextBlock x:Name="ModsVanillaWarning" Text="" TextWrapping="Wrap"
                                        Foreground="{DynamicResource Danger}" VerticalAlignment="Center" MaxWidth="640"/>
@@ -308,7 +321,8 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <Grid ColumnDefinitions="*,12,*">
+                    <!-- Search is the main event: give it the wider column. -->
+                    <Grid ColumnDefinitions="5*,14,7*">
                         <Border Grid.Column="0" Background="{DynamicResource BgSurface}"
                                 BorderBrush="{DynamicResource BorderSubtle}"
                                 BorderThickness="1" CornerRadius="12">
@@ -414,12 +428,25 @@
                                     </RadioButton>
                                 </StackPanel>
                             </Border>
-                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
-                                <TextBox x:Name="ModrinthQueryBox" Width="240" Watermark="Search Modrinth..."/>
-                                <Button x:Name="ModrinthSearchButton" Classes="secondary" Content="Search"/>
-                                <TextBlock x:Name="ModrinthStatus" Classes="Caption" VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis" Text=""/>
-                            </StackPanel>
+                            <!-- Big search field with an inline magnifier, Modrinth-style; the wrapper
+                                 border lights up via :focus-within while the inner TextBox stays bare. -->
+                            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,4">
+                                <Border Grid.Column="0" Classes="searchwrap" Background="{DynamicResource BgInput}"
+                                        BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"
+                                        CornerRadius="{DynamicResource RadiusMd}" Padding="12,0" MinHeight="38">
+                                    <DockPanel VerticalAlignment="Center">
+                                        <Image DockPanel.Dock="Left" Width="16" Height="16" Margin="0,0,8,0"
+                                               VerticalAlignment="Center"
+                                               Source="{icon:LucideImage Kind=Search, Brush={StaticResource TextMuted}}"/>
+                                        <TextBox x:Name="ModrinthQueryBox" Classes="bare" Watermark="Search Modrinth..."
+                                                 VerticalContentAlignment="Center" MinHeight="34"/>
+                                    </DockPanel>
+                                </Border>
+                                <Button Grid.Column="1" x:Name="ModrinthSearchButton" Classes="secondary"
+                                        Content="Search" Margin="8,0,0,0" VerticalAlignment="Stretch"/>
+                            </Grid>
+                            <TextBlock DockPanel.Dock="Top" x:Name="ModrinthStatus" Classes="Caption"
+                                       Margin="2,0,0,6" TextTrimming="CharacterEllipsis" Text=""/>
                             <!-- Advanced: pick a specific version for the selected result. -->
                             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
                                 <TextBlock x:Name="LblModVersion" Text="Version:" VerticalAlignment="Center"/>

@@ -123,6 +123,29 @@
         <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
     </Style>
 
+    <!-- Bare TextBox: no chrome of its own, for use inside a styled wrapper (search field).
+         The wrapper carries the border and lights up when anything inside has focus. -->
+    <Style Selector="TextBox.bare /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="TextBox.bare:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="TextBox.bare:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Border.searchwrap">
+        <Setter Property="Transitions">
+            <Transitions><BrushTransition Property="BorderBrush" Duration="0:0:0.12"/></Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.searchwrap:focus-within">
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+    </Style>
+
     <Style Selector="ComboBox">
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
     </Style>
