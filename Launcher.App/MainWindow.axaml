@@ -643,39 +643,47 @@
                 </ScrollViewer>
 
                 <!-- =============================== SETTINGS (about + prefs) =============================== -->
-                <ScrollViewer x:Name="SettingsPanel" IsVisible="False">
-                    <StackPanel Margin="24" Spacing="8">
-                        <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"/>
-                        <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version" Foreground="{DynamicResource TextSecondary}"/>
-                        <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text="" Margin="0,6,0,0"/>
-                        <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Text=""/>
-                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,12,0,0">
-                            <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="LanguageCombo" Width="180"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
-                            <Button x:Name="CheckUpdatesButton" Content="Check for updates"/>
-                            <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                        </StackPanel>
+                <!-- Card-grouped like Accounts: About & preferences / Java / Logs. -->
+                <ScrollViewer x:Name="SettingsPanel" IsVisible="False"
+                              behaviors:SmoothScroll.Enabled="True">
+                    <StackPanel Margin="24" Spacing="16">
+                        <Border Classes="card">
+                            <StackPanel Spacing="8">
+                                <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"/>
+                                <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text=""/>
+                                <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Text=""/>
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}" Margin="0,6"/>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="LanguageCombo" Width="180"/>
+                                    <Button x:Name="CheckUpdatesButton" Content="Check for updates" Margin="14,0,0,0"/>
+                                    <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
 
-                        <!-- Java: detect real runtimes and pick a default, dodging the Oracle stub. -->
-                        <StackPanel Spacing="6" Margin="0,20,0,0">
-                            <TextBlock x:Name="LblJavaSection" Classes="Subtitle" Text="Java"/>
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <Button x:Name="DetectJavaButton" Content="Detect / fix Java"/>
-                                <ComboBox x:Name="DefaultJavaCombo" Width="360" VerticalAlignment="Center"/>
+                        <!-- Java: detect real runtimes, pick a default, or install a Temurin JRE. -->
+                        <Border Classes="card">
+                            <StackPanel Spacing="8">
+                                <TextBlock x:Name="LblJavaSection" Classes="Subtitle" Text="Java"/>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Button x:Name="DetectJavaButton" Content="Detect / fix Java"/>
+                                    <ComboBox x:Name="DefaultJavaCombo" Width="360" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock x:Name="LblInstallJava" Text="Install Java:" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="JavaInstallCombo" Width="140" VerticalAlignment="Center"/>
+                                    <Button x:Name="InstallJavaButton" Classes="secondary" Content="Install"/>
+                                </StackPanel>
+                                <TextBlock x:Name="JavaStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
+                                <TextBlock x:Name="JavaOracleWarn" Text="" TextWrapping="Wrap" IsVisible="False" Foreground="{DynamicResource Warning}"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock x:Name="LblInstallJava" Text="Install Java:" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="JavaInstallCombo" Width="140" VerticalAlignment="Center"/>
-                                <Button x:Name="InstallJavaButton" Classes="secondary" Content="Install"/>
-                            </StackPanel>
-                            <TextBlock x:Name="JavaStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
-                            <TextBlock x:Name="JavaOracleWarn" Text="" TextWrapping="Wrap" IsVisible="False" Foreground="{DynamicResource Warning}"/>
-                        </StackPanel>
+                        </Border>
 
                         <!-- Logs: mirrors the session log and points at the crash.log folder. -->
-                        <StackPanel Spacing="6" Margin="0,20,0,0">
+                        <Border Classes="card">
+                        <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto,Auto">
                                 <TextBlock Grid.Column="0" x:Name="LblLogsSection" Classes="Subtitle" Text="Logs"
                                            VerticalAlignment="Center"/>
@@ -690,6 +698,7 @@
                                          BorderThickness="0" VerticalContentAlignment="Top"/>
                             </Border>
                         </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 

@@ -234,7 +234,16 @@ public sealed class ModService
             ? await _curseforge.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct).ConfigureAwait(false)
             : await _modrinth.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct).ConfigureAwait(false);
 
-        lock (_searchCache) { _searchCache[key] = (DateTime.UtcNow, hits); }
+        var now = DateTime.UtcNow;
+        lock (_searchCache)
+        {
+            // Drop expired entries once the cache gets big, so it stays bounded.
+            if (_searchCache.Count > 64)
+                foreach (var stale in _searchCache.Where(kv => now - kv.Value.at >= SearchCacheTtl)
+                                                  .Select(kv => kv.Key).ToList())
+                    _searchCache.Remove(stale);
+            _searchCache[key] = (now, hits);
+        }
         return hits;
     }
 

@@ -59,6 +59,7 @@ public partial class MainWindow : AppWindow
     private InstalledSignatures? _installedSigs; // what the selected instance already has, for the "Installed" tag
     private ContentKind _contentKind = ContentKind.Mod; // Mods / Shaders / Datapacks segment
     private ContentSource _contentSource = ContentSource.Modrinth; // Modrinth / CurseForge browser source
+    private string _modsRenderSig = ""; // instance+kind+files of the currently rendered mod list
 
     // Modrinth search: debounced query, page-by-scroll, cancel-on-new-search.
     private DispatcherTimer? _searchDebounce;
@@ -67,7 +68,14 @@ public partial class MainWindow : AppWindow
     private int _modrinthOffset;
     private bool _modrinthHasMore;
     private bool _modrinthLoading;
-    private static readonly HttpClient _iconHttp = new() { Timeout = TimeSpan.FromSeconds(15) };
+    // Same transport tuning as the core client: compressed responses over warm,
+    // pooled connections, so thumbnails ride the fast path too.
+    private static readonly HttpClient _iconHttp = new(new SocketsHttpHandler
+    {
+        AutomaticDecompression = System.Net.DecompressionMethods.All,
+        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),
+    })
+    { Timeout = TimeSpan.FromSeconds(15) };
     private static readonly Dictionary<string, Bitmap> _iconCache = new();
     // Cap concurrent icon downloads so 30 result thumbnails don't starve the
     // bandwidth the search/next-page requests need.
@@ -139,6 +147,11 @@ public partial class MainWindow : AppWindow
         InstallJavaButton.Click += async (_, _) => await SafeAsync(InstallJavaAsync);
         OpenLogsFolderButton.Click += (_, _) => OpenLogsFolder();
         CopyLogButton.Click += async (_, _) => await CopyLogAsync();
+        // Log boxes only render while visible; catch up when the drawer opens.
+        LogDrawer.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == Expander.IsExpandedProperty) FlushVisibleLogs();
+        };
         DefaultJavaCombo.SelectionChanged += OnDefaultJavaChanged;
         JavaCombo.SelectionChanged += OnInstanceJavaChanged;
 
@@ -374,6 +387,7 @@ public partial class MainWindow : AppWindow
         AccountsPanel.IsVisible = ReferenceEquals(item, NavAccounts);
         SettingsPanel.IsVisible = ReferenceEquals(item, NavSettings);
 
+        FlushVisibleLogs(); // catch a log view up if it was hidden while lines streamed
         if (ReferenceEquals(item, NavMods)) RefreshMods();
     }
 
@@ -431,13 +445,37 @@ public partial class MainWindow : AppWindow
         }
     }
 
-    /// <summary>Mirrors the session log to both the Home drawer and the Settings Logs tab.</summary>
+    private string _logText = "";
+    private bool _homeLogStale, _settingsLogStale;
+
+    /// <summary>
+    /// Mirrors the session log to the Home drawer and the Settings Logs tab — but only
+    /// writes into boxes that are actually visible. Rebuilding a large TextBox is the
+    /// most expensive part of log streaming, so hidden views just mark themselves stale
+    /// and catch up when shown (nav change / drawer expand call FlushVisibleLogs).
+    /// </summary>
     private void RenderLog(string text)
     {
-        LogBox.Text = text;
-        LogBox.CaretIndex = text.Length;
-        SettingsLogBox.Text = text;
-        SettingsLogBox.CaretIndex = text.Length;
+        _logText = text;
+        _homeLogStale = true;
+        _settingsLogStale = true;
+        FlushVisibleLogs();
+    }
+
+    private void FlushVisibleLogs()
+    {
+        if (_homeLogStale && HomePanel.IsVisible && LogDrawer.IsExpanded)
+        {
+            LogBox.Text = _logText;
+            LogBox.CaretIndex = _logText.Length;
+            _homeLogStale = false;
+        }
+        if (_settingsLogStale && SettingsPanel.IsVisible)
+        {
+            SettingsLogBox.Text = _logText;
+            SettingsLogBox.CaretIndex = _logText.Length;
+            _settingsLogStale = false;
+        }
     }
 
     /// <summary>Opens the folder that holds crash.log (next to the executable).</summary>
@@ -451,7 +489,7 @@ public partial class MainWindow : AppWindow
     private async Task CopyLogAsync()
     {
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        if (clipboard != null) await clipboard.SetTextAsync(SettingsLogBox.Text ?? "");
+        if (clipboard != null) await clipboard.SetTextAsync(_logText);
     }
 
     private async Task InitAsync()
@@ -1244,19 +1282,35 @@ public partial class MainWindow : AppWindow
         var inst = SelectedModInstance();
         ModsInstanceName.Text = inst?.Name ?? "—";
 
-        _modEnrichCts?.Cancel();
-        _modVms.Clear();
-        _allModVms.Clear();
         if (inst == null)
         {
+            _modEnrichCts?.Cancel();
+            _modVms.Clear();
+            _allModVms.Clear();
             _mods = new();
+            _modsRenderSig = "";
             ModsList.ItemsSource = null;
             ModsEmptyState.IsVisible = true;
             ModsCountBadge.Text = "0";
             return;
         }
 
-        _mods = _core.Mods.ListContent(inst, _contentKind).ToList();
+        // Re-opening the tab with nothing changed keeps the rendered cards (and any
+        // in-flight enrichment) instead of rebuilding them from scratch every time.
+        var fresh = _core.Mods.ListContent(inst, _contentKind).ToList();
+        var sig = inst.Id + "\u001f" + _contentKind + "\u001f"
+                  + string.Join("\u001f", fresh.Select(m => m.FileName));
+        if (sig == _modsRenderSig && _allModVms.Count == fresh.Count)
+        {
+            _ = RefreshInstalledSignaturesAsync(inst); // comparator stays fresh either way
+            return;
+        }
+        _modsRenderSig = sig;
+
+        _modEnrichCts?.Cancel();
+        _modVms.Clear();
+        _allModVms.Clear();
+        _mods = fresh;
         foreach (var m in _mods)
             _allModVms.Add(new InstalledModVm(m) { ToggleRequested = OnModToggleRequested });
         ModsList.ItemsSource = _modVms;
@@ -1664,6 +1718,9 @@ public partial class MainWindow : AppWindow
             var bmp = new Bitmap(ms);
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                // Bounded: past ~256 bitmaps, reset rather than grow without limit.
+                // Icons still on screen stay alive via their VMs; evicted ones just re-fetch.
+                if (_iconCache.Count > 256) _iconCache.Clear();
                 _iconCache[url] = bmp;
                 vm.Icon = bmp;
             });
