@@ -12,7 +12,7 @@
         Background="{DynamicResource BgBase}"
         Foreground="{DynamicResource TextPrimary}"
         FontWeight="SemiBold"
-        Icon="/Assets/fury-logo.png"
+        Icon="/Assets/fl-icon.png"
         Title="FURY Launcher">
 
     <!-- Visible text is set from Launcher.Core.Localization at runtime (ApplyLanguage). -->
