@@ -9,7 +9,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 namespace Launcher.App.Behaviors;
@@ -18,17 +17,19 @@ namespace Launcher.App.Behaviors;
 /// Attached behavior that turns a control's mouse-wheel scrolling into a smooth,
 /// interpolated animation instead of the default per-notch jump. Set
 /// <c>SmoothScroll.Enabled="True"</c> on a <see cref="ScrollViewer"/> or on a control
-/// that hosts one (e.g. a virtualized <see cref="ListBox"/>); the behavior finds the
-/// inner <see cref="ScrollViewer"/>, accumulates a target offset on each wheel tick,
-/// and eases <c>Offset.Y</c> toward it on a ~16 ms timer, clamped to the scrollable
-/// range. Virtualization is preserved because it only drives the existing offset.
+/// that hosts one (e.g. a <see cref="ListBox"/>); the behavior finds the inner
+/// <see cref="ScrollViewer"/>, accumulates a target offset on each wheel tick, and
+/// eases <c>Offset.Y</c> toward it once per <b>compositor frame</b>
+/// (<see cref="TopLevel.RequestAnimationFrame"/>), clamped to the scrollable range.
+/// Frame-synced stepping is what keeps it visually smooth: a plain 16 ms timer beats
+/// against the real frame clock and shows up as micro-stutter on heavy lists.
 /// </summary>
 public static class SmoothScroll
 {
     /// <summary>Pixels moved per wheel notch (delta of 1).</summary>
     private const double StepPixels = 100.0;
 
-    /// <summary>Fraction of the remaining distance covered each tick (higher = snappier).</summary>
+    /// <summary>Fraction of the remaining distance covered each frame (higher = snappier).</summary>
     private const double Ease = 0.22;
 
     public static readonly AttachedProperty<bool> EnabledProperty =
@@ -53,20 +54,18 @@ public static class SmoothScroll
     private sealed class Controller
     {
         private readonly Control _owner;
-        private readonly DispatcherTimer _timer;
         private ScrollViewer? _scrollViewer;
         private double _target;
+        private bool _animating;
 
         public Controller(Control owner)
         {
             _owner = owner;
-            _timer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(16) };
-            _timer.Tick += OnTick;
 
             // Tunnel so we pre-empt the default wheel scroll before it jumps.
             owner.AddHandler(InputElement.PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel);
             owner.AttachedToVisualTree += (_, _) => ResolveScrollViewer();
-            owner.DetachedFromVisualTree += (_, _) => _timer.Stop();
+            owner.DetachedFromVisualTree += (_, _) => _animating = false;
             ResolveScrollViewer();
         }
 
@@ -83,17 +82,29 @@ public static class SmoothScroll
             if (max <= 0) return; // nothing to scroll: let the event bubble
 
             // Resync to the real offset whenever we start fresh, so it never drifts.
-            if (!_timer.IsEnabled) _target = sv.Offset.Y;
+            if (!_animating) _target = sv.Offset.Y;
             _target = Math.Clamp(_target - e.Delta.Y * StepPixels, 0, max);
 
             e.Handled = true;
-            if (!_timer.IsEnabled) _timer.Start();
+            if (!_animating)
+            {
+                _animating = true;
+                RequestFrame();
+            }
         }
 
-        private void OnTick(object? sender, EventArgs e)
+        private void RequestFrame()
         {
+            var top = TopLevel.GetTopLevel(_owner);
+            if (top == null) { _animating = false; return; }
+            top.RequestAnimationFrame(OnFrame);
+        }
+
+        private void OnFrame(TimeSpan _)
+        {
+            if (!_animating) return;
             var sv = _scrollViewer;
-            if (sv == null) { _timer.Stop(); return; }
+            if (sv == null) { _animating = false; return; }
 
             var max = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
             _target = Math.Clamp(_target, 0, max);
@@ -103,10 +114,11 @@ public static class SmoothScroll
             if (Math.Abs(_target - next) < 0.5)
             {
                 next = _target;
-                _timer.Stop();
+                _animating = false;
             }
 
             sv.Offset = new Vector(sv.Offset.X, next);
+            if (_animating) RequestFrame();
         }
     }
 }

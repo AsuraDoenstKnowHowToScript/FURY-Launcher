@@ -115,6 +115,9 @@
         <Setter Property="Background" Value="{DynamicResource BgInput}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+        <Setter Property="Transitions">
+            <Transitions><BrushTransition Property="BorderBrush" Duration="0:0:0.12"/></Transitions>
+        </Setter>
     </Style>
     <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
         <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
@@ -153,6 +156,9 @@
         <Setter Property="Background" Value="{DynamicResource BgInput}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+        <Setter Property="Transitions">
+            <Transitions><BrushTransition Property="BorderBrush" Duration="0:0:0.12"/></Transitions>
+        </Setter>
     </Style>
     <Style Selector="ComboBox:pointerover /template/ Border#Background">
         <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
@@ -292,6 +298,29 @@
         <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
         <Setter Property="BoxShadow" Value="0 10 26 0 #60000000"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
+        <Setter Property="RenderTransform" Value="translateY(-2px)"/>
+    </Style>
+
+    <!-- Flat card: for cards inside scrolling lists. Blur shadows are the most expensive
+         thing to repaint, and a non-virtualized list repaints every card on every scrolled
+         pixel — so list cards trade the blur for layer contrast plus an animated accent
+         outline on hover, and scrolling stays at full frame rate. -->
+    <Style Selector="Border.card.flat">
+        <Setter Property="BoxShadow" Value="0 0 0 0 #00000000"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.14"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.14"/>
+                <TransformOperationsTransition Property="RenderTransform"
+                                               Duration="0:0:0.14" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <!-- Direct :pointerover so it also works inside plain ItemsControls (installed list). -->
+    <Style Selector="Border.card.flat:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
+        <Setter Property="BoxShadow" Value="0 0 0 0 #00000000"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
         <Setter Property="RenderTransform" Value="translateY(-2px)"/>
     </Style>
 

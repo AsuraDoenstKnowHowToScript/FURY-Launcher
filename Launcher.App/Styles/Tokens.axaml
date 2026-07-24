@@ -46,6 +46,8 @@
     <SolidColorBrush x:Key="AccentPressed" Color="{StaticResource AccentPressedColor}"/>
     <!-- Accent at ~15%, for a selected list item, not the full purple -->
     <SolidColorBrush x:Key="AccentSubtle" Color="{StaticResource AccentColor}" Opacity="0.15"/>
+    <!-- Accent at ~55%: hover/focus outlines that glow without shouting -->
+    <SolidColorBrush x:Key="AccentOutline" Color="{StaticResource AccentColor}" Opacity="0.55"/>
     <SolidColorBrush x:Key="OnAccent" Color="{StaticResource OnAccentColor}"/>
     <SolidColorBrush x:Key="TextPrimary" Color="{StaticResource TextPrimaryColor}"/>
     <SolidColorBrush x:Key="TextSecondary" Color="{StaticResource TextSecondaryColor}"/>
