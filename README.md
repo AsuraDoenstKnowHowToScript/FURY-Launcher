@@ -9,19 +9,17 @@ FURY Launcher is a Minecraft launcher for Windows. It manages isolated instances
 [![Languages](https://img.shields.io/badge/languages-5-purple)](#languages)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
+## Screenshots
+
+<!-- Screenshots live in branding/screenshots/. Drop the images there, then uncomment:
+![Home](branding/screenshots/home.png)
+![Content](branding/screenshots/content.png)
+![Accounts](branding/screenshots/accounts.png)
+-->
+
 ## Current version
 
-The latest stable build is `v0.4.2`; `v0.4.3-beta` is available for testing. Download from the [Releases](../../releases) page.
-
-## Versions
-
-| Channel | Version | Notes |
-| --- | --- | --- |
-| Beta (latest) | `v0.4.3-beta` | Java installer, logs tab, polish |
-| Stable | `v0.4.2` | Recommended stable build |
-| Stable | `v0.4.1` | Faster search |
-
-The release badge above always points to the newest published build.
+The latest stable build is `v0.5.0`. Download it from the [Releases](../../releases) page — the release badge above always tracks the newest published build.
 
 ## Download
 
@@ -39,7 +37,7 @@ Windows 10 and Windows 11 (64-bit). A Linux build is in development, though Wind
 
 You can create as many instances as you need, and each one stays fully isolated: its own `.minecraft`, Minecraft version, loader (Vanilla, Fabric, Forge, or NeoForge), memory limits, and JVM arguments.
 
-Sign in with a Microsoft account through an embedded window, without a browser tab or any copy and paste, or play offline by typing a nick. Microsoft accounts and offline profiles share the same picker.
+Sign in with a Microsoft account through an embedded window — no browser tab, no copy and paste — or create an offline account with just a nick. Every account, Microsoft or offline, lives in one list on the Accounts tab: click a card to make it the active account that launches. You can add several Microsoft accounts and switch between them, each keeping its own signed-in session; an expired session is flagged and re-authenticated on demand.
 
 Manage mods per instance: add, remove, and toggle jars, or search Modrinth and CurseForge, pick a version, and install it. Any required dependencies are pulled in automatically. Installing a mod that conflicts with one you already have (Sodium vs Embeddium, Iris vs Oculus) warns you and offers to replace it. CurseForge search needs an API key configured at build time.
 
@@ -47,7 +45,7 @@ Install Forge and NeoForge straight from Maven, with no ad links or extra browse
 
 Import Modrinth `.mrpack` packs (the mods are downloaded and verified), or share a self-contained `.frpack` that bundles the manifest together with the mod jars.
 
-Set a skin and cape per offline profile, and they show up in game through CustomSkinLoader.
+Each offline account carries its own skin, cape and body model (Steve or Alex), shown in game through CustomSkinLoader. A Microsoft account instead shows the skin from your Mojang profile as a read-only preview — local skin and cape editing is disabled for it, since Mojang manages that.
 
 The launcher checks GitHub for updates at startup and can update itself in place. Stable builds install directly, while beta builds ask for confirmation first.
 
@@ -76,7 +74,7 @@ dotnet run --project Launcher.App
 
 The logic lives in `Launcher.Core`, a library with no UI dependency. `Launcher.App` is an Avalonia front end that subscribes to Core events and displays the result. Everything the launcher does can run without the interface through the `LauncherCore` class.
 
-Data is stored in `%APPDATA%\FURY Launcher\`: the instance index, accounts, profiles, settings, and one isolated `.minecraft` per instance. No credentials are kept in the source.
+Data is stored in `%APPDATA%\FURY Launcher\`: the instance index (`instances.json`), the account list (`fury-accounts.json`), the cached Microsoft sign-in tokens (`accounts.json`), settings (`settings.json`), and one isolated `.minecraft` per instance. No credentials are kept in the source.
 
 ## Trademark and affiliation
 
