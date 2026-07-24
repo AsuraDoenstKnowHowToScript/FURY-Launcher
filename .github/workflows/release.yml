@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without the leading v (e.g. 0.5.0)"
+        description: "Version without the leading v (e.g. 0.5.1)"
         required: true
-        default: "0.5.0"
+        default: "0.5.1"
       prerelease:
         description: "Mark as a pre-release (beta)?"
         type: boolean
@@ -70,32 +70,14 @@ jobs:
         shell: bash
         run: |
           cat > release-notes.md <<'EOF'
-          The first stable release. A full visual overhaul and a rebuilt account
-          system, on top of the quality-of-life work from the beta.
+          A small patch on top of 0.5.0.
 
-          ## Unified accounts
-          Offline profiles and Microsoft accounts are now one thing: a single
-          account list. Pick who plays from a card on the Accounts tab; the Home
-          screen shows the active account as a chip. Offline accounts keep their
-          own skin, cape and body model (Steve/Alex); Microsoft accounts show a
-          read-only skin pulled from Mojang. Multiple Microsoft accounts are
-          supported, each resumed on its own — an expired session is flagged and
-          re-signed-in on demand. Your existing offline profiles migrate over
-          automatically on first launch.
+          ## Branding
+          FURY now ships with its own app icon — the window, the taskbar and the
+          `.exe` all carry the logo, with softer, more rounded corners.
 
-          ## Redesigned interface
-          - Deeper, layered dark-violet theme with softer depth and pill accents.
-          - Home leads with an instance hero band; one-row toolbars throughout.
-          - Composited head avatars on account cards and the Home chip.
-          - Frame-synced smooth scrolling and animated hover outlines; the Content
-            lists no longer feel laggy.
-          - The Content browser now searches automatically when you open it.
-
-          ## Also included
-          - Built-in Java installer (Settings > Java: Temurin 8/17/21) with live
-            progress, and a Logs section that mirrors the session log with Copy and
-            Open-folder shortcuts.
-          - Download progress shows a percentage and hides when idle.
+          Everything from 0.5.0 (unified accounts, the redesigned interface, smooth
+          scrolling, Content auto-search, the Java installer and Logs) is included.
 
           ## How to run
           Download the zip below, unzip, run `FURY Launcher.exe`. Windows 10/11
