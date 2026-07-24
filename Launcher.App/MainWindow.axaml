@@ -181,7 +181,10 @@
                                     <!-- Hidden: kept in sync with the card grid so play logic is unchanged. -->
                                     <ComboBox x:Name="PlayInstanceCombo" IsVisible="False" Width="0"/>
                                 </StackPanel>
-                                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                <!-- Only shown while a launch is actually downloading; hidden at rest so
+                                     the empty track isn't a stray gray line under the hero. -->
+                                <Grid x:Name="ProgressRow" ColumnDefinitions="*,Auto" VerticalAlignment="Center"
+                                      IsVisible="False">
                                     <ProgressBar Grid.Column="0" x:Name="DownloadProgress" Minimum="0" Maximum="1" Height="8"/>
                                     <TextBlock Grid.Column="1" x:Name="DownloadPercent" Classes="Caption" Text=""
                                                MinWidth="40" TextAlignment="Right" VerticalAlignment="Center"

@@ -399,7 +399,13 @@ public partial class MainWindow : AppWindow
                   : SettingsPanel;
         PlayPageTransition(shown);
 
-        if (ReferenceEquals(item, NavMods)) RefreshMods();
+        if (ReferenceEquals(item, NavMods))
+        {
+            RefreshMods();
+            // Auto-run the browse search on entering Content so results show immediately
+            // (empty query = popular mods), instead of waiting for a manual Search click.
+            if (_modrinthVms.Count == 0) StartModrinthSearch();
+        }
     }
 
     /// <summary>One-shot fade-in when a section becomes visible (same pattern as the card fade).</summary>
@@ -470,6 +476,9 @@ public partial class MainWindow : AppWindow
         {
             DownloadProgress.Value = p;
             DownloadPercent.Text = p is > 0 and < 1 ? $"{p * 100:0}%" : "";
+            // Reveal the bar only while there is real download progress; hide it at rest
+            // so the empty track doesn't linger as a gray line under the hero.
+            ProgressRow.IsVisible = p is > 0 and < 1;
         }
         if (status != null) PlayStatus.Text = status;
 
@@ -1395,12 +1404,14 @@ public partial class MainWindow : AppWindow
             }
 
             await _core.Game.LaunchAsync(inst, session, _launchCts.Token);
+            ProgressRow.IsVisible = false; // download done; the game is starting
         }
         catch (OperationCanceledException)
         {
             PlayStatus.Text = Loc.T("status.cancelled");
             PlayButton.IsEnabled = true;
             PlayButtonLabel.Text = Loc.T("btn.play");
+            ProgressRow.IsVisible = false;
         }
         catch (Exception ex)
         {
@@ -1410,6 +1421,7 @@ public partial class MainWindow : AppWindow
             LogDrawer.IsExpanded = true;
             PlayButton.IsEnabled = true;
             PlayButtonLabel.Text = Loc.T("btn.play");
+            ProgressRow.IsVisible = false;
         }
     });
 
