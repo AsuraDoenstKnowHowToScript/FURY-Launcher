@@ -31,8 +31,16 @@ public sealed class LauncherPaths
     /// <summary>Microsoft account/session cache used by CmlLib's login handler.</summary>
     public string AccountsFile => Path.Combine(Root, "accounts.json");
 
-    /// <summary>Selectable offline profiles (name + skin/cape + model).</summary>
+    /// <summary>Legacy selectable offline profiles (name + skin/cape + model). Kept only so
+    /// the one-time account migration can read and then retire it (renamed to <c>.bak</c>).</summary>
     public string ProfilesFile => Path.Combine(Root, "profiles.json");
+
+    /// <summary>Unified FURY account list (offline + Microsoft), keyed by our own account id.
+    /// Distinct from <see cref="AccountsFile"/>, which stays the CmlLib token vault.</summary>
+    public string FuryAccountsFile => Path.Combine(Root, "fury-accounts.json");
+
+    /// <summary>On-disk cache of Microsoft (Mojang) skin PNGs + metadata, keyed by uuid.</summary>
+    public string MsSkinCacheDir => Path.Combine(Root, "msskins");
 
     /// <summary>Small dismissible UI preferences.</summary>
     public string SettingsFile => Path.Combine(Root, "settings.json");

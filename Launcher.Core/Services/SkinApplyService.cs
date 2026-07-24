@@ -37,24 +37,75 @@ public sealed class SkinApplyService
     /// they render in-game for the offline player named after the profile.
     /// </summary>
     /// <returns>The username the skin was applied for (matches the profile name).</returns>
-    public async Task<string> ApplyOfflineAsync(
+    public Task<string> ApplyOfflineAsync(
         Instance instance, OfflineProfile profile, IProgress<string>? log = null, CancellationToken ct = default)
     {
         if (profile == null) throw new ArgumentNullException(nameof(profile));
-        var name = (profile.Name ?? "").Trim();
+        return ApplyCoreAsync(instance, profile.Name, profile.Slim, profile.SkinPath, profile.CapePath, log, ct);
+    }
+
+    /// <summary>
+    /// Same as the legacy overload but driven by an <see cref="Account"/>. Only offline accounts
+    /// are supported — Microsoft skins come from Mojang and cannot be set through CustomSkinLoader.
+    /// </summary>
+    public Task<string> ApplyOfflineAsync(
+        Instance instance, Account account, IProgress<string>? log = null, CancellationToken ct = default)
+    {
+        if (account == null) throw new ArgumentNullException(nameof(account));
+        if (account.Kind != AccountKind.Offline)
+            throw new InvalidOperationException("Skins de conta Microsoft são gerenciadas pela Mojang, não pelo CustomSkinLoader.");
+        return ApplyCoreAsync(instance, account.Username, account.Slim, account.SkinPath, account.CapePath, log, ct);
+    }
+
+    /// <summary>
+    /// Renames an offline account's local skin/cape files (keyed by nick) across every given
+    /// instance, so a nick change does not leave the old skin orphaned in CustomSkinLoader.
+    /// Best-effort per instance; a missing file is simply skipped.
+    /// </summary>
+    public Task RenameLocalSkinAsync(
+        IEnumerable<Instance> instances, string oldName, string newName, CancellationToken ct = default)
+    {
+        var oldN = (oldName ?? "").Trim();
+        var newN = (newName ?? "").Trim();
+        if (oldN.Length == 0 || newN.Length == 0 || string.Equals(oldN, newN, StringComparison.Ordinal))
+            return Task.CompletedTask;
+
+        foreach (var instance in instances)
+        {
+            var localSkin = Path.Combine(_paths.InstanceMinecraft(instance), "CustomSkinLoader", "LocalSkin");
+            foreach (var sub in new[] { "skins", "capes" })
+            {
+                try
+                {
+                    var from = Path.Combine(localSkin, sub, oldN + ".png");
+                    if (!File.Exists(from)) continue;
+                    var to = Path.Combine(localSkin, sub, newN + ".png");
+                    File.Move(from, to, overwrite: true);
+                }
+                catch (Exception ex) { CrashLog.Write($"[skin] renaming local {sub} '{oldN}'->'{newN}' failed", ex); }
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task<string> ApplyCoreAsync(
+        Instance instance, string username, bool slim, string? skinPath, string? capePath,
+        IProgress<string>? log, CancellationToken ct)
+    {
+        var name = (username ?? "").Trim();
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Perfil sem nome.", nameof(profile));
+            throw new ArgumentException("Conta sem nick.", nameof(username));
 
         if (instance.Loader == LoaderType.Vanilla)
             throw new InvalidOperationException(
                 "Skin em conta offline precisa do mod CustomSkinLoader, que exige um loader " +
                 "(Forge/Fabric/NeoForge). Esta instancia e Vanilla; crie ou edite para usar um loader.");
 
-        var hasSkin = profile.SkinPath != null && File.Exists(profile.SkinPath);
-        var hasCape = profile.CapePath != null && File.Exists(profile.CapePath);
+        var hasSkin = skinPath != null && File.Exists(skinPath);
+        var hasCape = capePath != null && File.Exists(capePath);
         if (!hasSkin && !hasCape)
             throw new InvalidOperationException(
-                $"O perfil '{name}' nao tem skin nem capa. Escolha uma skin PNG primeiro nesta aba.");
+                $"A conta '{name}' nao tem skin nem capa. Escolha uma skin PNG primeiro nesta aba.");
 
         // 1) Ensure the CustomSkinLoader mod is in the instance.
         await EnsureCustomSkinLoaderAsync(instance, log, ct).ConfigureAwait(false);
@@ -63,14 +114,14 @@ public sealed class SkinApplyService
         var localSkin = Path.Combine(_paths.InstanceMinecraft(instance), "CustomSkinLoader", "LocalSkin");
         if (hasSkin)
         {
-            CopyInto(Path.Combine(localSkin, "skins"), name + ".png", profile.SkinPath!);
-            log?.Report($"[skin] Skin local colocada para '{name}' (modelo {(profile.Slim ? "slim" : "classico")}).");
+            CopyInto(Path.Combine(localSkin, "skins"), name + ".png", skinPath!);
+            log?.Report($"[skin] Skin local colocada para '{name}' (modelo {(slim ? "slim" : "classico")}).");
         }
         if (hasCape)
         {
-            if (ProfileService.IsPng(profile.CapePath!))
+            if (AccountService.IsPng(capePath!))
             {
-                CopyInto(Path.Combine(localSkin, "capes"), name + ".png", profile.CapePath!);
+                CopyInto(Path.Combine(localSkin, "capes"), name + ".png", capePath!);
                 log?.Report($"[skin] Capa local colocada para '{name}'.");
             }
             else
@@ -80,9 +131,9 @@ public sealed class SkinApplyService
         }
 
         // 3) Write a LocalSkin-first config so the local skin always wins over Mojang.
-        WriteLocalSkinConfig(instance, profile.Slim);
+        WriteLocalSkinConfig(instance, slim);
 
-        log?.Report("[skin] Pronto. Selecione este perfil ao jogar offline e (re)inicie a instancia.");
+        log?.Report("[skin] Pronto. Selecione esta conta ao jogar offline e (re)inicie a instancia.");
         return name;
     }
 

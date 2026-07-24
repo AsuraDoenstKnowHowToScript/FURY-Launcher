@@ -27,6 +27,8 @@ public sealed class LauncherCore : IDisposable
     public PackService Packs { get; }
     public MrpackService Mrpacks { get; }
     public ProfileService Profiles { get; }
+    public AccountService Accounts { get; }
+    public MojangSkinService MsSkins { get; }
     public SkinApplyService Skins { get; }
     public JavaInstaller Java { get; }
     public SettingsService Settings { get; }
@@ -70,6 +72,10 @@ public sealed class LauncherCore : IDisposable
         Java = new JavaInstaller(_http, Paths);
         JavaLocator.ManagedRoot = Paths.JavaDir; // so scans find launcher-installed JREs
         Settings = new SettingsService(Paths);
+        // Unified accounts (offline + Microsoft) with a transparent one-time migration from
+        // profiles.json, plus read-only Microsoft skin fetch. Both are UI-agnostic.
+        Accounts = new AccountService(Paths, Settings, Auth);
+        MsSkins = new MojangSkinService(_http, Paths);
         Versions = new VersionListService(_http);
         Updates = new UpdateService(_http);
     }

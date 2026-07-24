@@ -6,6 +6,7 @@
 
 using CmlLib.Core.Auth;
 using CmlLib.Core.Auth.Microsoft;
+using XboxAuthNet.Game.Accounts;
 using XboxAuthNet.OAuth.CodeFlow;
 
 namespace Launcher.Core.Services;
@@ -22,6 +23,20 @@ public interface IAuthManager
     Task<MSession> LoginMicrosoftAsync(CancellationToken ct = default);
     Task<MSession?> TryResumeMicrosoftAsync(CancellationToken ct = default);
     Task SignOutMicrosoftAsync(CancellationToken ct = default);
+
+    // --- multi-account (each cached Microsoft account addressed by its Identifier) ---
+
+    /// <summary>Identifiers of every Microsoft account currently cached by CmlLib.</summary>
+    IReadOnlyList<string> ListMicrosoftAccountRefs();
+
+    /// <summary>Interactive Microsoft sign-in that also reports which cached account it produced.</summary>
+    Task<(MSession session, string? accountRef)> LoginMicrosoftWithRefAsync(CancellationToken ct = default);
+
+    /// <summary>Silently resume one specific cached Microsoft account; null if it can't (expired/offline).</summary>
+    Task<MSession?> TryResumeMicrosoftAsync(string accountRef, CancellationToken ct = default);
+
+    /// <summary>Sign out one specific cached Microsoft account, leaving the others intact.</summary>
+    Task SignOutMicrosoftAsync(string accountRef, CancellationToken ct = default);
 }
 
 public sealed class AuthManager : IAuthManager
@@ -133,6 +148,70 @@ public sealed class AuthManager : IAuthManager
                 Log?.Invoke(this, "[auth] Could not fully sign out: " + ex2.Message);
                 CrashLog.Write("[auth] deleting accounts cache failed", ex2);
             }
+        }
+    }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> ListMicrosoftAccountRefs()
+    {
+        try
+        {
+            return _handler.Value.AccountManager.GetAccounts()
+                .Select(a => a.Identifier)
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Select(id => id!)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[auth] enumerating cached accounts failed", ex);
+            return Array.Empty<string>();
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<(MSession session, string? accountRef)> LoginMicrosoftWithRefAsync(CancellationToken ct = default)
+    {
+        var session = await _handler.Value.AuthenticateInteractively(ct).ConfigureAwait(false);
+        string? reff = null;
+        try { reff = _handler.Value.AccountManager.GetDefaultAccount()?.Identifier; }
+        catch (Exception ex) { CrashLog.Write("[auth] resolving account ref after login failed", ex); }
+        return (session, reff);
+    }
+
+    /// <inheritdoc/>
+    public async Task<MSession?> TryResumeMicrosoftAsync(string accountRef, CancellationToken ct = default)
+    {
+        try
+        {
+            if (!_handler.Value.AccountManager.GetAccounts().TryGetAccount(accountRef, out var account) || account == null)
+                return null;
+            return await _handler.Value.AuthenticateSilently(account, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Expected when the token expired or there is no network; caller shows "session expired".
+            CrashLog.Write($"[auth] silent resume for '{accountRef}' failed", ex);
+            return null;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task SignOutMicrosoftAsync(string accountRef, CancellationToken ct = default)
+    {
+        try
+        {
+            if (_handler.Value.AccountManager.GetAccounts().TryGetAccount(accountRef, out var account) && account != null)
+            {
+                await _handler.Value.Signout(account, ct).ConfigureAwait(false);
+                Log?.Invoke(this, "[auth] Signed out of one Microsoft account.");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Best-effort: a failed per-account signout must not wedge account removal.
+            CrashLog.Write($"[auth] per-account signout for '{accountRef}' failed", ex);
+            Log?.Invoke(this, "[auth] Could not fully sign out that account: " + ex.Message);
         }
     }
 }

@@ -21,4 +21,10 @@ public sealed class LauncherSettings
     /// to steer clear of a broken Oracle "javapath" stub.
     /// </summary>
     public string? DefaultJavaPath { get; set; }
+
+    /// <summary>
+    /// Id of the currently selected <see cref="Account"/> — the single source of truth
+    /// for who launches and whose skin is applied. Null = no account selected yet.
+    /// </summary>
+    public string? ActiveAccountId { get; set; }
 }
