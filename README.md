@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/FURYLOGOLOGOLOGO.png" alt="FURY Launcher logo" width="150">
+</p>
+
 # FURY Launcher
 
 FURY Launcher is a Minecraft launcher for Windows. It manages isolated instances, handles mods, and supports both Microsoft and offline accounts.

@@ -9,6 +9,8 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Windows .exe icon (title bar / taskbar / file). -->
+    <ApplicationIcon>Assets\fury-logo.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AssemblyName>FURY Launcher</AssemblyName>
     <AssemblyTitle>FURY Launcher</AssemblyTitle>
@@ -55,6 +57,9 @@
   <ItemGroup>
     <!-- Fonts embedded as assembly resources (no system install required). -->
     <AvaloniaResource Include="Assets/Fonts/*.ttf" />
+    <!-- Brand logo (window icon + About/branding). -->
+    <AvaloniaResource Include="Assets/fury-logo.png" />
+    <AvaloniaResource Include="Assets/fury-logo.ico" />
   </ItemGroup>
 
 </Project>
