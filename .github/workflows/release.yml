@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without the leading v (e.g. 0.5.1)"
+        description: "Version without the leading v (e.g. 0.5.2)"
         required: true
-        default: "0.5.1"
+        default: "0.5.2"
       prerelease:
         description: "Mark as a pre-release (beta)?"
         type: boolean
@@ -73,8 +73,9 @@ jobs:
           A small patch on top of 0.5.0.
 
           ## Branding
-          FURY now ships with its own app icon — the window, the taskbar and the
-          `.exe` all carry the logo, with softer, more rounded corners.
+          FURY now ships with its own app icon: the compact "FL" mark shows on the
+          window, the taskbar and the `.exe`, so the launcher is recognisable at a
+          glance instead of the default icon.
 
           Everything from 0.5.0 (unified accounts, the redesigned interface, smooth
           scrolling, Content auto-search, the Java installer and Logs) is included.
