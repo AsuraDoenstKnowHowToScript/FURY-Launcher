@@ -36,10 +36,11 @@ public sealed class AccountMigrator
 
         var accounts = new List<Account>();
 
-        // 1) Legacy offline profiles → offline accounts.
+        // 1) Legacy offline profiles → offline accounts. Read through a self-contained DTO so
+        //    the old OfflineProfile type can be removed with the rest of the profile stack.
         try
         {
-            var legacy = await JsonStore.ReadAsync<List<OfflineProfile>>(_paths.ProfilesFile, ct).ConfigureAwait(false);
+            var legacy = await JsonStore.ReadAsync<List<LegacyProfile>>(_paths.ProfilesFile, ct).ConfigureAwait(false);
             if (legacy != null)
             {
                 foreach (var p in legacy)
@@ -102,5 +103,16 @@ public sealed class AccountMigrator
         {
             CrashLog.Write("[migrate] retiring legacy profiles.json failed", ex);
         }
+    }
+
+    /// <summary>Shape of the legacy <c>profiles.json</c> entries, for one-time reading only.</summary>
+    private sealed class LegacyProfile
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public bool Slim { get; set; }
+        public string? SkinPath { get; set; }
+        public string? CapePath { get; set; }
+        public DateTime CreatedUtc { get; set; }
     }
 }

@@ -33,21 +33,11 @@ public sealed class SkinApplyService
     }
 
     /// <summary>
-    /// Installs CustomSkinLoader (if missing) and places the profile's skin/cape so
-    /// they render in-game for the offline player named after the profile.
+    /// Installs CustomSkinLoader (if missing) and places the account's skin/cape so they render
+    /// in-game for the offline player named after the account. Only offline accounts are supported —
+    /// Microsoft skins come from Mojang and cannot be set through CustomSkinLoader.
     /// </summary>
-    /// <returns>The username the skin was applied for (matches the profile name).</returns>
-    public Task<string> ApplyOfflineAsync(
-        Instance instance, OfflineProfile profile, IProgress<string>? log = null, CancellationToken ct = default)
-    {
-        if (profile == null) throw new ArgumentNullException(nameof(profile));
-        return ApplyCoreAsync(instance, profile.Name, profile.Slim, profile.SkinPath, profile.CapePath, log, ct);
-    }
-
-    /// <summary>
-    /// Same as the legacy overload but driven by an <see cref="Account"/>. Only offline accounts
-    /// are supported — Microsoft skins come from Mojang and cannot be set through CustomSkinLoader.
-    /// </summary>
+    /// <returns>The username the skin was applied for (matches the account nick).</returns>
     public Task<string> ApplyOfflineAsync(
         Instance instance, Account account, IProgress<string>? log = null, CancellationToken ct = default)
     {

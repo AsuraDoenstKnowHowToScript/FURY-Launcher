@@ -53,7 +53,9 @@ public partial class MainWindow : AppWindow
     private readonly List<InstalledModVm> _allModVms = new();      // full set for the current instance
     private readonly ObservableCollection<InstalledModVm> _modVms = new(); // filtered, bound to the list
     private CancellationTokenSource? _modEnrichCts; // cancels stale metadata enrichment on refresh
-    private List<OfflineProfile> _profiles = new();
+    private List<Account> _accounts = new();
+    private readonly ObservableCollection<AccountCardVm> _accountCards = new();
+    private bool _suppressAccountSel; // guards the card list during programmatic selection
     private readonly ObservableCollection<ModrinthHitVm> _modrinthVms = new();
     private IReadOnlyList<ModrinthVersion> _modVersions = new List<ModrinthVersion>();
     private InstalledSignatures? _installedSigs; // what the selected instance already has, for the "Installed" tag
@@ -82,7 +84,8 @@ public partial class MainWindow : AppWindow
     private static readonly SemaphoreSlim _iconGate = new(6);
 
     private Instance? _editing;      // instance selected for editing (Instances tab)
-    private MSession? _msSession;    // cached Microsoft session after login
+    private Account? _activeAccount;      // the one account that launches; mirror of settings.ActiveAccountId
+    private MSession? _activeMsSession;   // resolved session for the active Microsoft account, for launch
     private CancellationTokenSource? _launchCts;
     private bool _suppressLangEvent; // guards the language dropdown during programmatic set
     private List<string> _versions = new(); // Minecraft versions shown in the create/edit dropdown
@@ -155,8 +158,7 @@ public partial class MainWindow : AppWindow
         DefaultJavaCombo.SelectionChanged += OnDefaultJavaChanged;
         JavaCombo.SelectionChanged += OnInstanceJavaChanged;
 
-        MicrosoftLoginButton.Click += OnMicrosoftLogin;
-        MicrosoftLogoutButton.Click += OnMicrosoftLogout;
+        MicrosoftLoginButton.Click += OnAddMicrosoft;
         PlayButton.Click += OnPlay;
         StopButton.Click += (_, _) =>
         {
@@ -204,10 +206,12 @@ public partial class MainWindow : AppWindow
         // --- modpack (.frpack) + skin profiles ---
         // Import/Export/Delete Click handlers are wired in XAML (they live inside
         // flyouts, a separate namescope, so no code-behind field is generated).
-        SkinProfileCombo.SelectionChanged += OnSkinProfileSelected;
-        NewProfileButton.Click += OnNewProfile;
+        AccountsList.ItemsSource = _accountCards;
+        AccountsList.SelectionChanged += OnAccountSelected;
+        AddOfflineButton.Click += OnAddOffline;
         SaveProfileButton.Click += OnSaveProfile;
-        DeleteProfileButton.Click += OnDeleteProfile;
+        DeleteAccountButton.Click += OnDeleteAccount;
+        ActiveAccountChip.Click += OnActiveChipClick;
         ChooseSkinButton.Click += OnChooseSkin;
         ChooseCapeButton.Click += OnChooseCape;
         ApplySkinButton.Click += OnApplySkin;
@@ -301,16 +305,12 @@ public partial class MainWindow : AppWindow
         SetFlyoutHeaders(MoreActionsButton, Loc.T("btn.exportpack"), Loc.T("btn.delete"));
 
         // Play tab
-        LblProfileOffline.Text = Loc.T("label.profile");
-        RefreshPlayAccountList();
-        MicrosoftLoginLabel.Text = Loc.T("btn.mslogin");
-        MicrosoftLogoutButton.Content = Loc.T("btn.mslogout");
+        LblPlayingAs.Text = Loc.T("account.playingas");
+        MicrosoftLoginLabel.Text = Loc.T("btn.addms");
         PlayButtonLabel.Text = Loc.T("btn.play");
         StopButton.Content = Loc.T("btn.stop");
         LblLog.Text = Loc.T("label.log");
-        AccountStatus.Text = _msSession != null
-            ? Loc.T("account.ms", _msSession.Username)
-            : Loc.T("status.offlineparen");
+        UpdateActiveAccountChip();
 
         // Mods tab
         LblModInstance.Text = Loc.T("label.instance");
@@ -326,12 +326,15 @@ public partial class MainWindow : AppWindow
         ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
         ModrinthEmptyText.Text = Loc.T("mods.searchprompt");
 
-        // Skin tab: same profile/nick wording as the Play tab.
+        // Accounts tab
         LblSkinAccountHeader.Text = Loc.T("skins.account");
-        LblSkinProfileHeader.Text = Loc.T("skins.profile");
+        LblSkinProfileHeader.Text = Loc.T("account.section");
         LblSkinAppearanceHeader.Text = Loc.T("skins.appearance");
-        NewProfileButton.Content = Loc.T("btn.new");
-        DeleteProfileButton.Content = Loc.T("btn.deleteprofile");
+        AddOfflineButton.Content = Loc.T("btn.addoffline");
+        DeleteAccountButton.Content = Loc.T("btn.delete");
+        AccountsEmpty.Text = Loc.T("account.none");
+        AccountSelectHint.Text = Loc.T("account.selecthint");
+        MsManagedNote.Text = Loc.T("account.msmanaged");
         LblProfileName.Text = Loc.T("label.nick");
         LblNickHint.Text = Loc.T("skins.nickhint");
         SlimCheck.Content = Loc.T("check.slim");
@@ -537,14 +540,9 @@ public partial class MainWindow : AppWindow
 
         await LoadVersionsAsync();
         await RefreshInstancesAsync();
-        await RefreshProfilesAsync();
-        // Restore a cached Microsoft session silently, if any.
-        _msSession = await _core.Auth.TryResumeMicrosoftAsync();
-        if (_msSession != null)
-        {
-            AccountStatus.Text = Loc.T("account.ms", _msSession.Username);
-            RefreshPlayAccountList();   // show the resumed Microsoft account in the profile list
-        }
+        // Unified accounts: builds the card list and resolves cached Microsoft sessions/avatars
+        // (silent resume) in the background.
+        await RefreshAccountsAsync();
 
         await CheckForUpdatesAsync();
     }
@@ -671,131 +669,295 @@ public partial class MainWindow : AppWindow
             Environment.Exit(0);
     }
 
-    // ============================ PROFILES (offline) ============================
+    // ============================ ACCOUNTS (unified) ============================
 
-    private async Task RefreshProfilesAsync()
+    /// <summary>
+    /// Reloads the unified account list, rebuilds the card selector, refreshes the Home
+    /// active-account chip and the editor, then resolves Microsoft sessions/avatars in the
+    /// background (silent resume). The active account is the single source of truth.
+    /// </summary>
+    private async Task RefreshAccountsAsync()
     {
-        _profiles = (await _core.Profiles.ListEnsuredAsync()).ToList();
-        var names = _profiles.Select(p => p.Name + (p.Slim ? $"  ({Loc.T("model.slim")})" : "")).ToList();
+        _accounts = (await _core.Accounts.ListAsync()).ToList();
+        _activeAccount = _accounts.FirstOrDefault(a => a.IsActive) ?? _accounts.FirstOrDefault();
+        if (_activeAccount != null && !_accounts.Any(a => a.IsActive))
+        {
+            await _core.Accounts.SetActiveAsync(_activeAccount.Id);
+            _activeAccount.IsActive = true;
+        }
 
-        // Skin tab lists offline profiles only.
-        var skinSel = SkinProfileCombo.SelectedIndex;
-        SkinProfileCombo.ItemsSource = names.ToList();
-        if (_profiles.Count > 0)
-            SkinProfileCombo.SelectedIndex = skinSel >= 0 && skinSel < _profiles.Count ? skinSel : 0;
+        RebuildAccountCards();
+        UpdateActiveAccountChip();
+        LoadEditorFor(_activeAccount);
+        _ = ResolveMicrosoftAsync();
+    }
 
-        // Play tab lists offline profiles + the signed-in Microsoft account.
-        RefreshPlayAccountList();
+    private void RebuildAccountCards()
+    {
+        var keepId = SelectedCard?.Id ?? _activeAccount?.Id;
+        _accountCards.Clear();
+        foreach (var a in _accounts)
+        {
+            var vm = new AccountCardVm(a, BadgeFor(a));
+            if (a.Kind == AccountKind.Offline && a.SkinPath != null && File.Exists(a.SkinPath))
+            {
+                try { vm.SetSkin(new Bitmap(a.SkinPath)); } catch { /* not a real skin: keep glyph */ }
+            }
+            _accountCards.Add(vm);
+        }
+        AccountsEmpty.IsVisible = _accountCards.Count == 0;
+
+        _suppressAccountSel = true;
+        AccountsList.SelectedItem = _accountCards.FirstOrDefault(v => v.Id == keepId)
+                                    ?? _accountCards.FirstOrDefault(v => v.Id == _activeAccount?.Id);
+        _suppressAccountSel = false;
+    }
+
+    private static string BadgeFor(Account a)
+        => Loc.T(a.Kind == AccountKind.Microsoft ? "account.badge.ms" : "account.badge.offline");
+
+    private AccountCardVm? SelectedCard => AccountsList.SelectedItem as AccountCardVm;
+    private Account? SelectedAccount => _accounts.FirstOrDefault(a => a.Id == SelectedCard?.Id);
+
+    private void OnAccountSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressAccountSel) return;
+        var acc = SelectedAccount;
+        if (acc == null) return;
+        _ = SafeAsync(async () =>
+        {
+            await _core.Accounts.SetActiveAsync(acc.Id);
+            _activeAccount = acc;
+            _activeMsSession = null; // re-resolved on demand for the newly active account
+            foreach (var v in _accountCards) v.IsActive = v.Id == acc.Id;
+            UpdateActiveAccountChip();
+            LoadEditorFor(acc);
+            if (acc.Kind == AccountKind.Microsoft) await ResolveMicrosoftAsync();
+        });
+    }
+
+    private void SelectCardById(string id)
+    {
+        _suppressAccountSel = true;
+        AccountsList.SelectedItem = _accountCards.FirstOrDefault(v => v.Id == id);
+        _suppressAccountSel = false;
+        LoadEditorFor(_accounts.FirstOrDefault(a => a.Id == id));
+    }
+
+    /// <summary>Fills the editor pane for the selected account, disabling skin/nick edits on Microsoft.</summary>
+    private void LoadEditorFor(Account? acc)
+    {
+        if (acc == null)
+        {
+            EditorPanel.IsVisible = false;
+            AccountSelectHint.IsVisible = true;
+            return;
+        }
+        AccountSelectHint.IsVisible = false;
+        EditorPanel.IsVisible = true;
+
+        var isMs = acc.Kind == AccountKind.Microsoft;
+        ProfileNameBox.Text = acc.Username;
+        ProfileNameBox.IsEnabled = !isMs;
+        SlimCheck.IsChecked = acc.Slim;
+        SlimCheck.IsEnabled = !isMs;
+        SaveProfileButton.IsEnabled = !isMs;
+        ChooseSkinButton.IsEnabled = !isMs;
+        ChooseCapeButton.IsEnabled = !isMs;
+        MsManagedNote.IsVisible = isMs;
+
+        var tip = isMs ? Loc.T("account.msmanaged.tip") : null;
+        ToolTip.SetTip(ChooseSkinButton, tip);
+        ToolTip.SetTip(ChooseCapeButton, tip);
+
+        if (isMs)
+        {
+            SetSkinImages(null);
+            SetCapeImage(null);
+            SkinStatus.Text = Loc.T("account.msmanaged");
+            _ = LoadMicrosoftPreviewAsync(acc);
+        }
+        else
+        {
+            SetSkinImages(acc.SkinPath);
+            SetCapeImage(acc.CapePath);
+            SkinStatus.Text = Loc.T("skin.profileinfo", acc.Username,
+                Loc.T(acc.SkinPath != null ? "skin.hasskin" : "skin.noskin"),
+                Loc.T(acc.CapePath != null ? "skin.hascape" : "skin.nocape"),
+                Loc.T(acc.Slim ? "model.slim" : "model.classic"));
+        }
+    }
+
+    /// <summary>Loads the read-only Mojang skin into the preview for a Microsoft account.</summary>
+    private async Task LoadMicrosoftPreviewAsync(Account acc)
+    {
+        if (string.IsNullOrEmpty(acc.Uuid)) return;
+        var skin = await _core.MsSkins.GetAsync(acc.Uuid);
+        if (SelectedAccount?.Id != acc.Id) return; // selection moved on while we fetched
+        if (skin != null && File.Exists(skin.PngPath))
+        {
+            SetSkinImages(skin.PngPath);
+            var card = _accountCards.FirstOrDefault(v => v.Id == acc.Id);
+            try { card?.SetSkin(new Bitmap(skin.PngPath)); } catch { }
+            UpdateActiveAccountChip();
+        }
     }
 
     /// <summary>
-    /// Fills the Play "Profile" dropdown with the offline profiles and, when signed in,
-    /// the Microsoft account (accounts are profiles too). The Microsoft entry is always
-    /// last, at index <c>_profiles.Count</c>.
+    /// Silently resumes each cached Microsoft account to fill its nick/uuid + avatar, marking
+    /// the ones whose token expired. Runs in the background; never throws to the UI.
     /// </summary>
-    private void RefreshPlayAccountList()
+    private async Task ResolveMicrosoftAsync()
     {
-        var items = _profiles.Select(p => p.Name + (p.Slim ? $"  ({Loc.T("model.slim")})" : "")).ToList();
-        if (_msSession != null)
-            items.Add($"{_msSession.Username}  (Microsoft)");
-
-        var sel = OfflineProfileCombo.SelectedIndex;
-        OfflineProfileCombo.ItemsSource = items;
-        if (items.Count > 0)
-            OfflineProfileCombo.SelectedIndex = sel >= 0 && sel < items.Count ? sel : 0;
+        foreach (var acc in _accounts.Where(a => a.Kind == AccountKind.Microsoft && !string.IsNullOrEmpty(a.MsAccountRef)).ToList())
+        {
+            MSession? s = null;
+            try { s = await _core.Auth.TryResumeMicrosoftAsync(acc.MsAccountRef!); } catch { }
+            var card = _accountCards.FirstOrDefault(v => v.Id == acc.Id);
+            if (s != null)
+            {
+                await _core.Accounts.UpsertMicrosoftAsync(acc.MsAccountRef!, s.Username ?? "", s.UUID ?? "");
+                acc.Username = string.IsNullOrWhiteSpace(s.Username) ? acc.Username : s.Username!;
+                acc.Uuid = string.IsNullOrWhiteSpace(s.UUID) ? acc.Uuid : s.UUID!;
+                if (_activeAccount?.Id == acc.Id) _activeMsSession = s;
+                if (card != null) { card.Username = acc.Username; card.Badge = Loc.T("account.badge.ms"); }
+                if (!string.IsNullOrEmpty(acc.Uuid))
+                {
+                    var skin = await _core.MsSkins.GetAsync(acc.Uuid);
+                    if (skin != null && File.Exists(skin.PngPath))
+                        try { card?.SetSkin(new Bitmap(skin.PngPath)); } catch { }
+                }
+            }
+            else if (card != null)
+            {
+                card.Badge = Loc.T("account.badge.expired");
+            }
+        }
+        UpdateActiveAccountChip();
+        if (_activeAccount?.Kind == AccountKind.Microsoft && SelectedAccount?.Id == _activeAccount.Id)
+            ProfileNameBox.Text = _activeAccount.Username;
     }
 
-    /// <summary>True when the Play dropdown has the Microsoft account entry selected.</summary>
-    private bool IsMicrosoftProfileSelected()
-        => _msSession != null && OfflineProfileCombo.SelectedIndex == _profiles.Count;
-
-    private OfflineProfile? SelectedSkinProfile()
+    /// <summary>Home chip: shows the active account's avatar + nick, or a placeholder.</summary>
+    private void UpdateActiveAccountChip()
     {
-        var idx = SkinProfileCombo.SelectedIndex;
-        return idx >= 0 && idx < _profiles.Count ? _profiles[idx] : null;
+        var acc = _activeAccount;
+        if (acc == null)
+        {
+            ActiveAccountName.Text = "—";
+            ActiveAccountFace.Source = null;
+            ActiveAccountHat.Source = null;
+            ActiveAccountFallback.IsVisible = true;
+            return;
+        }
+        ActiveAccountName.Text = string.IsNullOrWhiteSpace(acc.Username) ? "—" : acc.Username;
+        var card = _accountCards.FirstOrDefault(v => v.Id == acc.Id);
+        ActiveAccountFace.Source = card?.Face;
+        ActiveAccountHat.Source = card?.Hat;
+        ActiveAccountFallback.IsVisible = card?.Face == null;
     }
 
-    private void SelectProfileById(string id)
+    private async void OnAddOffline(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        var i = _profiles.FindIndex(p => p.Id == id);
-        if (i >= 0) { SkinProfileCombo.SelectedIndex = i; OfflineProfileCombo.SelectedIndex = i; }
-    }
+        // A unique starter nick so two "New account"s never clash.
+        var baseName = Loc.T("profile.newname");
+        var name = baseName;
+        var n = 2;
+        while (_accounts.Any(a => a.Kind == AccountKind.Offline && string.Equals(a.Username, name, StringComparison.OrdinalIgnoreCase)))
+            name = $"{baseName} {n++}";
 
-    private void OnSkinProfileSelected(object? sender, SelectionChangedEventArgs e)
-    {
-        var p = SelectedSkinProfile();
-        if (p == null) return;
-        ProfileNameBox.Text = p.Name;
-        SlimCheck.IsChecked = p.Slim;
-        SetSkinImages(p.SkinPath);
-        SetCapeImage(p.CapePath);
-        SkinStatus.Text = Loc.T("skin.profileinfo", p.Name,
-            Loc.T(p.SkinPath != null ? "skin.hasskin" : "skin.noskin"),
-            Loc.T(p.CapePath != null ? "skin.hascape" : "skin.nocape"),
-            Loc.T(p.Slim ? "model.slim" : "model.classic"));
-    }
+        var acc = await _core.Accounts.CreateOfflineAsync(name, false);
+        await _core.Accounts.SetActiveAsync(acc.Id);
+        await RefreshAccountsAsync();
+        SelectCardById(acc.Id);
+        SkinStatus.Text = Loc.T("skin.profilecreated", acc.Username);
+    });
 
-    private async void OnNewProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    private async void OnAddMicrosoft(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        var name = string.IsNullOrWhiteSpace(ProfileNameBox.Text) ? Loc.T("profile.newname") : ProfileNameBox.Text!.Trim();
-        var p = await _core.Profiles.CreateAsync(name, SlimCheck.IsChecked ?? false);
-        await RefreshProfilesAsync();
-        SelectProfileById(p.Id);
-        SkinStatus.Text = Loc.T("skin.profilecreated", p.Name);
+        MicrosoftLoginButton.IsEnabled = false;
+        AccountStatus.Text = Loc.T("ms.opening");
+        try
+        {
+            var (session, reff) = await _core.Auth.LoginMicrosoftWithRefAsync();
+            var key = string.IsNullOrEmpty(reff) ? (session.UUID ?? Guid.NewGuid().ToString("N")) : reff!;
+            var acc = await _core.Accounts.UpsertMicrosoftAsync(key, session.Username ?? "", session.UUID ?? "");
+            await _core.Accounts.SetActiveAsync(acc.Id);
+            _activeMsSession = session;
+            await RefreshAccountsAsync();
+            SelectCardById(acc.Id);
+            AccountStatus.Text = Loc.T("account.ms", session.Username);
+        }
+        finally
+        {
+            MicrosoftLoginButton.IsEnabled = true;
+        }
     });
 
     private async void OnSaveProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = Loc.T("skin.selectorcreate"); ShowToast(Loc.T("skin.selectorcreate"), error: true); return; }
+        var acc = SelectedAccount;
+        if (acc == null) { SkinStatus.Text = Loc.T("skin.selectorcreate"); ShowToast(Loc.T("skin.selectorcreate"), error: true); return; }
+        if (acc.Kind != AccountKind.Offline) return; // Microsoft nick/skin are read-only
 
         var newName = ProfileNameBox.Text?.Trim() ?? "";
         if (newName.Length == 0)
         {
-            // The nick is the offline identity; never let a profile be saved without one.
             SkinStatus.Text = Loc.T("skin.nickrequired");
             ShowToast(Loc.T("skin.nickrequired"), error: true);
             ProfileNameBox.Focus();
             return;
         }
-        var nameChanged = !string.Equals(newName, p.Name, StringComparison.Ordinal);
+        var slim = SlimCheck.IsChecked ?? false;
+        var nameChanged = !string.Equals(newName, acc.Username, StringComparison.Ordinal);
 
-        // Warn (once) that changing an offline nick changes the identity/UUID and can lose
-        // server progress. Skin/cape stay on the profile; this is only about the nick.
         if (nameChanged)
         {
+            // Renaming an offline account changes its UUID (the identity); warn once.
             var settings = await _core.Settings.LoadAsync();
             if (!settings.SuppressNickChangeWarning)
             {
                 var (proceed, dontShow) = await WarnAckAsync(
                     Loc.T("warn.nicktitle"),
-                    Loc.T("warn.nickmsg", p.Name, newName),
+                    Loc.T("warn.nickmsg", acc.Username, newName),
                     Loc.T("warn.nickack"));
                 if (!proceed) { SkinStatus.Text = Loc.T("skin.nickcancelled"); return; }
-                if (dontShow)
-                {
-                    settings.SuppressNickChangeWarning = true;
-                    await _core.Settings.SaveAsync(settings);
-                }
+                if (dontShow) { settings.SuppressNickChangeWarning = true; await _core.Settings.SaveAsync(settings); }
             }
+
+            var old = await _core.Accounts.RenameOfflineAsync(acc.Id, newName);
+            await _core.Skins.RenameLocalSkinAsync(_instances, old, newName);
+            acc = (await _core.Accounts.ListAsync()).FirstOrDefault(a => a.Id == acc.Id) ?? acc;
         }
 
-        p.Name = newName;
-        p.Slim = SlimCheck.IsChecked ?? false;
-        await _core.Profiles.UpdateAsync(p);
-        await RefreshProfilesAsync();
-        SelectProfileById(p.Id);
-        SkinStatus.Text = Loc.T("skin.profilesaved", p.Name, Loc.T(p.Slim ? "model.slim" : "model.classic"));
+        if (acc.Slim != slim)
+        {
+            acc.Slim = slim;
+            await _core.Accounts.UpdateAsync(acc);
+        }
+
+        await RefreshAccountsAsync();
+        SelectCardById(acc.Id);
+        SkinStatus.Text = Loc.T("skin.profilesaved", newName, Loc.T(slim ? "model.slim" : "model.classic"));
     });
 
-    private async void OnDeleteProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    private async void OnDeleteAccount(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        var p = SelectedSkinProfile();
-        if (p == null) return;
-        await _core.Profiles.DeleteAsync(p.Id);
-        await RefreshProfilesAsync();
-        SkinStatus.Text = Loc.T("skin.profiledeleted", p.Name);
+        var acc = SelectedAccount;
+        if (acc == null) return;
+        if (!await ConfirmAsync(Loc.T("account.remove.title"), Loc.T("account.remove.msg", acc.Username))) return;
+
+        if (acc.Kind == AccountKind.Microsoft && !string.IsNullOrEmpty(acc.MsAccountRef))
+            await _core.Auth.SignOutMicrosoftAsync(acc.MsAccountRef!);
+        if (_activeAccount?.Id == acc.Id) _activeMsSession = null;
+
+        await _core.Accounts.DeleteAsync(acc.Id);
+        await RefreshAccountsAsync();
+        SkinStatus.Text = Loc.T("skin.profiledeleted", acc.Username);
     });
+
+    private void OnActiveChipClick(object? sender, RoutedEventArgs e)
+        => NavView.SelectedItem = NavAccounts;
 
     // ============================ INSTANCES ============================
 
@@ -1101,32 +1263,6 @@ public partial class MainWindow : AppWindow
 
     // ============================== PLAY ==============================
 
-    private async void OnMicrosoftLogin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        MicrosoftLoginButton.IsEnabled = false;
-        AccountStatus.Text = Loc.T("ms.opening");
-        try
-        {
-            _msSession = await _core.Auth.LoginMicrosoftAsync();
-            AccountStatus.Text = Loc.T("account.ms", _msSession.Username);
-            RefreshPlayAccountList();
-            OfflineProfileCombo.SelectedIndex = _profiles.Count; // select the Microsoft entry
-        }
-        finally
-        {
-            MicrosoftLoginButton.IsEnabled = true;
-        }
-    });
-
-    private async void OnMicrosoftLogout(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        await _core.Auth.SignOutMicrosoftAsync();
-        _msSession = null;
-        RefreshPlayAccountList();
-        OfflineProfileCombo.SelectedIndex = _profiles.Count > 0 ? 0 : -1;   // back to an offline profile
-        AccountStatus.Text = Loc.T("status.offlineparen");
-    });
-
     /// <summary>
     /// Called by the auth flow (possibly off the UI thread): shows a dialog asking the
     /// user to paste the URL the browser landed on after signing in. Returns the pasted
@@ -1200,18 +1336,38 @@ public partial class MainWindow : AppWindow
         // Show this instance's log for the launch, even if it differs from the selection.
         ShowLogFor(inst.Id);
 
-        MSession session;
-        OfflineProfile? offlineProfile = null;
-        if (IsMicrosoftProfileSelected())
+        // Who launches comes from the single active account (chosen in the Accounts tab).
+        var active = _activeAccount;
+        if (active == null)
         {
-            session = _msSession!;   // the Microsoft account profile is selected
+            PlayStatus.Text = Loc.T("skin.selectorcreate");
+            ShowToast(Loc.T("skin.selectorcreate"), error: true);
+            NavView.SelectedItem = NavAccounts;
+            return;
+        }
+
+        MSession session;
+        Account? offlineProfile = null;
+        if (active.Kind == AccountKind.Microsoft)
+        {
+            var s = _activeMsSession
+                    ?? (active.MsAccountRef != null ? await _core.Auth.TryResumeMicrosoftAsync(active.MsAccountRef) : null);
+            if (s == null)
+            {
+                // Token expired / offline: send the user back to re-authenticate this account.
+                PlayStatus.Text = Loc.T("account.needsmsauth");
+                ShowToast(Loc.T("account.needsmsauth"), error: true);
+                NavView.SelectedItem = NavAccounts;
+                return;
+            }
+            _activeMsSession = s;
+            session = s;
         }
         else
         {
-            var pIdx = OfflineProfileCombo.SelectedIndex;
-            offlineProfile = pIdx >= 0 && pIdx < _profiles.Count ? _profiles[pIdx] : null;
-            // The selected offline profile's name IS the nick.
-            session = _core.Auth.CreateOffline(offlineProfile?.Name ?? "Player");
+            offlineProfile = active;
+            // The offline account's nick IS the identity.
+            session = _core.Auth.CreateOffline(active.Username.Length > 0 ? active.Username : "Player");
         }
 
         _launchCts = new CancellationTokenSource();
@@ -1889,30 +2045,30 @@ public partial class MainWindow : AppWindow
 
     private async void OnChooseSkin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = Loc.T("skin.createselectfirst"); return; }
+        var acc = SelectedAccount;
+        if (acc == null || acc.Kind != AccountKind.Offline) { SkinStatus.Text = Loc.T("skin.createselectfirst"); return; }
         var path = await PickImageAsync(Loc.T("picker.skin"));
         if (path == null) return;
-        await _core.Profiles.SetSkinAsync(p, path);
-        await RefreshProfilesAsync();
-        SelectProfileById(p.Id);
+        await _core.Accounts.SetSkinAsync(acc, path);
+        await RefreshAccountsAsync();
+        SelectCardById(acc.Id);
     });
 
     private async void OnChooseCape(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = Loc.T("skin.createselectfirst"); return; }
+        var acc = SelectedAccount;
+        if (acc == null || acc.Kind != AccountKind.Offline) { SkinStatus.Text = Loc.T("skin.createselectfirst"); return; }
         var path = await PickImageAsync(Loc.T("picker.cape"));
         if (path == null) return;
-        await _core.Profiles.SetCapeAsync(p, path);
-        await RefreshProfilesAsync();
-        SelectProfileById(p.Id);
+        await _core.Accounts.SetCapeAsync(acc, path);
+        await RefreshAccountsAsync();
+        SelectCardById(acc.Id);
     });
 
     private async void OnApplySkin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
-        var p = SelectedSkinProfile();
-        if (p == null) { SkinStatus.Text = Loc.T("skin.createselect"); return; }
+        var acc = SelectedAccount;
+        if (acc == null || acc.Kind != AccountKind.Offline) { SkinStatus.Text = Loc.T("skin.createselect"); return; }
         var idx = SkinInstanceCombo.SelectedIndex;
         if (idx < 0 || idx >= _instances.Count) { SkinStatus.Text = Loc.T("skin.selectinstanceapply"); return; }
         var inst = _instances[idx];
@@ -1922,8 +2078,8 @@ public partial class MainWindow : AppWindow
         try
         {
             var log = new Progress<string>(AppendLog);
-            await _core.Skins.ApplyOfflineAsync(inst, p, log);
-            SkinStatus.Text = Loc.T("skin.applied", p.Name, inst.Name);
+            await _core.Skins.ApplyOfflineAsync(inst, acc, log);
+            SkinStatus.Text = Loc.T("skin.applied", acc.Username, inst.Name);
         }
         finally
         {

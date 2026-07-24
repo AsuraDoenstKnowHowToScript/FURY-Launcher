@@ -26,7 +26,6 @@ public sealed class LauncherCore : IDisposable
     public ModMetadataService ModMetadata { get; }
     public PackService Packs { get; }
     public MrpackService Mrpacks { get; }
-    public ProfileService Profiles { get; }
     public AccountService Accounts { get; }
     public MojangSkinService MsSkins { get; }
     public SkinApplyService Skins { get; }
@@ -67,7 +66,6 @@ public sealed class LauncherCore : IDisposable
         Mods = new ModService(Paths, modrinth, ModMetadata, curseforge);
         Packs = new PackService(Paths, Instances);
         Mrpacks = new MrpackService(_http, Paths, Instances);
-        Profiles = new ProfileService(Paths);
         Skins = new SkinApplyService(Paths, Mods);
         Java = new JavaInstaller(_http, Paths);
         JavaLocator.ManagedRoot = Paths.JavaDir; // so scans find launcher-installed JREs
