@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without the leading v (e.g. 0.4.3-beta)"
+        description: "Version without the leading v (e.g. 0.5.0)"
         required: true
-        default: "0.4.3-beta"
+        default: "0.5.0"
       prerelease:
         description: "Mark as a pre-release (beta)?"
         type: boolean
@@ -70,25 +70,32 @@ jobs:
         shell: bash
         run: |
           cat > release-notes.md <<'EOF'
-          A beta focused on quality of life. Please report anything odd — this build
-          goes stable once it has been tested.
+          The first stable release. A full visual overhaul and a rebuilt account
+          system, on top of the quality-of-life work from the beta.
 
-          ## Built-in Java installer
-          Settings > Java can now download and install Java for you (Eclipse Temurin
-          8, 17 or 21). No more hunting for the right version when a Minecraft
-          release needs a newer Java than the one you have. The install shows live
-          progress and is picked as the default when it finishes.
+          ## Unified accounts
+          Offline profiles and Microsoft accounts are now one thing: a single
+          account list. Pick who plays from a card on the Accounts tab; the Home
+          screen shows the active account as a chip. Offline accounts keep their
+          own skin, cape and body model (Steve/Alex); Microsoft accounts show a
+          read-only skin pulled from Mojang. Multiple Microsoft accounts are
+          supported, each resumed on its own — an expired session is flagged and
+          re-signed-in on demand. Your existing offline profiles migrate over
+          automatically on first launch.
 
-          ## Logs in Settings
-          A new Logs section in Settings mirrors the session log, with one-click
-          Copy and an Open folder button that takes you straight to `crash.log`.
+          ## Redesigned interface
+          - Deeper, layered dark-violet theme with softer depth and pill accents.
+          - Home leads with an instance hero band; one-row toolbars throughout.
+          - Composited head avatars on account cards and the Home chip.
+          - Frame-synced smooth scrolling and animated hover outlines; the Content
+            lists no longer feel laggy.
+          - The Content browser now searches automatically when you open it.
 
-          ## Interface polish
-          - The Modrinth and CurseForge buttons now carry their real logos.
-          - CurseForge search is temporarily marked "coming soon" while its
-            integration is finished; Modrinth remains fully live.
-          - Download progress now shows a percentage.
-          - Scrollbars no longer overlap the instance and mod cards.
+          ## Also included
+          - Built-in Java installer (Settings > Java: Temurin 8/17/21) with live
+            progress, and a Logs section that mirrors the session log with Copy and
+            Open-folder shortcuts.
+          - Download progress shows a percentage and hides when idle.
 
           ## How to run
           Download the zip below, unzip, run `FURY Launcher.exe`. Windows 10/11
