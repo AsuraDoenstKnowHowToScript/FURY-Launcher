@@ -18,14 +18,22 @@ public sealed class DayBarVm
     /// <summary>Kept visible even at zero, so an empty day still reads as a day.</summary>
     private const double MinHeight = 6;
 
-    public DayBarVm(string label, long seconds, double fraction, bool isToday, string tip)
+    public DayBarVm(string label, long seconds, double fraction, bool isToday, string tip, string valueText)
     {
         Label = label;
         Seconds = seconds;
         IsToday = isToday;
         Tip = tip;
+        ValueText = valueText;
+        HasValue = seconds > 0;
         BarHeight = MinHeight + Math.Clamp(fraction, 0, 1) * (MaxHeight - MinHeight);
     }
+
+    /// <summary>Amount printed above the column, e.g. "1h 20m". Empty on a day with nothing.</summary>
+    public string ValueText { get; }
+
+    /// <summary>False on an empty day, so the label can be hidden instead of printing a zero.</summary>
+    public bool HasValue { get; }
 
     /// <summary>Single-letter weekday initial.</summary>
     public string Label { get; }

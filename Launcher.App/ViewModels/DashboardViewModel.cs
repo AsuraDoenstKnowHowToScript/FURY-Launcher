@@ -156,6 +156,14 @@ public sealed class DashboardViewModel : ViewModelBase
     private string _weekTotal = "0m";
     public string WeekTotal { get => _weekTotal; private set => SetProperty(ref _weekTotal, value); }
 
+    private string _weekAverage = "0m";
+    /// <summary>Mean over the seven days, so the strip is readable without counting bars.</summary>
+    public string WeekAverage { get => _weekAverage; private set => SetProperty(ref _weekAverage, value); }
+
+    private string _weekBest = "—";
+    /// <summary>The busiest day of the week, named.</summary>
+    public string WeekBest { get => _weekBest; private set => SetProperty(ref _weekBest, value); }
+
     // ---------------------------- localized text ----------------------------
 
     public string SubtitleText => Loc.T("dash.subtitle");
@@ -169,6 +177,9 @@ public sealed class DashboardViewModel : ViewModelBase
     public string HoursHeaderText => Loc.T("dash.hours");
     public string WeekHeaderText => Loc.T("dash.week");
     public string ChangelogHeaderText => Loc.T("dash.changelog");
+    public string WeekTotalLabel => Loc.T("dash.week.total");
+    public string WeekAvgLabel => Loc.T("dash.week.avg");
+    public string WeekBestLabel => Loc.T("dash.week.best");
     public string TabAllText => Loc.T("dash.tab.all");
     public string TabStableText => Loc.T("dash.tab.stable");
     public string NoDataText => Loc.T("dash.nodata");
@@ -244,20 +255,28 @@ public sealed class DashboardViewModel : ViewModelBase
     {
         var days = await _core.Playtime.LastSevenDaysAsync();
         var peak = days.Length == 0 ? 0 : days.Max();
-        WeekTotal = Humanize(days.Sum());
+        var total = days.Sum();
+
+        WeekTotal = Humanize(total);
+        WeekAverage = Humanize(days.Length == 0 ? 0 : total / days.Length);
 
         Week.Clear();
+        var bestLabel = "—";
         for (var i = 0; i < days.Length; i++)
         {
             var date = DateTime.Now.Date.AddDays(-(days.Length - 1 - i));
             var label = date.ToString("ddd");
+            if (days[i] == peak && peak > 0) bestLabel = $"{label} · {Humanize(peak)}";
+
             Week.Add(new DayBarVm(
                 label.Length > 0 ? label[..1].ToUpperInvariant() : "",
                 days[i],
                 peak > 0 ? (double)days[i] / peak : 0,
                 date == DateTime.Now.Date,
-                $"{label} · {Humanize(days[i])}"));
+                $"{label} · {Humanize(days[i])}",
+                Humanize(days[i])));
         }
+        WeekBest = bestLabel;
     }
 
     private async Task LoadChangelogAsync()

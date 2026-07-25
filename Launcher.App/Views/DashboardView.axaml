@@ -168,20 +168,48 @@
                 <!-- Seven-day strip. Bars are plain Borders with a bound height: no chart library. -->
                 <ctl:PanelCard Header="{Binding WeekHeaderText}"
                                Icon="{icon:LucideImage Kind=CalendarDays, Brush={StaticResource TextSecondary}}">
-                    <StackPanel Spacing="16">
-                        <TextBlock Classes="Body" Text="{Binding WeekTotal}" HorizontalAlignment="Right"
-                                   Foreground="{DynamicResource TextSecondary}"/>
+                    <!-- Summary on the left, chart taking every pixel that is left: the strip used
+                         to sit in a corner with the panel empty around it. -->
+                    <Grid ColumnDefinitions="Auto,28,*">
+                        <StackPanel Grid.Column="0" Spacing="14" VerticalAlignment="Center">
+                            <StackPanel Spacing="1">
+                                <TextBlock Classes="Caption" Text="{Binding WeekTotalLabel}"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock Classes="Title" Text="{Binding WeekTotal}"/>
+                            </StackPanel>
+                            <StackPanel Spacing="1">
+                                <TextBlock Classes="Caption" Text="{Binding WeekAvgLabel}"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock Classes="Body" Text="{Binding WeekAverage}"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                            <StackPanel Spacing="1">
+                                <TextBlock Classes="Caption" Text="{Binding WeekBestLabel}"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                                <TextBlock Classes="Body" Text="{Binding WeekBest}"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                            </StackPanel>
+                        </StackPanel>
 
-                        <ItemsControl ItemsSource="{Binding Week}" HorizontalAlignment="Left">
+                        <!-- Seven equal columns that stretch, so the chart always fills the panel. -->
+                        <ItemsControl Grid.Column="2" ItemsSource="{Binding Week}"
+                                      HorizontalAlignment="Stretch" VerticalAlignment="Bottom">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="12"/>
+                                    <UniformGrid Columns="7"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:DayBarVm">
-                                    <StackPanel Width="40" Spacing="9" ToolTip.Tip="{Binding Tip}">
-                                        <Grid Height="86">
+                                    <StackPanel Spacing="8" Margin="5,0" ToolTip.Tip="{Binding Tip}">
+                                        <TextBlock Classes="Caption" Text="{Binding ValueText}"
+                                                   IsVisible="{Binding HasValue}"
+                                                   HorizontalAlignment="Center" FontSize="10"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                        <Grid Height="96">
+                                            <!-- Track, so an empty day still reads as a slot. -->
+                                            <Border CornerRadius="8" Background="{DynamicResource BgElevated}"
+                                                    Opacity="0.5"/>
                                             <!-- Today is accented; the rest stay quiet. -->
                                             <Border VerticalAlignment="Bottom" CornerRadius="8"
                                                     Height="{Binding BarHeight}"
@@ -199,7 +227,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </StackPanel>
+                    </Grid>
                 </ctl:PanelCard>
             </StackPanel>
         </ScrollViewer>

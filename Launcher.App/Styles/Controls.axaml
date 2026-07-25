@@ -324,6 +324,97 @@
         <Setter Property="RenderTransform" Value="translateY(-2px)"/>
     </Style>
 
+    <!-- ============================ DROPDOWN ============================
+         Our own dropdown, built by restyling the theme's template parts rather than replacing
+         the template: the box, the chevron and the popup all follow the launcher's tokens, the
+         chevron turns as it opens, and the popup surface matches an elevated card. Restyling
+         instead of retemplating keeps every ComboBox behaviour (keyboard, virtualisation,
+         selection) exactly as the framework wrote it. -->
+    <Style Selector="ComboBox">
+        <Setter Property="MinHeight" Value="38"/>
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+    </Style>
+    <Style Selector="ComboBox /template/ Border#Background">
+        <Setter Property="Background" Value="{DynamicResource BgInput}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.14"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.14"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ComboBox:pointerover /template/ Border#Background">
+        <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
+    </Style>
+    <Style Selector="ComboBox:focus /template/ Border#Background">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
+    </Style>
+    <Style Selector="ComboBox:dropdownopen /template/ Border#Background">
+        <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+    </Style>
+
+    <!-- Chevron: muted at rest, accented and flipped while the list is open. -->
+    <Style Selector="ComboBox /template/ Path#DropDownGlyph">
+        <Setter Property="Fill" Value="{DynamicResource TextMuted}"/>
+        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+        <Setter Property="RenderTransform" Value="rotate(0deg)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform"
+                                               Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                <BrushTransition Property="Fill" Duration="0:0:0.14"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ComboBox:pointerover /template/ Path#DropDownGlyph">
+        <Setter Property="Fill" Value="{DynamicResource TextSecondary}"/>
+    </Style>
+    <Style Selector="ComboBox:dropdownopen /template/ Path#DropDownGlyph">
+        <Setter Property="Fill" Value="{DynamicResource Accent}"/>
+        <Setter Property="RenderTransform" Value="rotate(180deg)"/>
+    </Style>
+
+    <!-- The list surface reads as an elevated card, not a system menu. -->
+    <Style Selector="ComboBox /template/ Border#PopupBorder">
+        <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+        <Setter Property="BoxShadow" Value="0 12 30 0 #70000000"/>
+        <Setter Property="Padding" Value="4"/>
+    </Style>
+
+    <Style Selector="ComboBoxItem">
+        <Setter Property="Padding" Value="11,8"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+        <Setter Property="Margin" Value="0,1"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.12"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ComboBoxItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BgHover}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+    </Style>
+    <Style Selector="ComboBoxItem:selected">
+        <Setter Property="Background" Value="{DynamicResource AccentSubtle}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+    </Style>
+    <Style Selector="ComboBoxItem:selected:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BgHover}"/>
+    </Style>
+
     <!-- Read-only variant: same card, no hover response. A lift and an accent outline promise
          that clicking does something, so rows that are purely informational (a playtime
          ranking, a release note) opt out instead of lying about being interactive.

@@ -14,23 +14,33 @@ using Avalonia.VisualTree;
 namespace Launcher.App.Behaviors;
 
 /// <summary>
-/// Attached behavior that turns a control's mouse-wheel scrolling into a smooth,
-/// interpolated animation instead of the default per-notch jump. Set
-/// <c>SmoothScroll.Enabled="True"</c> on a <see cref="ScrollViewer"/> or on a control
-/// that hosts one (e.g. a <see cref="ListBox"/>); the behavior finds the inner
-/// <see cref="ScrollViewer"/>, accumulates a target offset on each wheel tick, and
-/// eases <c>Offset.Y</c> toward it once per <b>compositor frame</b>
-/// (<see cref="TopLevel.RequestAnimationFrame"/>), clamped to the scrollable range.
-/// Frame-synced stepping is what keeps it visually smooth: a plain 16 ms timer beats
-/// against the real frame clock and shows up as micro-stutter on heavy lists.
+/// Attached behavior that turns a control's mouse-wheel scrolling into a smooth, interpolated
+/// animation instead of the default per-notch jump. Set <c>SmoothScroll.Enabled="True"</c> on a
+/// <see cref="ScrollViewer"/> or on a control that hosts one.
+///
+/// Three things matter for this to actually look smooth:
+/// <list type="number">
+/// <item>The animated position is kept here as a <see cref="double"/> and never read back from
+/// the <see cref="ScrollViewer"/>. Offset is coerced to whole device pixels, so reading it back
+/// would quantise every step; once the remaining distance drops below a pixel the motion would
+/// stall and then jump, which reads as stuttering right at the end of every scroll.</item>
+/// <item>Easing is a function of elapsed time, not of frames, so a 144 Hz display and a 60 Hz
+/// display travel the same distance in the same wall-clock time and an uneven frame does not
+/// produce an uneven step.</item>
+/// <item>The scroll viewer is resolved from the element under the pointer, so a list nested in a
+/// page scrolls itself, and hands over to the page once it reaches its own end.</item>
+/// </list>
 /// </summary>
 public static class SmoothScroll
 {
     /// <summary>Pixels moved per wheel notch (delta of 1).</summary>
     private const double StepPixels = 100.0;
 
-    /// <summary>Fraction of the remaining distance covered each frame (higher = snappier).</summary>
-    private const double Ease = 0.22;
+    /// <summary>Fraction of the remaining distance covered per 60 Hz frame (higher = snappier).</summary>
+    private const double EasePerFrame = 0.22;
+
+    /// <summary>Reference frame time the ease fraction is expressed against.</summary>
+    private const double ReferenceFrameMs = 1000.0 / 60.0;
 
     public static readonly AttachedProperty<bool> EnabledProperty =
         AvaloniaProperty.RegisterAttached<Control, bool>("Enabled", typeof(SmoothScroll));
@@ -54,43 +64,82 @@ public static class SmoothScroll
     private sealed class Controller
     {
         private readonly Control _owner;
-        private ScrollViewer? _scrollViewer;
+
+        private ScrollViewer? _sv;      // the viewer currently being animated
+        private double _current;        // our authoritative position; the viewer's own is quantised
         private double _target;
         private bool _animating;
+        private TimeSpan _lastFrame;
 
         public Controller(Control owner)
         {
             _owner = owner;
 
-            // Tunnel so we pre-empt the default wheel scroll before it jumps.
+            // Tunnel: we have to pre-empt the ScrollViewer's own wheel handler, which would jump.
             owner.AddHandler(InputElement.PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel);
-            owner.AttachedToVisualTree += (_, _) => ResolveScrollViewer();
-            owner.DetachedFromVisualTree += (_, _) => _animating = false;
-            ResolveScrollViewer();
+            owner.DetachedFromVisualTree += (_, _) => Stop();
         }
 
-        private void ResolveScrollViewer()
-            => _scrollViewer = _owner as ScrollViewer
-                               ?? _owner.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+        private void Stop()
+        {
+            _animating = false;
+            _sv = null;
+        }
 
         private void OnWheel(object? sender, PointerWheelEventArgs e)
         {
-            var sv = _scrollViewer ??= _owner.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-            if (sv == null) return;
+            var sv = Resolve(e.Source as Visual, e.Delta.Y);
+            if (sv == null) return; // nothing here can scroll: let it bubble to an outer page
+
+            // Switching viewers (or starting fresh) resyncs from the real offset once.
+            if (!ReferenceEquals(sv, _sv) || !_animating)
+            {
+                _sv = sv;
+                _current = sv.Offset.Y;
+                _target = _current;
+            }
 
             var max = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
-            if (max <= 0) return; // nothing to scroll: let the event bubble
-
-            // Resync to the real offset whenever we start fresh, so it never drifts.
-            if (!_animating) _target = sv.Offset.Y;
             _target = Math.Clamp(_target - e.Delta.Y * StepPixels, 0, max);
 
             e.Handled = true;
             if (!_animating)
             {
                 _animating = true;
+                _lastFrame = TimeSpan.Zero;
                 RequestFrame();
             }
+        }
+
+        /// <summary>
+        /// Finds the scroll viewer the wheel should drive: the innermost one under the pointer that
+        /// still has room in this direction, so a list scrolls itself until it bottoms out and the
+        /// page takes over from there.
+        /// </summary>
+        private ScrollViewer? Resolve(Visual? source, double deltaY)
+        {
+            if (source != null)
+            {
+                foreach (var sv in source.GetSelfAndVisualAncestors().OfType<ScrollViewer>())
+                    if (HasRoom(sv, deltaY))
+                        return sv;
+            }
+
+            // The pointer was not over a scrollable viewer (empty area, say): fall back to the one
+            // this behavior was attached to.
+            var own = _owner as ScrollViewer ?? _owner.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            return own != null && HasRoom(own, deltaY) ? own : null;
+        }
+
+        private bool HasRoom(ScrollViewer sv, double deltaY)
+        {
+            var max = sv.Extent.Height - sv.Viewport.Height;
+            if (max <= 0.5) return false;
+
+            // Mid-animation the viewer's offset lags behind where we are heading, so judge by the
+            // target instead or a fast flick would bleed into the parent.
+            var y = _animating && ReferenceEquals(sv, _sv) ? _target : sv.Offset.Y;
+            return deltaY > 0 ? y > 0.5 : y < max - 0.5;
         }
 
         private void RequestFrame()
@@ -100,24 +149,29 @@ public static class SmoothScroll
             top.RequestAnimationFrame(OnFrame);
         }
 
-        private void OnFrame(TimeSpan _)
+        private void OnFrame(TimeSpan now)
         {
             if (!_animating) return;
-            var sv = _scrollViewer;
+            var sv = _sv;
             if (sv == null) { _animating = false; return; }
+
+            // Time-based easing: the same fraction per unit of time whatever the refresh rate is.
+            var dtMs = _lastFrame == TimeSpan.Zero ? ReferenceFrameMs : (now - _lastFrame).TotalMilliseconds;
+            _lastFrame = now;
+            dtMs = Math.Clamp(dtMs, 1.0, 64.0); // a hitch must not teleport the view
+            var factor = 1.0 - Math.Pow(1.0 - EasePerFrame, dtMs / ReferenceFrameMs);
 
             var max = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
             _target = Math.Clamp(_target, 0, max);
 
-            var current = sv.Offset.Y;
-            var next = current + (_target - current) * Ease;
-            if (Math.Abs(_target - next) < 0.5)
+            _current += (_target - _current) * factor;
+            if (Math.Abs(_target - _current) < 0.25)
             {
-                next = _target;
+                _current = _target;
                 _animating = false;
             }
 
-            sv.Offset = new Vector(sv.Offset.X, next);
+            sv.Offset = new Vector(sv.Offset.X, _current);
             if (_animating) RequestFrame();
         }
     }
