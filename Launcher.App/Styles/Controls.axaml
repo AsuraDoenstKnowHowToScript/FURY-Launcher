@@ -29,7 +29,15 @@
     <!-- ============================ BUTTONS ============================ -->
     <!-- Variants are opt-in via Classes; plain buttons keep the Fluent look.
          Subtle 120ms colour transitions, no glow/scale. Inline paddings in
-         views still win over these defaults. -->
+         views still win over these defaults.
+
+         Every state restates Background, BorderBrush and Foreground even where the
+         value is unchanged. The Fluent theme sets the same three properties on the
+         same content presenter for :pointerover and :pressed, so leaving one out
+         hands that property to the theme for the duration of the state, and the
+         colour transition animates through whatever it hands back. Tokens.axaml
+         already points the theme's own keys at our palette; these setters are the
+         second half of that, and together they are why hover no longer flashes. -->
 
     <!-- primary -->
     <Style Selector="Button.primary">
@@ -39,7 +47,9 @@
     </Style>
     <Style Selector="Button.primary /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource Accent}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
         <Setter Property="Transitions">
             <Transitions><BrushTransition Property="Background" Duration="0:0:0.12"/></Transitions>
@@ -47,9 +57,13 @@
     </Style>
     <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource AccentHover}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
     </Style>
     <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource AccentPressed}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
     </Style>
 
     <!-- secondary -->
@@ -61,6 +75,7 @@
         <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
         <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
         <Setter Property="Transitions">
             <Transitions>
@@ -72,6 +87,12 @@
     <Style Selector="Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource BgHover}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+    </Style>
+    <Style Selector="Button.secondary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
     </Style>
 
     <!-- danger (destructive only: delete instance, remove mod) -->
@@ -81,7 +102,9 @@
     </Style>
     <Style Selector="Button.danger /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource Danger}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
         <Setter Property="Transitions">
             <Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions>
@@ -89,7 +112,15 @@
     </Style>
     <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource Danger}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
         <Setter Property="Opacity" Value="0.85"/>
+    </Style>
+    <Style Selector="Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Danger}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
+        <Setter Property="Opacity" Value="0.7"/>
     </Style>
 
     <!-- ghost -->
@@ -99,14 +130,24 @@
     </Style>
     <Style Selector="Button.ghost /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
         <Setter Property="Transitions">
             <Transitions><BrushTransition Property="Background" Duration="0:0:0.12"/></Transitions>
         </Setter>
     </Style>
+    <!-- The lift to primary text is the whole hover cue here, since the fill barely moves. -->
     <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource BgElevated}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+    </Style>
+    <Style Selector="Button.ghost:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
     </Style>
 
     <!-- ============================ INPUTS ============================ -->

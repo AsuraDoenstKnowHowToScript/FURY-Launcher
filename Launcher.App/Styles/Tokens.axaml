@@ -84,4 +84,28 @@
     <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent"/>
     <sys:Double x:Key="ScrollBarSize">10</sys:Double>
 
+    <!-- Button state brushes, restated in our palette.
+         The Fluent theme sets these on the button's content presenter for :pointerover
+         and :pressed, and Controls.axaml sets the same properties from a Style. Both
+         values reach the property, ours wins the final result, but the theme's value
+         still lands on the way there and the colour transition animates towards it for
+         a moment before it is corrected. That detour is the pale flash on the way in and
+         on the way out. Pointing the theme's own keys at our colours means the detour
+         goes nowhere visible, whichever value gets there first.
+         Pressed sits below the resting layer: buttons look pushed in, not lit up. -->
+    <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource BgSurfaceColor}"/>
+    <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="{StaticResource BgSurfaceColor}"/>
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{StaticResource BorderStrongColor}"/>
+    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="ButtonBorderBrushDisabled" Color="{StaticResource BorderSubtleColor}"/>
+    <!-- Text keeps its resting colour through hover. The theme's version jumps to pure
+         white, which is the other half of the flash on anything with grey text. -->
+    <SolidColorBrush x:Key="ButtonForeground" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
+
 </ResourceDictionary>
