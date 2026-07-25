@@ -48,8 +48,11 @@ public sealed class ServerDirectory
         new() { Name = "Hypixel Asia",  Address = "mc.hypixel.net",    Region = ServerRegion.Asia,         Origin = ServerOrigin.Directory },
         new() { Name = "Loyisa",        Address = "mc.loyisa.cn",      Region = ServerRegion.Asia,         Origin = ServerOrigin.Directory },
 
-        new() { Name = "Craft Br",   Address = "mc.craftlandia.com.br",Region = ServerRegion.SouthAmerica, Origin = ServerOrigin.Directory },
-        new() { Name = "Nightmare",  Address = "mc.nightmare.com.br",  Region = ServerRegion.SouthAmerica, Origin = ServerOrigin.Directory },
+        // Checked against live DNS. All three publish only SRV and point their A record at a CDN,
+        // so they are also the case that proves the SRV lookup is doing its job.
+        new() { Name = "Craftlandia", Address = "craftlandia.com.br",  Region = ServerRegion.SouthAmerica, Origin = ServerOrigin.Directory },
+        new() { Name = "MushMC",      Address = "mushmc.com",          Region = ServerRegion.SouthAmerica, Origin = ServerOrigin.Directory },
+        new() { Name = "Hylex",       Address = "hylex.gg",            Region = ServerRegion.SouthAmerica, Origin = ServerOrigin.Directory },
     };
 
     /// <summary>The shipped directory for one region, or all of it when region is null.</summary>

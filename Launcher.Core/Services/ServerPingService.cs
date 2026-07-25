@@ -18,9 +18,8 @@ namespace Launcher.Core.Services;
 /// server answers with its MOTD, player counts, version and icon, so everything the list shows
 /// is the server's own live data rather than a third party's index of it.
 ///
-/// Not implemented: SRV record lookup. The game resolves _minecraft._tcp.&lt;host&gt; first, which
-/// needs a DNS library .NET does not ship. Servers that publish a plain A record on 25565 (which
-/// is nearly all of them) work; one that only publishes SRV needs its port typed in.
+/// SRV is resolved first, the same as the game does, because a large share of servers publish
+/// only an SRV record and point their A record at a CDN. Skipping it makes those look dead.
 /// </summary>
 public sealed class ServerPingService
 {
@@ -49,13 +48,26 @@ public sealed class ServerPingService
         cts.CancelAfter(Timeout);
         try
         {
+            // Only when no port was typed, which is also when the game looks SRV up: an explicit
+            // port means the user is naming an endpoint directly and expects it to be used.
+            var connectHost = host;
+            var connectPort = port;
+            if (!HasExplicitPort(address))
+            {
+                var srv = await MinecraftSrvResolver.ResolveAsync(host, cts.Token).ConfigureAwait(false);
+                if (srv is { } target) (connectHost, connectPort) = target;
+            }
+
             using var tcp = new TcpClient { NoDelay = true };
-            await tcp.ConnectAsync(host, port, cts.Token).ConfigureAwait(false);
+            await tcp.ConnectAsync(connectHost, connectPort, cts.Token).ConfigureAwait(false);
             await using var net = tcp.GetStream();
 
             // Handshake. Protocol version -1 is the documented "I am only asking for status"
             // value; the server ignores it in this state, so no version negotiation happens and
             // old and new servers both answer.
+            // The handshake carries the address the player typed, not the SRV target. Proxies
+            // route on it, so a network that sends several domains to one endpoint needs the
+            // original to tell them apart. Vanilla servers ignore the field entirely.
             var handshake = new MemoryStream();
             WriteVarInt(handshake, 0x00);
             WriteVarInt(handshake, -1);
@@ -326,6 +338,20 @@ public sealed class ServerPingService
         if (colon > 0 && int.TryParse(raw[(colon + 1)..], out var port) && port is > 0 and <= 65535)
             return (raw[..colon], port);
         return (raw, DefaultPort);
+    }
+
+    /// <summary>True when the address ends in an explicit :port, so SRV should be skipped.</summary>
+    private static bool HasExplicitPort(string address)
+    {
+        var raw = (address ?? "").Trim();
+        if (raw.Length == 0) return false;
+        if (raw.StartsWith('['))
+        {
+            var close = raw.IndexOf(']');
+            return close > 0 && raw.Length > close + 1 && raw[close + 1] == ':';
+        }
+        var colon = raw.LastIndexOf(':');
+        return colon > 0 && int.TryParse(raw[(colon + 1)..], out var p) && p is > 0 and <= 65535;
     }
 
     private static async Task SendPacketAsync(Stream s, byte[] body, CancellationToken ct)

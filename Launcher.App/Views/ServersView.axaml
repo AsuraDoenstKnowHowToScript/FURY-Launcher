@@ -61,7 +61,8 @@
                                         <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center"
                                                     ClipToBounds="True">
                                             <Grid ColumnDefinitions="Auto,8,Auto,*">
-                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="15"
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="14"
+                                                           FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
                                                            TextTrimming="CharacterEllipsis"/>
                                                 <Border Grid.Column="2" CornerRadius="999" Padding="8,2"
                                                         VerticalAlignment="Center"
@@ -77,10 +78,12 @@
 
                                             <!-- The MOTD in the server's own colours, as the game shows it. -->
                                             <ctl:MotdBlock Runs="{Binding Motd}" FontSize="12"
+                                                           FontFamily="{DynamicResource FontMinecraft}"
                                                            TextWrapping="NoWrap"
                                                            TextTrimming="CharacterEllipsis"
                                                            IsVisible="{Binding Online}"/>
                                             <TextBlock Text="{Binding OfflineText}" FontSize="12"
+                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
                                                        TextTrimming="CharacterEllipsis"
                                                        IsVisible="{Binding Offline}"
                                                        Foreground="{DynamicResource Danger}"/>
@@ -99,7 +102,8 @@
                                                            VerticalAlignment="Center"
                                                            Foreground="{DynamicResource TextMuted}"/>
                                             </StackPanel>
-                                            <TextBlock Text="{Binding Players}" Classes="Mono" FontSize="12"
+                                            <TextBlock Text="{Binding Players}" FontSize="12"
+                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
                                                        HorizontalAlignment="Right"
                                                        Foreground="{DynamicResource TextSecondary}"/>
                                             <TextBlock Text="{Binding Version}" FontSize="10"
@@ -182,13 +186,16 @@
 
                                         <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center"
                                                     ClipToBounds="True">
-                                            <TextBlock Text="{Binding Name}" FontSize="15"
+                                            <TextBlock Text="{Binding Name}" FontSize="14"
+                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
                                                        TextTrimming="CharacterEllipsis"/>
                                             <ctl:MotdBlock Runs="{Binding Motd}" FontSize="12"
+                                                           FontFamily="{DynamicResource FontMinecraft}"
                                                            TextWrapping="NoWrap"
                                                            TextTrimming="CharacterEllipsis"
                                                            IsVisible="{Binding Online}"/>
                                             <TextBlock Text="{Binding OfflineText}" FontSize="12"
+                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
                                                        TextTrimming="CharacterEllipsis"
                                                        IsVisible="{Binding Offline}"
                                                        Foreground="{DynamicResource Danger}"/>
@@ -207,7 +214,8 @@
                                                            VerticalAlignment="Center"
                                                            Foreground="{DynamicResource TextMuted}"/>
                                             </StackPanel>
-                                            <TextBlock Text="{Binding Players}" Classes="Mono" FontSize="12"
+                                            <TextBlock Text="{Binding Players}" FontSize="12"
+                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
                                                        HorizontalAlignment="Right"
                                                        Foreground="{DynamicResource TextSecondary}"/>
                                             <TextBlock Text="{Binding Version}" FontSize="10"

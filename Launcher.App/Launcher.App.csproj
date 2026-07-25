@@ -57,6 +57,9 @@
   <ItemGroup>
     <!-- Fonts embedded as assembly resources (no system install required). -->
     <AvaloniaResource Include="Assets/Fonts/*.ttf" />
+    <!-- Monocraft is under the SIL Open Font License, which requires the notice to travel with
+         the font. Shipping it as content keeps it readable next to the binary. -->
+    <Content Include="Assets/Fonts/Monocraft-OFL-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- App icon: the compact FL mark (window + .exe). -->
     <AvaloniaResource Include="Assets/fl-icon.png" />
     <AvaloniaResource Include="Assets/fl-icon.ico" />
