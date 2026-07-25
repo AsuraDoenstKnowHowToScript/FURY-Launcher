@@ -2,10 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ctl="using:Launcher.App.Controls">
 
+    <!-- A ControlTheme is a resource, not a style: it belongs in Styles.Resources, keyed by the
+         control type, so Avalonia picks it up automatically for every PanelCard. -->
     <Styles.Resources>
-        <!-- The dot grid. A VisualBrush tiled every 22px: one faint dot per tile, drawn once and
-             repeated by the compositor, so the texture costs nothing to scroll. The dot itself is
-             already low-alpha; the layer opacity in the template dials it the rest of the way. -->
+
+        <!-- The dot grid. A VisualBrush tiled every 22px: one faint dot drawn once and repeated by
+             the compositor, so the texture costs nothing to scroll. The dot is already low-alpha;
+             the layer opacity in the template dials it the rest of the way. -->
         <VisualBrush x:Key="DotGrid" TileMode="Tile" Stretch="None"
                      SourceRect="0,0,22,22" DestinationRect="0,0,22,22">
             <VisualBrush.Visual>
@@ -18,62 +21,63 @@
 
         <!-- Depth: a violet bloom pushed into the top-right corner, fading out well before the
              opposite edge. This is what stops a panel from reading as a flat rectangle. -->
-        <RadialGradientBrush x:Key="PanelGlow" Center="86%,2%" GradientOrigin="86%,2%" Radius="0.85">
+        <RadialGradientBrush x:Key="PanelGlow" Center="86%,2%" GradientOrigin="86%,2%"
+                             RadiusX="85%" RadiusY="85%">
             <GradientStop Offset="0" Color="#4A3691"/>
             <GradientStop Offset="0.55" Color="#2A2145"/>
             <GradientStop Offset="1" Color="#00181422"/>
         </RadialGradientBrush>
+
+        <ControlTheme x:Key="{x:Type ctl:PanelCard}" TargetType="ctl:PanelCard">
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border CornerRadius="{DynamicResource RadiusLg}" BorderThickness="1"
+                            BorderBrush="{DynamicResource BorderSubtle}"
+                            Background="{DynamicResource BgSurface}"
+                            BoxShadow="0 4 16 0 #45000000"
+                            ClipToBounds="True">
+                        <Panel>
+                            <!-- Texture stack, bottom to top: glow, dots, watermark, content. -->
+                            <Border Background="{StaticResource PanelGlow}"
+                                    Opacity="{TemplateBinding TextureOpacity}"/>
+                            <Border Background="{StaticResource DotGrid}" Opacity="0.055"/>
+
+                            <Image Source="{TemplateBinding Icon}"
+                                   Width="{TemplateBinding WatermarkSize}"
+                                   Height="{TemplateBinding WatermarkSize}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Top"
+                                   Margin="0,-30,-26,0" Opacity="0.06"
+                                   IsHitTestVisible="False"/>
+
+                            <DockPanel Margin="{TemplateBinding Padding}">
+                                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,11,*" Margin="0,0,0,16"
+                                      IsVisible="{TemplateBinding ShowHeader}">
+                                    <Border Grid.Column="0" Width="34" Height="34" CornerRadius="10"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource AccentSubtle}"
+                                            BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                        <Image Source="{TemplateBinding Icon}" Width="17" Height="17"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Classes="Subtitle" VerticalAlignment="Center"
+                                               Text="{TemplateBinding Header}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+
+                                <ContentPresenter Name="PART_ContentPresenter"
+                                                  Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            </DockPanel>
+                        </Panel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
     </Styles.Resources>
-
-    <ControlTheme x:Key="{x:Type ctl:PanelCard}" TargetType="ctl:PanelCard">
-        <Setter Property="Padding" Value="20"/>
-        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border CornerRadius="{DynamicResource RadiusLg}" BorderThickness="1"
-                        BorderBrush="{DynamicResource BorderSubtle}"
-                        Background="{DynamicResource BgSurface}"
-                        BoxShadow="0 4 16 0 #45000000"
-                        ClipToBounds="True">
-                    <Panel>
-                        <!-- Texture stack, bottom to top: glow, dots, watermark, content. -->
-                        <Border Background="{StaticResource PanelGlow}"
-                                Opacity="{TemplateBinding TextureOpacity}"/>
-                        <Border Background="{StaticResource DotGrid}" Opacity="0.055"/>
-
-                        <Image Source="{TemplateBinding Icon}"
-                               Width="{TemplateBinding WatermarkSize}"
-                               Height="{TemplateBinding WatermarkSize}"
-                               HorizontalAlignment="Right" VerticalAlignment="Top"
-                               Margin="0,-30,-26,0" Opacity="0.06"
-                               IsHitTestVisible="False"/>
-
-                        <DockPanel Margin="{TemplateBinding Padding}">
-                            <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,11,*" Margin="0,0,0,16"
-                                  IsVisible="{TemplateBinding ShowHeader}">
-                                <Border Grid.Column="0" Width="34" Height="34" CornerRadius="10"
-                                        VerticalAlignment="Center"
-                                        Background="{DynamicResource AccentSubtle}"
-                                        BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
-                                    <Image Source="{TemplateBinding Icon}" Width="17" Height="17"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <TextBlock Grid.Column="2" Classes="Subtitle" VerticalAlignment="Center"
-                                           Text="{TemplateBinding Header}"
-                                           TextTrimming="CharacterEllipsis"/>
-                            </Grid>
-
-                            <ContentPresenter Name="PART_ContentPresenter"
-                                              Content="{TemplateBinding Content}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </DockPanel>
-                    </Panel>
-                </Border>
-            </ControlTemplate>
-        </Setter>
-    </ControlTheme>
-
 </Styles>
