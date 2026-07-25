@@ -43,7 +43,7 @@ namespace Launcher.App;
 /// this file only reads/writes controls and marshals Core events to the UI thread.
 /// All visible text comes from <see cref="Loc"/> via <see cref="ApplyLanguage"/>.
 /// </summary>
-public partial class MainWindow : AppWindow
+public partial class MainWindow : AppWindow, IDialogService
 {
     private readonly LauncherCore _core = new();
     private readonly LoaderType[] _loaders = Enum.GetValues<LoaderType>();
@@ -53,9 +53,6 @@ public partial class MainWindow : AppWindow
     private readonly List<InstalledModVm> _allModVms = new();      // full set for the current instance
     private readonly ObservableCollection<InstalledModVm> _modVms = new(); // filtered, bound to the list
     private CancellationTokenSource? _modEnrichCts; // cancels stale metadata enrichment on refresh
-    private List<Account> _accounts = new();
-    private readonly ObservableCollection<AccountCardVm> _accountCards = new();
-    private bool _suppressAccountSel; // guards the card list during programmatic selection
     private readonly ObservableCollection<ModrinthHitVm> _modrinthVms = new();
     private IReadOnlyList<ModrinthVersion> _modVersions = new List<ModrinthVersion>();
     private InstalledSignatures? _installedSigs; // what the selected instance already has, for the "Installed" tag
@@ -84,8 +81,7 @@ public partial class MainWindow : AppWindow
     private static readonly SemaphoreSlim _iconGate = new(6);
 
     private Instance? _editing;      // instance selected for editing (Instances tab)
-    private Account? _activeAccount;      // the one account that launches; mirror of settings.ActiveAccountId
-    private MSession? _activeMsSession;   // resolved session for the active Microsoft account, for launch
+    private readonly AccountsViewModel _accountsVm; // owns the Accounts screen + the active account
     private CancellationTokenSource? _launchCts;
     private bool _suppressLangEvent; // guards the language dropdown during programmatic set
     private List<string> _versions = new(); // Minecraft versions shown in the create/edit dropdown
@@ -121,6 +117,12 @@ public partial class MainWindow : AppWindow
 
         Title = $"{AppInfo.Name} v{AppInfo.Version}";
         AboutTitle.Text = AppInfo.Name;
+
+        // The Accounts screen is a self-contained view model; the window only hosts its view,
+        // mirrors the active account on the Home chip, and reads it when launching.
+        _accountsVm = new AccountsViewModel(_core, _selected, this);
+        AccountsPanel.DataContext = _accountsVm;
+        _accountsVm.ActiveAccountChanged += (_, _) => Dispatcher.UIThread.Post(UpdateActiveAccountChip);
 
         LoaderCombo.ItemsSource = _loaders.Select(l => l.ToString()).ToList();
         LoaderCombo.SelectedIndex = 0;
@@ -158,7 +160,6 @@ public partial class MainWindow : AppWindow
         DefaultJavaCombo.SelectionChanged += OnDefaultJavaChanged;
         JavaCombo.SelectionChanged += OnInstanceJavaChanged;
 
-        MicrosoftLoginButton.Click += OnAddMicrosoft;
         PlayButton.Click += OnPlay;
         StopButton.Click += (_, _) =>
         {
@@ -203,18 +204,10 @@ public partial class MainWindow : AppWindow
         NavVersion.Text = "v" + AppInfo.Version;
         NavView.SelectedItem = NavHome;
 
-        // --- modpack (.frpack) + skin profiles ---
+        // --- modpack (.frpack) ---
         // Import/Export/Delete Click handlers are wired in XAML (they live inside
         // flyouts, a separate namescope, so no code-behind field is generated).
-        AccountsList.ItemsSource = _accountCards;
-        AccountsList.SelectionChanged += OnAccountSelected;
-        AddOfflineButton.Click += OnAddOffline;
-        SaveProfileButton.Click += OnSaveProfile;
-        DeleteAccountButton.Click += OnDeleteAccount;
         ActiveAccountChip.Click += OnActiveChipClick;
-        ChooseSkinButton.Click += OnChooseSkin;
-        ChooseCapeButton.Click += OnChooseCape;
-        ApplySkinButton.Click += OnApplySkin;
 
         // --- empty-state + Vanilla-mods shortcuts ---
         EmptyStateNewButton.Click += OnEmptyStateNew;
@@ -306,7 +299,6 @@ public partial class MainWindow : AppWindow
 
         // Play tab
         LblPlayingAs.Text = Loc.T("account.playingas");
-        MicrosoftLoginLabel.Text = Loc.T("btn.addms");
         PlayButtonLabel.Text = Loc.T("btn.play");
         StopButton.Content = Loc.T("btn.stop");
         LblLog.Text = Loc.T("label.log");
@@ -326,28 +318,7 @@ public partial class MainWindow : AppWindow
         ModrinthDownloadButton.Content = Loc.T("btn.downloadinstance");
         ModrinthEmptyText.Text = Loc.T("mods.searchprompt");
 
-        // Accounts tab
-        LblSkinAccountHeader.Text = Loc.T("skins.account");
-        LblSkinProfileHeader.Text = Loc.T("account.section");
-        LblSkinAppearanceHeader.Text = Loc.T("skins.appearance");
-        AddOfflineButton.Content = Loc.T("btn.addoffline");
-        DeleteAccountButton.Content = Loc.T("btn.delete");
-        AccountsEmpty.Text = Loc.T("account.none");
-        AccountSelectHint.Text = Loc.T("account.selecthint");
-        MsManagedNote.Text = Loc.T("account.msmanaged");
-        LblProfileName.Text = Loc.T("label.nick");
-        LblNickHint.Text = Loc.T("skins.nickhint");
-        SlimCheck.Content = Loc.T("check.slim");
-        SaveProfileButton.Content = Loc.T("btn.saveprofile");
-        ChooseSkinButton.Content = Loc.T("btn.chooseskin");
-        ChooseCapeButton.Content = Loc.T("btn.choosecape");
-        LblApplyInstance.Text = Loc.T("label.applyinstance");
-        ApplySkinButton.Content = Loc.T("btn.applyingame");
-        LblSkinPreview.Text = Loc.T("label.skinpreview");
-        LblFacePreview.Text = Loc.T("label.facepreview");
-        LblCapePreview.Text = Loc.T("label.capepreview");
-        LblSkinHelp1.Text = Loc.T("skin.help1");
-        LblSkinHelp2.Text = Loc.T("skin.help2");
+        // Accounts tab: the view binds its own localized text and re-reads it on Loc.Changed.
 
         // About tab
         AboutVersion.Text = Loc.T("about.version", AppInfo.Version);
@@ -395,7 +366,7 @@ public partial class MainWindow : AppWindow
         // Ease the incoming section in (one-shot; never replays on interaction).
         var shown = HomePanel.IsVisible ? (Control)HomePanel
                   : ModsPanel.IsVisible ? ModsPanel
-                  : AccountsPanel.IsVisible ? AccountsPanel
+                  : AccountsPanel.IsVisible ? (Control)AccountsPanel
                   : SettingsPanel;
         PlayPageTransition(shown);
 
@@ -551,7 +522,7 @@ public partial class MainWindow : AppWindow
         await RefreshInstancesAsync();
         // Unified accounts: builds the card list and resolves cached Microsoft sessions/avatars
         // (silent resume) in the background.
-        await RefreshAccountsAsync();
+        await _accountsVm.RefreshAsync();
 
         await CheckForUpdatesAsync();
     }
@@ -678,292 +649,28 @@ public partial class MainWindow : AppWindow
             Environment.Exit(0);
     }
 
-    // ============================ ACCOUNTS (unified) ============================
-
-    /// <summary>
-    /// Reloads the unified account list, rebuilds the card selector, refreshes the Home
-    /// active-account chip and the editor, then resolves Microsoft sessions/avatars in the
-    /// background (silent resume). The active account is the single source of truth.
-    /// </summary>
-    private async Task RefreshAccountsAsync()
-    {
-        _accounts = (await _core.Accounts.ListAsync()).ToList();
-        _activeAccount = _accounts.FirstOrDefault(a => a.IsActive) ?? _accounts.FirstOrDefault();
-        if (_activeAccount != null && !_accounts.Any(a => a.IsActive))
-        {
-            await _core.Accounts.SetActiveAsync(_activeAccount.Id);
-            _activeAccount.IsActive = true;
-        }
-
-        RebuildAccountCards();
-        UpdateActiveAccountChip();
-        LoadEditorFor(_activeAccount);
-        _ = ResolveMicrosoftAsync();
-    }
-
-    private void RebuildAccountCards()
-    {
-        var keepId = SelectedCard?.Id ?? _activeAccount?.Id;
-        _accountCards.Clear();
-        foreach (var a in _accounts)
-        {
-            var vm = new AccountCardVm(a, BadgeFor(a));
-            if (a.Kind == AccountKind.Offline && a.SkinPath != null && File.Exists(a.SkinPath))
-            {
-                try { vm.SetSkin(new Bitmap(a.SkinPath)); } catch { /* not a real skin: keep glyph */ }
-            }
-            _accountCards.Add(vm);
-        }
-        AccountsEmpty.IsVisible = _accountCards.Count == 0;
-
-        _suppressAccountSel = true;
-        AccountsList.SelectedItem = _accountCards.FirstOrDefault(v => v.Id == keepId)
-                                    ?? _accountCards.FirstOrDefault(v => v.Id == _activeAccount?.Id);
-        _suppressAccountSel = false;
-    }
-
-    private static string BadgeFor(Account a)
-        => Loc.T(a.Kind == AccountKind.Microsoft ? "account.badge.ms" : "account.badge.offline");
-
-    private AccountCardVm? SelectedCard => AccountsList.SelectedItem as AccountCardVm;
-    private Account? SelectedAccount => _accounts.FirstOrDefault(a => a.Id == SelectedCard?.Id);
-
-    private void OnAccountSelected(object? sender, SelectionChangedEventArgs e)
-    {
-        if (_suppressAccountSel) return;
-        var acc = SelectedAccount;
-        if (acc == null) return;
-        _ = SafeAsync(async () =>
-        {
-            await _core.Accounts.SetActiveAsync(acc.Id);
-            _activeAccount = acc;
-            _activeMsSession = null; // re-resolved on demand for the newly active account
-            foreach (var v in _accountCards) v.IsActive = v.Id == acc.Id;
-            UpdateActiveAccountChip();
-            LoadEditorFor(acc);
-            if (acc.Kind == AccountKind.Microsoft) await ResolveMicrosoftAsync();
-        });
-    }
-
-    private void SelectCardById(string id)
-    {
-        _suppressAccountSel = true;
-        AccountsList.SelectedItem = _accountCards.FirstOrDefault(v => v.Id == id);
-        _suppressAccountSel = false;
-        LoadEditorFor(_accounts.FirstOrDefault(a => a.Id == id));
-    }
-
-    /// <summary>Fills the editor pane for the selected account, disabling skin/nick edits on Microsoft.</summary>
-    private void LoadEditorFor(Account? acc)
-    {
-        if (acc == null)
-        {
-            EditorPanel.IsVisible = false;
-            AccountSelectHint.IsVisible = true;
-            return;
-        }
-        AccountSelectHint.IsVisible = false;
-        EditorPanel.IsVisible = true;
-
-        var isMs = acc.Kind == AccountKind.Microsoft;
-        ProfileNameBox.Text = acc.Username;
-        ProfileNameBox.IsEnabled = !isMs;
-        SlimCheck.IsChecked = acc.Slim;
-        SlimCheck.IsEnabled = !isMs;
-        SaveProfileButton.IsEnabled = !isMs;
-        ChooseSkinButton.IsEnabled = !isMs;
-        ChooseCapeButton.IsEnabled = !isMs;
-        MsManagedNote.IsVisible = isMs;
-
-        var tip = isMs ? Loc.T("account.msmanaged.tip") : null;
-        ToolTip.SetTip(ChooseSkinButton, tip);
-        ToolTip.SetTip(ChooseCapeButton, tip);
-
-        if (isMs)
-        {
-            SetSkinImages(null);
-            SetCapeImage(null);
-            SkinStatus.Text = Loc.T("account.msmanaged");
-            _ = LoadMicrosoftPreviewAsync(acc);
-        }
-        else
-        {
-            SetSkinImages(acc.SkinPath);
-            SetCapeImage(acc.CapePath);
-            SkinStatus.Text = Loc.T("skin.profileinfo", acc.Username,
-                Loc.T(acc.SkinPath != null ? "skin.hasskin" : "skin.noskin"),
-                Loc.T(acc.CapePath != null ? "skin.hascape" : "skin.nocape"),
-                Loc.T(acc.Slim ? "model.slim" : "model.classic"));
-        }
-    }
-
-    /// <summary>Loads the read-only Mojang skin into the preview for a Microsoft account.</summary>
-    private async Task LoadMicrosoftPreviewAsync(Account acc)
-    {
-        if (string.IsNullOrEmpty(acc.Uuid)) return;
-        var skin = await _core.MsSkins.GetAsync(acc.Uuid);
-        if (SelectedAccount?.Id != acc.Id) return; // selection moved on while we fetched
-        if (skin != null && File.Exists(skin.PngPath))
-        {
-            SetSkinImages(skin.PngPath);
-            var card = _accountCards.FirstOrDefault(v => v.Id == acc.Id);
-            try { card?.SetSkin(new Bitmap(skin.PngPath)); } catch { }
-            UpdateActiveAccountChip();
-        }
-    }
-
-    /// <summary>
-    /// Silently resumes each cached Microsoft account to fill its nick/uuid + avatar, marking
-    /// the ones whose token expired. Runs in the background; never throws to the UI.
-    /// </summary>
-    private async Task ResolveMicrosoftAsync()
-    {
-        foreach (var acc in _accounts.Where(a => a.Kind == AccountKind.Microsoft && !string.IsNullOrEmpty(a.MsAccountRef)).ToList())
-        {
-            MSession? s = null;
-            try { s = await _core.Auth.TryResumeMicrosoftAsync(acc.MsAccountRef!); } catch { }
-            var card = _accountCards.FirstOrDefault(v => v.Id == acc.Id);
-            if (s != null)
-            {
-                await _core.Accounts.UpsertMicrosoftAsync(acc.MsAccountRef!, s.Username ?? "", s.UUID ?? "");
-                acc.Username = string.IsNullOrWhiteSpace(s.Username) ? acc.Username : s.Username!;
-                acc.Uuid = string.IsNullOrWhiteSpace(s.UUID) ? acc.Uuid : s.UUID!;
-                if (_activeAccount?.Id == acc.Id) _activeMsSession = s;
-                if (card != null) { card.Username = acc.Username; card.Badge = Loc.T("account.badge.ms"); }
-                if (!string.IsNullOrEmpty(acc.Uuid))
-                {
-                    var skin = await _core.MsSkins.GetAsync(acc.Uuid);
-                    if (skin != null && File.Exists(skin.PngPath))
-                        try { card?.SetSkin(new Bitmap(skin.PngPath)); } catch { }
-                }
-            }
-            else if (card != null)
-            {
-                card.Badge = Loc.T("account.badge.expired");
-            }
-        }
-        UpdateActiveAccountChip();
-        if (_activeAccount?.Kind == AccountKind.Microsoft && SelectedAccount?.Id == _activeAccount.Id)
-            ProfileNameBox.Text = _activeAccount.Username;
-    }
+    // ========================= ACCOUNTS (Home chip only) =========================
+    // The screen itself lives in Views/AccountsView + AccountsViewModel. What stays here is
+    // strictly Home's business: the read-only chip and the jump to the Accounts tab.
 
     /// <summary>Home chip: shows the active account's avatar + nick, or a placeholder.</summary>
     private void UpdateActiveAccountChip()
     {
-        var acc = _activeAccount;
+        var acc = _accountsVm.ActiveAccount;
         if (acc == null)
         {
-            ActiveAccountName.Text = "—";
+            ActiveAccountName.Text = "\u2014";
             ActiveAccountFace.Source = null;
             ActiveAccountHat.Source = null;
             ActiveAccountFallback.IsVisible = true;
             return;
         }
-        ActiveAccountName.Text = string.IsNullOrWhiteSpace(acc.Username) ? "—" : acc.Username;
-        var card = _accountCards.FirstOrDefault(v => v.Id == acc.Id);
+        ActiveAccountName.Text = string.IsNullOrWhiteSpace(acc.Username) ? "\u2014" : acc.Username;
+        var card = _accountsVm.Cards.FirstOrDefault(v => v.Id == acc.Id);
         ActiveAccountFace.Source = card?.Face;
         ActiveAccountHat.Source = card?.Hat;
         ActiveAccountFallback.IsVisible = card?.Face == null;
     }
-
-    private async void OnAddOffline(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        // A unique starter nick so two "New account"s never clash.
-        var baseName = Loc.T("profile.newname");
-        var name = baseName;
-        var n = 2;
-        while (_accounts.Any(a => a.Kind == AccountKind.Offline && string.Equals(a.Username, name, StringComparison.OrdinalIgnoreCase)))
-            name = $"{baseName} {n++}";
-
-        var acc = await _core.Accounts.CreateOfflineAsync(name, false);
-        await _core.Accounts.SetActiveAsync(acc.Id);
-        await RefreshAccountsAsync();
-        SelectCardById(acc.Id);
-        SkinStatus.Text = Loc.T("skin.profilecreated", acc.Username);
-    });
-
-    private async void OnAddMicrosoft(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        MicrosoftLoginButton.IsEnabled = false;
-        AccountStatus.Text = Loc.T("ms.opening");
-        try
-        {
-            var (session, reff) = await _core.Auth.LoginMicrosoftWithRefAsync();
-            var key = string.IsNullOrEmpty(reff) ? (session.UUID ?? Guid.NewGuid().ToString("N")) : reff!;
-            var acc = await _core.Accounts.UpsertMicrosoftAsync(key, session.Username ?? "", session.UUID ?? "");
-            await _core.Accounts.SetActiveAsync(acc.Id);
-            _activeMsSession = session;
-            await RefreshAccountsAsync();
-            SelectCardById(acc.Id);
-            AccountStatus.Text = Loc.T("account.ms", session.Username);
-        }
-        finally
-        {
-            MicrosoftLoginButton.IsEnabled = true;
-        }
-    });
-
-    private async void OnSaveProfile(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        var acc = SelectedAccount;
-        if (acc == null) { SkinStatus.Text = Loc.T("skin.selectorcreate"); ShowToast(Loc.T("skin.selectorcreate"), error: true); return; }
-        if (acc.Kind != AccountKind.Offline) return; // Microsoft nick/skin are read-only
-
-        var newName = ProfileNameBox.Text?.Trim() ?? "";
-        if (newName.Length == 0)
-        {
-            SkinStatus.Text = Loc.T("skin.nickrequired");
-            ShowToast(Loc.T("skin.nickrequired"), error: true);
-            ProfileNameBox.Focus();
-            return;
-        }
-        var slim = SlimCheck.IsChecked ?? false;
-        var nameChanged = !string.Equals(newName, acc.Username, StringComparison.Ordinal);
-
-        if (nameChanged)
-        {
-            // Renaming an offline account changes its UUID (the identity); warn once.
-            var settings = await _core.Settings.LoadAsync();
-            if (!settings.SuppressNickChangeWarning)
-            {
-                var (proceed, dontShow) = await WarnAckAsync(
-                    Loc.T("warn.nicktitle"),
-                    Loc.T("warn.nickmsg", acc.Username, newName),
-                    Loc.T("warn.nickack"));
-                if (!proceed) { SkinStatus.Text = Loc.T("skin.nickcancelled"); return; }
-                if (dontShow) { settings.SuppressNickChangeWarning = true; await _core.Settings.SaveAsync(settings); }
-            }
-
-            var old = await _core.Accounts.RenameOfflineAsync(acc.Id, newName);
-            await _core.Skins.RenameLocalSkinAsync(_instances, old, newName);
-            acc = (await _core.Accounts.ListAsync()).FirstOrDefault(a => a.Id == acc.Id) ?? acc;
-        }
-
-        if (acc.Slim != slim)
-        {
-            acc.Slim = slim;
-            await _core.Accounts.UpdateAsync(acc);
-        }
-
-        await RefreshAccountsAsync();
-        SelectCardById(acc.Id);
-        SkinStatus.Text = Loc.T("skin.profilesaved", newName, Loc.T(slim ? "model.slim" : "model.classic"));
-    });
-
-    private async void OnDeleteAccount(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        var acc = SelectedAccount;
-        if (acc == null) return;
-        if (!await ConfirmAsync(Loc.T("account.remove.title"), Loc.T("account.remove.msg", acc.Username))) return;
-
-        if (acc.Kind == AccountKind.Microsoft && !string.IsNullOrEmpty(acc.MsAccountRef))
-            await _core.Auth.SignOutMicrosoftAsync(acc.MsAccountRef!);
-        if (_activeAccount?.Id == acc.Id) _activeMsSession = null;
-
-        await _core.Accounts.DeleteAsync(acc.Id);
-        await RefreshAccountsAsync();
-        SkinStatus.Text = Loc.T("skin.profiledeleted", acc.Username);
-    });
 
     private void OnActiveChipClick(object? sender, RoutedEventArgs e)
         => NavView.SelectedItem = NavAccounts;
@@ -980,13 +687,11 @@ public partial class MainWindow : AppWindow
         InstancesList.ItemsSource = _instances;
         PlayInstanceCombo.ItemsSource = labels.ToList();
         ModInstanceCombo.ItemsSource = labels.ToList();
-        SkinInstanceCombo.ItemsSource = labels.ToList();
 
         if (_instances.Count > 0)
         {
             if (PlayInstanceCombo.SelectedIndex < 0) PlayInstanceCombo.SelectedIndex = 0;
             if (ModInstanceCombo.SelectedIndex < 0) ModInstanceCombo.SelectedIndex = 0;
-            if (SkinInstanceCombo.SelectedIndex < 0) SkinInstanceCombo.SelectedIndex = 0;
             // The Home list is the single selector: default to the first instance.
             if (InstancesList.SelectedIndex < 0) InstancesList.SelectedIndex = 0;
         }
@@ -1039,12 +744,12 @@ public partial class MainWindow : AppWindow
     {
         if (PlayInstanceCombo.ItemsSource != null) PlayInstanceCombo.SelectedIndex = idx;
         if (ModInstanceCombo.ItemsSource != null) ModInstanceCombo.SelectedIndex = idx;
-        if (SkinInstanceCombo.ItemsSource != null) SkinInstanceCombo.SelectedIndex = idx;
 
+        // The Accounts screen reads the instance from this shared service, so there is no
+        // hidden per-screen combo to keep in sync any more.
         var inst = idx >= 0 && idx < _instances.Count ? _instances[idx] : null;
         _selected.Current = inst;
         ModsInstanceName.Text = inst?.Name ?? "—";
-        SkinInstanceName.Text = inst?.Name ?? "—";
 
         // Follow the selection: show this instance's log session and reflect whether
         // it is currently running (it may have been launched in the background).
@@ -1346,7 +1051,7 @@ public partial class MainWindow : AppWindow
         ShowLogFor(inst.Id);
 
         // Who launches comes from the single active account (chosen in the Accounts tab).
-        var active = _activeAccount;
+        var active = _accountsVm.ActiveAccount;
         if (active == null)
         {
             PlayStatus.Text = Loc.T("skin.selectorcreate");
@@ -1359,7 +1064,7 @@ public partial class MainWindow : AppWindow
         Account? offlineProfile = null;
         if (active.Kind == AccountKind.Microsoft)
         {
-            var s = _activeMsSession
+            var s = _accountsVm.ActiveMsSession
                     ?? (active.MsAccountRef != null ? await _core.Auth.TryResumeMicrosoftAsync(active.MsAccountRef) : null);
             if (s == null)
             {
@@ -1369,7 +1074,7 @@ public partial class MainWindow : AppWindow
                 NavView.SelectedItem = NavAccounts;
                 return;
             }
-            _activeMsSession = s;
+            _accountsVm.ActiveMsSession = s;
             session = s;
         }
         else
@@ -2053,53 +1758,10 @@ public partial class MainWindow : AppWindow
         InstanceStatus.Text = Loc.T("pack.imported", inst.Name, inst.McVersion, inst.Loader);
     });
 
-    // =============================== SKIN / CAPE ===============================
+    // =============================== FILE PICKER ===============================
 
-    private async void OnChooseSkin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        var acc = SelectedAccount;
-        if (acc == null || acc.Kind != AccountKind.Offline) { SkinStatus.Text = Loc.T("skin.createselectfirst"); return; }
-        var path = await PickImageAsync(Loc.T("picker.skin"));
-        if (path == null) return;
-        await _core.Accounts.SetSkinAsync(acc, path);
-        await RefreshAccountsAsync();
-        SelectCardById(acc.Id);
-    });
-
-    private async void OnChooseCape(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        var acc = SelectedAccount;
-        if (acc == null || acc.Kind != AccountKind.Offline) { SkinStatus.Text = Loc.T("skin.createselectfirst"); return; }
-        var path = await PickImageAsync(Loc.T("picker.cape"));
-        if (path == null) return;
-        await _core.Accounts.SetCapeAsync(acc, path);
-        await RefreshAccountsAsync();
-        SelectCardById(acc.Id);
-    });
-
-    private async void OnApplySkin(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
-    {
-        var acc = SelectedAccount;
-        if (acc == null || acc.Kind != AccountKind.Offline) { SkinStatus.Text = Loc.T("skin.createselect"); return; }
-        var idx = SkinInstanceCombo.SelectedIndex;
-        if (idx < 0 || idx >= _instances.Count) { SkinStatus.Text = Loc.T("skin.selectinstanceapply"); return; }
-        var inst = _instances[idx];
-
-        ApplySkinButton.IsEnabled = false;
-        SkinStatus.Text = Loc.T("skin.applying");
-        try
-        {
-            var log = new Progress<string>(AppendLog);
-            await _core.Skins.ApplyOfflineAsync(inst, acc, log);
-            SkinStatus.Text = Loc.T("skin.applied", acc.Username, inst.Name);
-        }
-        finally
-        {
-            ApplySkinButton.IsEnabled = true;
-        }
-    });
-
-    private async Task<string?> PickImageAsync(string title)
+    /// <summary>Native PNG picker used by the Accounts screen; null when cancelled.</summary>
+    public async Task<string?> PickImageAsync(string title)
     {
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -2111,33 +1773,10 @@ public partial class MainWindow : AppWindow
         return string.IsNullOrEmpty(path) ? null : path;
     }
 
-    private void SetSkinImages(string? path)
-    {
-        if (string.IsNullOrEmpty(path) || !File.Exists(path))
-        {
-            SkinImage.Source = null;
-            FaceImage.Source = null;
-            return;
-        }
-
-        var bmp = new Bitmap(path);
-        SkinImage.Source = bmp;
-
-        // Cheap face preview: the 8x8 face region lives at (8,8) in every skin
-        // texture (64x64 and legacy 64x32). Nearest-neighbor upscaling keeps it crisp.
-        try { FaceImage.Source = new CroppedBitmap(bmp, new PixelRect(8, 8, 8, 8)); }
-        catch { FaceImage.Source = null; } // not a real skin texture, skip the crop
-    }
-
-    private void SetCapeImage(string? path)
-    {
-        CapeImage.Source = string.IsNullOrEmpty(path) || !File.Exists(path) ? null : new Bitmap(path);
-    }
-
     // ============================== HELPERS ==============================
 
     /// <summary>Minimal modal yes/no dialog (bare UI: no MessageBox in Avalonia).</summary>
-    private async Task<bool> ConfirmAsync(string title, string message, string? confirmLabel = null, string? cancelLabel = null)
+    public async Task<bool> ConfirmAsync(string title, string message, string? confirmLabel = null, string? cancelLabel = null)
     {
         var tcs = new TaskCompletionSource<bool>();
         var yes = new Button { Content = confirmLabel ?? Loc.T("btn.continue") };
@@ -2179,7 +1818,7 @@ public partial class MainWindow : AppWindow
     /// Modal warning with an acknowledge button and a "don't show again" checkbox.
     /// Returns whether the user proceeded and whether to suppress future warnings.
     /// </summary>
-    private async Task<(bool proceed, bool dontShowAgain)> WarnAckAsync(string title, string message, string ackButton)
+    public async Task<(bool proceed, bool dontShowAgain)> WarnAckAsync(string title, string message, string ackButton)
     {
         var tcs = new TaskCompletionSource<bool>();
         var dontShow = new CheckBox { Content = Loc.T("warn.dontshow") };
@@ -2255,6 +1894,12 @@ public partial class MainWindow : AppWindow
         ToastBorder.Opacity = 0;
         if (slide != null) slide.Y = 24;
     }
+
+    // --- IDialogService: the window-level affordances view models are allowed to ask for ---
+
+    void IDialogService.Toast(string message, bool error) => ShowToast(message, error);
+    void IDialogService.Log(string line) => AppendLog(line);
+    Task IDialogService.RunGuardedAsync(Func<Task> action) => SafeAsync(action);
 
     /// <summary>Runs an async handler, surfacing any error to the log (never swallowed).</summary>
     private async Task SafeAsync(Func<Task> action)
