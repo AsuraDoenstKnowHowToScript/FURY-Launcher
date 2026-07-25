@@ -40,6 +40,9 @@
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.12"/>
                 <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+                <!-- Hover paints no fill here, so the text is the only thing that moves and
+                     it is the thing that has to ease rather than snap. -->
+                <BrushTransition Property="Foreground" Duration="0:0:0.12"/>
             </Transitions>
         </Setter>
     </Style>
@@ -160,17 +163,17 @@
         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
         <Setter Property="Transitions">
-            <Transitions><BrushTransition Property="Background" Duration="0:0:0.12"/></Transitions>
+            <Transitions><BrushTransition Property="Foreground" Duration="0:0:0.12"/></Transitions>
         </Setter>
     </Style>
-    <!-- The lift to primary text is the whole hover cue here, since the fill barely moves. -->
+    <!-- Hover paints nothing. The text and icon coming up to full is the entire cue. -->
     <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AccentWash}"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
     <Style Selector="Button.ghost:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AccentSubtle}"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
     </Style>
@@ -231,7 +234,7 @@
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
     </Style>
     <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource AccentWash}"/>
+        <Setter Property="Background" Value="Transparent"/>
     </Style>
     <!-- Selected: subtle accent tint, not the full purple -->
     <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
@@ -328,7 +331,7 @@
         </Setter>
     </Style>
     <Style Selector="RadioButton.segment:pointerover /template/ Border#Pill">
-        <Setter Property="Background" Value="{DynamicResource AccentWash}"/>
+        <Setter Property="Background" Value="Transparent"/>
     </Style>
     <Style Selector="RadioButton.segment:checked /template/ Border#Pill">
         <Setter Property="Background" Value="{DynamicResource Accent}"/>
@@ -471,11 +474,12 @@
         <Setter Property="Transitions">
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.12"/>
             </Transitions>
         </Setter>
     </Style>
     <Style Selector="ComboBoxItem:pointerover">
-        <Setter Property="Background" Value="{DynamicResource AccentWash}"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
     <Style Selector="ComboBoxItem:selected">
