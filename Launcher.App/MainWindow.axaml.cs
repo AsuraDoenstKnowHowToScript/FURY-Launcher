@@ -82,6 +82,7 @@ public partial class MainWindow : AppWindow, IDialogService
 
     private Instance? _editing;      // instance selected for editing (Instances tab)
     private readonly AccountsViewModel _accountsVm; // owns the Accounts screen + the active account
+    private readonly DashboardViewModel _dashboardVm; // owns the Dashboard screen
     private CancellationTokenSource? _launchCts;
     private bool _suppressLangEvent; // guards the language dropdown during programmatic set
     private List<string> _versions = new(); // Minecraft versions shown in the create/edit dropdown
@@ -123,6 +124,16 @@ public partial class MainWindow : AppWindow, IDialogService
         _accountsVm = new AccountsViewModel(_core, _selected, this);
         AccountsPanel.DataContext = _accountsVm;
         _accountsVm.ActiveAccountChanged += (_, _) => Dispatcher.UIThread.Post(UpdateActiveAccountChip);
+
+        // Dashboard: its own view model too. It only raises intents; the window still owns
+        // navigation and the launch pipeline.
+        _dashboardVm = new DashboardViewModel(_core, _selected, this);
+        DashboardPanel.DataContext = _dashboardVm;
+        _dashboardVm.PlayRequested += (_, inst) => PlayFromDashboard(inst);
+        _dashboardVm.BrowseRequested += (_, _) => NavView.SelectedItem = NavMods;
+        _dashboardVm.InstancesRequested += (_, _) => NavView.SelectedItem = NavHome;
+        _dashboardVm.RefreshRequested += (_, _) =>
+            Dispatcher.UIThread.Post(() => _ = SafeAsync(_dashboardVm.RefreshAsync));
 
         LoaderCombo.ItemsSource = _loaders.Select(l => l.ToString()).ToList();
         LoaderCombo.SelectedIndex = 0;
@@ -202,7 +213,7 @@ public partial class MainWindow : AppWindow, IDialogService
         // Left navigation: swap the visible section; refresh mods when opening Mods.
         NavView.SelectionChanged += OnNavSelectionChanged;
         NavVersion.Text = "v" + AppInfo.Version;
-        NavView.SelectedItem = NavHome;
+        NavView.SelectedItem = NavDashboard;   // the dashboard is the landing screen
 
         // --- modpack (.frpack) ---
         // Import/Export/Delete Click handlers are wired in XAML (they live inside
@@ -260,6 +271,7 @@ public partial class MainWindow : AppWindow, IDialogService
     private void ApplyLanguage()
     {
         // Tabs
+        NavDashboard.Content = Loc.T("nav.dashboard");
         NavHome.Content = Loc.T("nav.home");
         NavMods.Content = Loc.T("nav.content");
         NavAccounts.Content = Loc.T("nav.accounts");
@@ -356,6 +368,7 @@ public partial class MainWindow : AppWindow, IDialogService
     private void OnNavSelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
     {
         var item = e.SelectedItem as NavigationViewItem;
+        DashboardPanel.IsVisible = ReferenceEquals(item, NavDashboard);
         HomePanel.IsVisible = ReferenceEquals(item, NavHome);
         ModsPanel.IsVisible = ReferenceEquals(item, NavMods);
         AccountsPanel.IsVisible = ReferenceEquals(item, NavAccounts);
@@ -364,11 +377,15 @@ public partial class MainWindow : AppWindow, IDialogService
         FlushVisibleLogs(); // catch a log view up if it was hidden while lines streamed
 
         // Ease the incoming section in (one-shot; never replays on interaction).
-        var shown = HomePanel.IsVisible ? (Control)HomePanel
+        var shown = DashboardPanel.IsVisible ? (Control)DashboardPanel
+                  : HomePanel.IsVisible ? HomePanel
                   : ModsPanel.IsVisible ? ModsPanel
-                  : AccountsPanel.IsVisible ? (Control)AccountsPanel
+                  : AccountsPanel.IsVisible ? AccountsPanel
                   : SettingsPanel;
         PlayPageTransition(shown);
+
+        // Numbers go stale while you play; recompute whenever the dashboard comes back up.
+        if (ReferenceEquals(item, NavDashboard)) _ = SafeAsync(_dashboardVm.RefreshAsync);
 
         if (ReferenceEquals(item, NavMods))
         {
@@ -523,6 +540,8 @@ public partial class MainWindow : AppWindow, IDialogService
         // Unified accounts: builds the card list and resolves cached Microsoft sessions/avatars
         // (silent resume) in the background.
         await _accountsVm.RefreshAsync();
+        // Instances and accounts are loaded by now, so the dashboard has real numbers to show.
+        await _dashboardVm.RefreshAsync();
 
         await CheckForUpdatesAsync();
     }
@@ -674,6 +693,18 @@ public partial class MainWindow : AppWindow, IDialogService
 
     private void OnActiveChipClick(object? sender, RoutedEventArgs e)
         => NavView.SelectedItem = NavAccounts;
+
+    /// <summary>
+    /// Dashboard "Play": selects the instance in the Home list (so the hero, the log view and
+    /// the shared selection all follow) and then runs the normal launch path.
+    /// </summary>
+    private void PlayFromDashboard(Instance instance)
+    {
+        var idx = _instances.FindIndex(i => i.Id == instance.Id);
+        if (idx >= 0) InstancesList.SelectedIndex = idx;   // fires OnInstanceSelected -> syncs everything
+        else _selected.Current = instance;
+        OnPlay(this, new RoutedEventArgs());
+    }
 
     // ============================ INSTANCES ============================
 

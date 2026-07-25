@@ -45,6 +45,9 @@ public sealed class LauncherPaths
     /// <summary>Small dismissible UI preferences.</summary>
     public string SettingsFile => Path.Combine(Root, "settings.json");
 
+    /// <summary>Per-instance played time, accumulated from real game sessions.</summary>
+    public string PlaytimeFile => Path.Combine(Root, "playtime.json");
+
     /// <summary>Optional per-machine CurseForge API key (never committed).</summary>
     public string CurseForgeKeyFile => Path.Combine(Root, "curseforge.key");
 

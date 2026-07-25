@@ -56,6 +56,11 @@
             </uic:NavigationView.PaneHeader>
 
             <uic:NavigationView.MenuItems>
+                <uic:NavigationViewItem x:Name="NavDashboard" Content="Dashboard">
+                    <uic:NavigationViewItem.IconSource>
+                        <uic:ImageIconSource Source="{icon:LucideImage Kind=Gamepad2, Brush={StaticResource TextSecondary}}"/>
+                    </uic:NavigationViewItem.IconSource>
+                </uic:NavigationViewItem>
                 <uic:NavigationViewItem x:Name="NavHome" Content="Home">
                     <uic:NavigationViewItem.IconSource>
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=LayoutGrid, Brush={StaticResource TextSecondary}}"/>
@@ -580,6 +585,11 @@
                      driven by AccountsViewModel. The window only hosts it and reads the
                      active account from the view model when launching. -->
                 <views:AccountsView x:Name="AccountsPanel" IsVisible="False"/>
+
+                <!-- =============================== DASHBOARD =============================== -->
+                <!-- The landing screen: greeting, real play time per instance and the launcher's
+                     own changelog. Lives in Views/DashboardView.axaml. -->
+                <views:DashboardView x:Name="DashboardPanel" IsVisible="False"/>
 
                 <!-- =============================== SETTINGS (about + prefs) =============================== -->
                 <!-- Card-grouped like Accounts: About & preferences / Java / Logs. -->

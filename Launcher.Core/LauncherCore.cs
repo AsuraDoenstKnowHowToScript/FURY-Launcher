@@ -28,6 +28,7 @@ public sealed class LauncherCore : IDisposable
     public MrpackService Mrpacks { get; }
     public AccountService Accounts { get; }
     public MojangSkinService MsSkins { get; }
+    public PlaytimeService Playtime { get; }
     public SkinApplyService Skins { get; }
     public JavaInstaller Java { get; }
     public SettingsService Settings { get; }
@@ -74,6 +75,9 @@ public sealed class LauncherCore : IDisposable
         // profiles.json, plus read-only Microsoft skin fetch. Both are UI-agnostic.
         Accounts = new AccountService(Paths, Settings, Auth);
         MsSkins = new MojangSkinService(_http, Paths);
+        // Play time is measured from the real process lifetime, not guessed by the UI.
+        Playtime = new PlaytimeService(Paths);
+        Game.RunningChanged += (_, e) => Playtime.OnRunningChanged(e.InstanceId, e.Running);
         Versions = new VersionListService(_http);
         Updates = new UpdateService(_http);
     }

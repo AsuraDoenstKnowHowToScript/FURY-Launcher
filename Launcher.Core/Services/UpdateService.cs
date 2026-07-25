@@ -19,6 +19,17 @@ public sealed class UpdateInfo
     public string HtmlUrl { get; init; } = "";       // release page
 }
 
+/// <summary>One published release, as shown in the in-app changelog.</summary>
+public sealed class ReleaseNote
+{
+    public required string Version { get; init; }     // tag without the leading "v"
+    public required string Tag { get; init; }
+    public bool IsBeta { get; init; }
+    public DateTime PublishedUtc { get; init; }
+    public string Body { get; init; } = "";           // markdown-ish release notes
+    public string HtmlUrl { get; init; } = "";
+}
+
 /// <summary>
 /// Checks the project's GitHub Releases for a newer build and downloads it. Stable
 /// releases (no pre-release suffix) are preferred; betas are surfaced too so the UI
@@ -87,6 +98,53 @@ public sealed class UpdateService
                 best = candidate;
         }
         return best;
+    }
+
+    /// <summary>
+    /// Lists published releases, newest first, for the in-app changelog. Drafts are skipped.
+    /// Returns an empty list on any failure — a changelog must never break the screen.
+    /// </summary>
+    public async Task<IReadOnlyList<ReleaseNote>> ListReleasesAsync(
+        string owner, string repo, int max = 15, CancellationToken ct = default)
+    {
+        try
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get,
+                $"https://api.github.com/repos/{owner}/{repo}/releases?per_page={max}");
+            req.Headers.UserAgent.ParseAdd($"{repo}-Updater");
+            req.Headers.Accept.ParseAdd("application/vnd.github+json");
+
+            using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
+            resp.EnsureSuccessStatusCode();
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
+
+            var list = new List<ReleaseNote>();
+            foreach (var rel in doc.RootElement.EnumerateArray())
+            {
+                if (GetBool(rel, "draft")) continue;
+                var tag = GetString(rel, "tag_name");
+                if (string.IsNullOrEmpty(tag)) continue;
+
+                var version = tag.TrimStart('v', 'V');
+                DateTime.TryParse(GetString(rel, "published_at"), out var published);
+                list.Add(new ReleaseNote
+                {
+                    Version = version,
+                    Tag = tag,
+                    IsBeta = GetBool(rel, "prerelease") || version.Contains('-'),
+                    PublishedUtc = published,
+                    Body = GetString(rel, "body"),
+                    HtmlUrl = GetString(rel, "html_url"),
+                });
+            }
+            return list;
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[update] listing releases for the changelog failed", ex);
+            return Array.Empty<ReleaseNote>();
+        }
     }
 
     /// <summary>

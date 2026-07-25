@@ -1,0 +1,270 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:icon="using:IconPacks.Avalonia.Lucide"
+             xmlns:vm="using:Launcher.App.ViewModels"
+             xmlns:behaviors="using:Launcher.App.Behaviors"
+             x:Class="Launcher.App.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+
+    <!-- The dashboard leads with the user's own instances and hours, not a shelf of things to
+         install: this is a launcher that manages instances, so that is the headline. Two
+         columns — the story on the left, what changed in the launcher on the right. -->
+    <ScrollViewer behaviors:SmoothScroll.Enabled="True">
+        <Grid Margin="24" ColumnDefinitions="*,20,340">
+
+            <!-- ============================ MAIN COLUMN ============================ -->
+            <StackPanel Grid.Column="0" Spacing="16">
+
+                <!-- Greeting + the one action that matters: keep playing -->
+                <Border Classes="card" Padding="26,22">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                            <GradientStop Offset="0" Color="#2E2054"/>
+                            <GradientStop Offset="0.55" Color="#1C1728"/>
+                            <GradientStop Offset="1" Color="#16141E"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Classes="Display" Text="{Binding Greeting}"/>
+                                <TextBlock Classes="Display" Text="{Binding UserName}"
+                                           Foreground="{DynamicResource BrandGradient}"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding SubtitleText}"
+                                       Foreground="{DynamicResource TextSecondary}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10"
+                                    VerticalAlignment="Center">
+                            <Button Classes="secondary" MinHeight="50" Padding="18,0"
+                                    Content="{Binding BrowseText}" Command="{Binding BrowseCommand}"/>
+                            <Button Classes="primary" MinHeight="50" Padding="22,0"
+                                    Command="{Binding PlayCommand}" IsVisible="{Binding HasFeatured}">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <Image Width="19" Height="19" VerticalAlignment="Center"
+                                           Source="{icon:LucideImage Kind=Play, Brush={StaticResource OnAccent}}"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding PlayText}" FontSize="15"/>
+                                        <TextBlock Text="{Binding Featured.Name}" FontSize="11" Opacity="0.75"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Four numbers that answer "how is my setup doing" -->
+                <Grid ColumnDefinitions="*,12,*,12,*,12,*">
+                    <Border Grid.Column="0" Classes="card" Padding="16">
+                        <StackPanel Spacing="10">
+                            <Border Width="34" Height="34" CornerRadius="10" HorizontalAlignment="Left"
+                                    Background="{DynamicResource AccentSubtle}"
+                                    BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                <Image Width="17" Height="17" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Source="{icon:LucideImage Kind=Timer, Brush={StaticResource TextSecondary}}"/>
+                            </Border>
+                            <TextBlock Classes="Title" Text="{Binding TotalPlayed}"/>
+                            <TextBlock Classes="Caption" Text="{Binding StatTotalText}"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Classes="card" Padding="16">
+                        <StackPanel Spacing="10">
+                            <Border Width="34" Height="34" CornerRadius="10" HorizontalAlignment="Left"
+                                    Background="{DynamicResource AccentSubtle}"
+                                    BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                <Image Width="17" Height="17" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Source="{icon:LucideImage Kind=Boxes, Brush={StaticResource TextSecondary}}"/>
+                            </Border>
+                            <TextBlock Classes="Title" Text="{Binding InstanceCount}"/>
+                            <TextBlock Classes="Caption" Text="{Binding StatInstancesText}"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="4" Classes="card" Padding="16">
+                        <StackPanel Spacing="10">
+                            <Border Width="34" Height="34" CornerRadius="10" HorizontalAlignment="Left"
+                                    Background="{DynamicResource AccentSubtle}"
+                                    BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                <Image Width="17" Height="17" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextSecondary}}"/>
+                            </Border>
+                            <TextBlock Classes="Title" Text="{Binding ModCount}"/>
+                            <TextBlock Classes="Caption" Text="{Binding StatModsText}"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="6" Classes="card" Padding="16">
+                        <StackPanel Spacing="10">
+                            <Border Width="34" Height="34" CornerRadius="10" HorizontalAlignment="Left"
+                                    Background="{DynamicResource AccentSubtle}"
+                                    BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                <Image Width="17" Height="17" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Source="{icon:LucideImage Kind=History, Brush={StaticResource TextSecondary}}"/>
+                            </Border>
+                            <TextBlock Classes="Title" Text="{Binding LastSession}"/>
+                            <TextBlock Classes="Caption" Text="{Binding StatLastText}"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- The original bit: not "what's popular", but where YOUR time actually went. -->
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="14">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Image Width="17" Height="17" VerticalAlignment="Center"
+                                   Source="{icon:LucideImage Kind=TrendingUp, Brush={StaticResource TextSecondary}}"/>
+                            <TextBlock Classes="Subtitle" Text="{Binding HoursHeaderText}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding NoInstancesText}" IsVisible="{Binding !HasInstances}"
+                                   Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding NoDataText}" TextWrapping="Wrap"
+                                   IsVisible="{Binding ShowPlaytimeHint}"
+                                   Foreground="{DynamicResource TextMuted}"/>
+
+                        <ItemsControl ItemsSource="{Binding Instances}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:InstanceTileVm">
+                                    <Border Classes="card flat" Padding="13" Margin="0,0,0,8">
+                                        <StackPanel Spacing="9">
+                                            <Grid ColumnDefinitions="*,12,Auto">
+                                                <StackPanel Grid.Column="0" Spacing="2">
+                                                    <TextBlock Text="{Binding Name}" Classes="Body"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Meta}" Classes="Caption"
+                                                               Foreground="{DynamicResource TextMuted}"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Spacing="2">
+                                                    <TextBlock Text="{Binding PlayedText}" Classes="Body"
+                                                               TextAlignment="Right"/>
+                                                    <TextBlock Text="{Binding LastPlayedText}" Classes="Caption"
+                                                               TextAlignment="Right"
+                                                               Foreground="{DynamicResource TextMuted}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <ProgressBar Minimum="0" Maximum="1" Height="6"
+                                                         Value="{Binding Share, Mode=OneWay}"
+                                                         IsVisible="{Binding HasPlaytime}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Seven-day strip. Bars are plain Borders with a bound height: no chart library. -->
+                <Border Classes="card" Padding="20">
+                    <StackPanel Spacing="16">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9">
+                                <Image Width="17" Height="17" VerticalAlignment="Center"
+                                       Source="{icon:LucideImage Kind=CalendarDays, Brush={StaticResource TextSecondary}}"/>
+                                <TextBlock Classes="Subtitle" Text="{Binding WeekHeaderText}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" Classes="Body" Text="{Binding WeekTotal}"
+                                       VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding Week}" HorizontalAlignment="Left">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="12"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DayBarVm">
+                                    <StackPanel Width="40" Spacing="9" ToolTip.Tip="{Binding Tip}">
+                                        <Grid Height="86">
+                                            <!-- Today is accented; the rest stay quiet. -->
+                                            <Border VerticalAlignment="Bottom" CornerRadius="8"
+                                                    Height="{Binding BarHeight}"
+                                                    Background="{DynamicResource Accent}"
+                                                    IsVisible="{Binding IsToday}"/>
+                                            <Border VerticalAlignment="Bottom" CornerRadius="8"
+                                                    Height="{Binding BarHeight}"
+                                                    Background="{DynamicResource BgHover}"
+                                                    IsVisible="{Binding !IsToday}"/>
+                                        </Grid>
+                                        <TextBlock Text="{Binding Label}" Classes="Caption"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ========================== CHANGELOG RAIL ========================== -->
+            <Border Grid.Column="2" Classes="card" Padding="18" VerticalAlignment="Top">
+                <StackPanel Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Image Width="17" Height="17" VerticalAlignment="Center"
+                               Source="{icon:LucideImage Kind=Newspaper, Brush={StaticResource TextSecondary}}"/>
+                        <TextBlock Classes="Subtitle" Text="{Binding ChangelogHeaderText}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Channel tabs -->
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <!-- OneWay on purpose: the commands own the state, IsChecked only reflects it
+                             (ShowStableOnly is computed, so a two-way bind would not compile). -->
+                        <RadioButton Classes="segment" GroupName="chlog" Content="{Binding TabAllText}"
+                                     IsChecked="{Binding ShowBetas, Mode=OneWay}"
+                                     Command="{Binding ShowAllCommand}"/>
+                        <RadioButton Classes="segment" GroupName="chlog" Content="{Binding TabStableText}"
+                                     IsChecked="{Binding ShowStableOnly, Mode=OneWay}"
+                                     Command="{Binding ShowStableCommand}"/>
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding Changelog}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ChangelogItemVm">
+                                <Border Classes="card flat" Padding="13" Margin="0,0,0,8">
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnDefinitions="Auto,8,Auto,*">
+                                            <Border Grid.Column="0" CornerRadius="999" Padding="9,3"
+                                                    Background="{DynamicResource AccentSubtle}"
+                                                    BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                                <TextBlock Text="{Binding Version}" Classes="Caption"
+                                                           Foreground="{DynamicResource TextPrimary}"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="2" Text="{Binding Channel}" Classes="Caption"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding DateText}" Classes="Caption"
+                                                       TextAlignment="Right" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                        </Grid>
+
+                                        <Border CornerRadius="999" Padding="9,3" HorizontalAlignment="Left"
+                                                Background="{DynamicResource AccentSubtle}"
+                                                BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1"
+                                                IsVisible="{Binding IsCurrent}">
+                                            <TextBlock Text="{Binding CurrentLabel}" Classes="Caption"
+                                                       Foreground="{DynamicResource TextPrimary}"/>
+                                        </Border>
+
+                                        <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" Classes="Caption"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                        <Button Classes="ghost" Padding="0,2" Command="{Binding OpenCommand}"
+                                                HorizontalAlignment="Left">
+                                            <TextBlock Text="GitHub ↗" Classes="Caption"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
