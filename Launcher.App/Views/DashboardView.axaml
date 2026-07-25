@@ -3,6 +3,7 @@
              xmlns:icon="using:IconPacks.Avalonia.Lucide"
              xmlns:vm="using:Launcher.App.ViewModels"
              xmlns:behaviors="using:Launcher.App.Behaviors"
+             xmlns:ctl="using:Launcher.App.Controls"
              x:Class="Launcher.App.Views.DashboardView"
              x:DataType="vm:DashboardViewModel">
 
@@ -122,13 +123,9 @@
                 </Grid>
 
                 <!-- The original bit: not "what's popular", but where YOUR time actually went. -->
-                <Border Classes="card" Padding="20">
+                <ctl:PanelCard Header="{Binding HoursHeaderText}"
+                               Icon="{icon:LucideImage Kind=TrendingUp, Brush={StaticResource TextSecondary}}">
                     <StackPanel Spacing="14">
-                        <StackPanel Orientation="Horizontal" Spacing="9">
-                            <Image Width="17" Height="17" VerticalAlignment="Center"
-                                   Source="{icon:LucideImage Kind=TrendingUp, Brush={StaticResource TextSecondary}}"/>
-                            <TextBlock Classes="Subtitle" Text="{Binding HoursHeaderText}" VerticalAlignment="Center"/>
-                        </StackPanel>
 
                         <TextBlock Text="{Binding NoInstancesText}" IsVisible="{Binding !HasInstances}"
                                    Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap"/>
@@ -165,20 +162,14 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
-                </Border>
+                </ctl:PanelCard>
 
                 <!-- Seven-day strip. Bars are plain Borders with a bound height: no chart library. -->
-                <Border Classes="card" Padding="20">
+                <ctl:PanelCard Header="{Binding WeekHeaderText}"
+                               Icon="{icon:LucideImage Kind=CalendarDays, Brush={StaticResource TextSecondary}}">
                     <StackPanel Spacing="16">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9">
-                                <Image Width="17" Height="17" VerticalAlignment="Center"
-                                       Source="{icon:LucideImage Kind=CalendarDays, Brush={StaticResource TextSecondary}}"/>
-                                <TextBlock Classes="Subtitle" Text="{Binding WeekHeaderText}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1" Classes="Body" Text="{Binding WeekTotal}"
-                                       VerticalAlignment="Center" Foreground="{DynamicResource TextSecondary}"/>
-                        </Grid>
+                        <TextBlock Classes="Body" Text="{Binding WeekTotal}" HorizontalAlignment="Right"
+                                   Foreground="{DynamicResource TextSecondary}"/>
 
                         <ItemsControl ItemsSource="{Binding Week}" HorizontalAlignment="Left">
                             <ItemsControl.ItemsPanel>
@@ -208,7 +199,7 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
-                </Border>
+                </ctl:PanelCard>
             </StackPanel>
         </ScrollViewer>
 

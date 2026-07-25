@@ -276,10 +276,10 @@ public partial class MainWindow : AppWindow, IDialogService
         NavMods.Content = Loc.T("nav.content");
         NavAccounts.Content = Loc.T("nav.accounts");
         NavSettings.Content = Loc.T("nav.settings");
-        LblJavaSection.Text = Loc.T("settings.java");
+        JavaPanel.Header = Loc.T("settings.java");
         LblInstallJava.Text = Loc.T("java.installlabel");
         InstallJavaButton.Content = Loc.T("btn.install");
-        LblLogsSection.Text = Loc.T("settings.logs");
+        LogsPanel.Header = Loc.T("settings.logs");
         OpenLogsFolderButton.Content = Loc.T("btn.openfolder");
         CopyLogButton.Content = Loc.T("btn.copy");
         DetectJavaButton.Content = Loc.T("btn.detectjava");
@@ -857,7 +857,8 @@ public partial class MainWindow : AppWindow, IDialogService
             : Loc.T("java.none");
 
         var stub = JavaLocator.OracleStubPath();
-        JavaOracleWarn.IsVisible = stub != null;
+        // The whole alert box toggles, not just its text, or an empty bordered box would show.
+        JavaOracleWarnBox.IsVisible = stub != null;
         JavaOracleWarn.Text = stub != null ? Loc.T("java.oraclewarn") : "";
     }
 

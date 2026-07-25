@@ -6,6 +6,7 @@
         xmlns:models="using:Launcher.Core.Models"
         xmlns:vm="using:Launcher.App.ViewModels"
         xmlns:views="using:Launcher.App.Views"
+        xmlns:ctl="using:Launcher.App.Controls"
         xmlns:behaviors="using:Launcher.App.Behaviors"
         x:Class="Launcher.App.MainWindow"
         Width="1280" Height="860"
@@ -676,58 +677,92 @@
                 <!-- Card-grouped like Accounts: About & preferences / Java / Logs. -->
                 <ScrollViewer x:Name="SettingsPanel" IsVisible="False"
                               behaviors:SmoothScroll.Enabled="True">
-                    <StackPanel Margin="24" Spacing="16">
-                        <Border Classes="card">
-                            <StackPanel Spacing="8">
+                    <StackPanel Margin="24" Spacing="16" MaxWidth="1180" HorizontalAlignment="Stretch">
+
+                        <!-- About: the brand block gets the biggest watermark, it is the title card. -->
+                        <ctl:PanelCard ShowHeader="False" Padding="26,24" WatermarkSize="210"
+                                       Icon="{icon:LucideImage Kind=Rocket, Brush={StaticResource TextSecondary}}">
+                            <StackPanel Spacing="10">
                                 <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"/>
-                                <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version" Foreground="{DynamicResource TextSecondary}"/>
-                                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Text=""/>
-                                <TextBlock x:Name="AboutContact" TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" Text=""/>
-                                <Border Height="1" Background="{DynamicResource BorderSubtle}" Margin="0,6"/>
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock x:Name="LblLanguage" Text="Language:" VerticalAlignment="Center"/>
-                                    <ComboBox x:Name="LanguageCombo" Width="180"/>
-                                    <Button x:Name="CheckUpdatesButton" Content="Check for updates" Margin="14,0,0,0"/>
-                                    <TextBlock x:Name="UpdateCheckStatus" Text="" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                </StackPanel>
+                                <Border CornerRadius="999" Padding="10,3" HorizontalAlignment="Left"
+                                        Background="{DynamicResource AccentSubtle}"
+                                        BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                    <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version"
+                                               Foreground="{DynamicResource TextPrimary}"/>
+                                </Border>
+                                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondary}" Text=""/>
+                                <TextBlock x:Name="AboutContact" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextMuted}" Text=""/>
+
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}" Margin="0,8"/>
+
+                                <Grid ColumnDefinitions="Auto,10,Auto,16,Auto,12,*" VerticalAlignment="Center">
+                                    <TextBlock Grid.Column="0" x:Name="LblLanguage" Text="Language:"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextMuted}"/>
+                                    <ComboBox Grid.Column="2" x:Name="LanguageCombo" Width="180"/>
+                                    <Button Grid.Column="4" x:Name="CheckUpdatesButton" Classes="secondary"
+                                            Content="Check for updates"/>
+                                    <TextBlock Grid.Column="6" x:Name="UpdateCheckStatus" Text=""
+                                               VerticalAlignment="Center" TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondary}"/>
+                                </Grid>
                             </StackPanel>
-                        </Border>
+                        </ctl:PanelCard>
 
                         <!-- Java: detect real runtimes, pick a default, or install a Temurin JRE. -->
-                        <Border Classes="card">
-                            <StackPanel Spacing="8">
-                                <StackPanel Orientation="Horizontal" Spacing="8"><Image Width="17" Height="17" VerticalAlignment="Center" Source="{icon:LucideImage Kind=Coffee, Brush={StaticResource TextSecondary}}"/><TextBlock x:Name="LblJavaSection" Classes="Subtitle" Text="Java" VerticalAlignment="Center"/></StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <Button x:Name="DetectJavaButton" Content="Detect / fix Java"/>
-                                    <ComboBox x:Name="DefaultJavaCombo" Width="360" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock x:Name="LblInstallJava" Text="Install Java:" VerticalAlignment="Center"/>
-                                    <ComboBox x:Name="JavaInstallCombo" Width="140" VerticalAlignment="Center"/>
-                                    <Button x:Name="InstallJavaButton" Classes="secondary" Content="Install"/>
-                                </StackPanel>
-                                <TextBlock x:Name="JavaStatus" Text="" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}"/>
-                                <TextBlock x:Name="JavaOracleWarn" Text="" TextWrapping="Wrap" IsVisible="False" Foreground="{DynamicResource Warning}"/>
+                        <ctl:PanelCard x:Name="JavaPanel" Header="Java"
+                                       Icon="{icon:LucideImage Kind=Coffee, Brush={StaticResource TextSecondary}}">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="Auto,12,*">
+                                    <Button Grid.Column="0" x:Name="DetectJavaButton" Classes="secondary"
+                                            Content="Detect / fix Java"/>
+                                    <ComboBox Grid.Column="2" x:Name="DefaultJavaCombo"
+                                              HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Grid ColumnDefinitions="Auto,10,Auto,10,Auto,*">
+                                    <TextBlock Grid.Column="0" x:Name="LblInstallJava" Text="Install Java:"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextMuted}"/>
+                                    <ComboBox Grid.Column="2" x:Name="JavaInstallCombo" Width="140"
+                                              VerticalAlignment="Center"/>
+                                    <Button Grid.Column="4" x:Name="InstallJavaButton" Classes="secondary"
+                                            Content="Install"/>
+                                </Grid>
+                                <TextBlock x:Name="JavaStatus" Text="" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                                <Border x:Name="JavaOracleWarnBox" IsVisible="False" CornerRadius="10" Padding="13,11"
+                                        Background="{DynamicResource BgElevated}"
+                                        BorderBrush="{DynamicResource Warning}" BorderThickness="1">
+                                    <Grid ColumnDefinitions="Auto,11,*">
+                                        <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Top"
+                                               Margin="0,2,0,0"
+                                               Source="{icon:LucideImage Kind=Info, Brush={StaticResource Warning}}"/>
+                                        <TextBlock Grid.Column="2" x:Name="JavaOracleWarn" Text="" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                    </Grid>
+                                </Border>
                             </StackPanel>
-                        </Border>
+                        </ctl:PanelCard>
 
                         <!-- Logs: mirrors the session log and points at the crash.log folder. -->
-                        <Border Classes="card">
-                        <StackPanel Spacing="8">
-                            <Grid ColumnDefinitions="*,Auto,Auto">
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"><Image Width="17" Height="17" VerticalAlignment="Center" Source="{icon:LucideImage Kind=FileText, Brush={StaticResource TextSecondary}}"/><TextBlock x:Name="LblLogsSection" Classes="Subtitle" Text="Logs" VerticalAlignment="Center"/></StackPanel>
-                                <Button Grid.Column="1" x:Name="OpenLogsFolderButton" Classes="secondary"
-                                        Content="Open folder" Margin="0,0,6,0"/>
-                                <Button Grid.Column="2" x:Name="CopyLogButton" Classes="secondary" Content="Copy"/>
-                            </Grid>
-                            <Border Background="{DynamicResource BgSurface}" BorderBrush="{DynamicResource BorderSubtle}"
-                                    BorderThickness="1" CornerRadius="8">
-                                <TextBox x:Name="SettingsLogBox" Classes="Mono" Height="260" AcceptsReturn="True"
-                                         IsReadOnly="True" TextWrapping="NoWrap" Background="Transparent"
-                                         BorderThickness="0" VerticalContentAlignment="Top"/>
-                            </Border>
-                        </StackPanel>
-                        </Border>
+                        <ctl:PanelCard x:Name="LogsPanel" Header="Logs"
+                                       Icon="{icon:LucideImage Kind=FileText, Brush={StaticResource TextSecondary}}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button x:Name="OpenLogsFolderButton" Classes="secondary" Content="Open folder"/>
+                                    <Button x:Name="CopyLogButton" Classes="secondary" Content="Copy"/>
+                                </StackPanel>
+                                <Border Background="{DynamicResource BgInput}"
+                                        BorderBrush="{DynamicResource BorderSubtle}"
+                                        BorderThickness="1" CornerRadius="10">
+                                    <TextBox x:Name="SettingsLogBox" Classes="Mono" Height="260" AcceptsReturn="True"
+                                             IsReadOnly="True" TextWrapping="NoWrap" Background="Transparent"
+                                             BorderThickness="0" VerticalContentAlignment="Top"/>
+                                </Border>
+                            </StackPanel>
+                        </ctl:PanelCard>
                     </StackPanel>
                 </ScrollViewer>
 
