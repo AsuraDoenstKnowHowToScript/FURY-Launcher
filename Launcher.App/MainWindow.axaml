@@ -325,11 +325,13 @@
                     </Grid>
                 </Grid>
 
-                <!-- =============================== MODS =============================== -->
+                <!-- =============================== CONTENT =============================== -->
+                <!-- Two elevated panes with the same rhythm as the dashboard: what the instance
+                     already has on the left, what you can add on the right. -->
                 <DockPanel x:Name="ModsPanel" IsVisible="False" Margin="24">
-                    <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="0,0,0,12">
-                        <!-- One toolbar row: content-type segments on the left, the instance
-                             context on the right — no stacked rows eating vertical space. -->
+
+                    <!-- Toolbar: content type on the left, instance context on the right -->
+                    <StackPanel DockPanel.Dock="Top" Spacing="12" Margin="0,0,0,16">
                         <Grid ColumnDefinitions="Auto,*,Auto">
                             <Border Grid.Column="0" Background="{DynamicResource BgElevated}" CornerRadius="12"
                                     Padding="3" HorizontalAlignment="Left">
@@ -342,241 +344,285 @@
                                                  Content="Datapacks"/>
                                 </StackPanel>
                             </Border>
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TextMuted}"/>
-                                <TextBlock x:Name="ModsInstanceName" Text="—" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TextSecondary}"/>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10"
+                                        VerticalAlignment="Center">
+                                <!-- Instance context as a pill, matching the Accounts and Dashboard chips -->
+                                <Border Background="{DynamicResource BgElevated}" CornerRadius="999"
+                                        BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"
+                                        Padding="13,6" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <Image Width="14" Height="14" VerticalAlignment="Center"
+                                               Source="{icon:LucideImage Kind=Boxes, Brush={StaticResource TextMuted}}"/>
+                                        <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                        <TextBlock x:Name="ModsInstanceName" Text="&#x2014;" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                    </StackPanel>
+                                </Border>
                                 <Button x:Name="RefreshModsButton" Classes="secondary" Content="Refresh"/>
                                 <ComboBox x:Name="ModInstanceCombo" IsVisible="False" Width="0"/>
                             </StackPanel>
                         </Grid>
-                        <StackPanel x:Name="ModsVanillaPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
-                            <TextBlock x:Name="ModsVanillaWarning" Text="" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource Danger}" VerticalAlignment="Center" MaxWidth="640"/>
-                            <Button x:Name="NewModdedInstanceButton" Classes="primary" Content="Create modded instance"/>
-                        </StackPanel>
+
+                        <!-- Vanilla notice, as a proper alert instead of loose red text -->
+                        <Border x:Name="ModsVanillaPanel" IsVisible="False" CornerRadius="12" Padding="14,12"
+                                Background="{DynamicResource BgElevated}"
+                                BorderBrush="{DynamicResource Danger}" BorderThickness="1">
+                            <Grid ColumnDefinitions="Auto,12,*,12,Auto">
+                                <Border Grid.Column="0" Width="30" Height="30" CornerRadius="9"
+                                        VerticalAlignment="Center" Background="{DynamicResource BgSurface}">
+                                    <Image Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Source="{icon:LucideImage Kind=Info, Brush={StaticResource Danger}}"/>
+                                </Border>
+                                <TextBlock Grid.Column="2" x:Name="ModsVanillaWarning" Text="" TextWrapping="Wrap"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                                <Button Grid.Column="4" x:Name="NewModdedInstanceButton" Classes="primary"
+                                        Content="Create modded instance" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
                     </StackPanel>
 
-                    <!-- Search is the main event: give it the wider column. -->
-                    <Grid ColumnDefinitions="5*,14,7*">
-                        <Border Grid.Column="0" Background="{DynamicResource BgSurface}"
-                                BorderBrush="{DynamicResource BorderSubtle}"
-                                BorderThickness="1" CornerRadius="14">
+                    <Grid ColumnDefinitions="5*,16,7*">
+
+                        <!-- INSTALLED: what this instance already has -->
+                        <Border Grid.Column="0" Classes="card" Padding="0">
                             <DockPanel>
-                                <!-- Header: title + purple count badge + filter box -->
-                                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,Auto,*" Margin="14,12">
-                                    <TextBlock x:Name="LblInstalledMods" Grid.Column="0" Classes="Subtitle"
+                                <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,10,Auto,Auto,*" Margin="18,16,18,14">
+                                    <Border Grid.Column="0" Width="32" Height="32" CornerRadius="9"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource AccentSubtle}"
+                                            BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                        <Image Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Source="{icon:LucideImage Kind=Layers, Brush={StaticResource TextSecondary}}"/>
+                                    </Border>
+                                    <TextBlock x:Name="LblInstalledMods" Grid.Column="2" Classes="Subtitle"
                                                Text="Mods" VerticalAlignment="Center"/>
-                                    <Border Grid.Column="1" Background="{DynamicResource BgElevated}" CornerRadius="999"
+                                    <Border Grid.Column="3" Background="{DynamicResource BgElevated}" CornerRadius="999"
                                             Padding="9,2" Margin="8,0,0,0" VerticalAlignment="Center">
                                         <TextBlock x:Name="ModsCountBadge" Classes="Caption" Text="0"
                                                    Foreground="{DynamicResource TextSecondary}"/>
                                     </Border>
-                                    <TextBox Grid.Column="2" x:Name="ModsFilterBox" MaxWidth="220"
+                                    <TextBox Grid.Column="4" x:Name="ModsFilterBox" MaxWidth="200"
                                              HorizontalAlignment="Right" Margin="12,0,0,0"
                                              Watermark="Filter installed..."/>
                                 </Grid>
                                 <Border DockPanel.Dock="Top" Height="1" Background="{DynamicResource BorderSubtle}"/>
-                                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="14,10,14,12">
-                                    <Button x:Name="AddModButton" Content="Add jar"/>
-                                </StackPanel>
-                                <Grid Margin="10,8,10,4">
-                                <!-- Plain ItemsControl (no virtualization, no selection): each card is
-                                     created once and never recycled, so hover/toggle can't blink it. -->
-                                <ScrollViewer behaviors:SmoothScroll.Enabled="True"
-                                              HorizontalScrollBarVisibility="Disabled"
-                                              VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
-                                    <ItemsControl x:Name="ModsList" Background="Transparent">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:InstalledModVm">
-                                                <Border Classes="card flat" Padding="10" MinHeight="84" Margin="0,0,0,8">
-                                                    <Grid ColumnDefinitions="Auto,10,*,10,Auto,6,Auto">
-                                                        <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10"
-                                                                VerticalAlignment="Center"
-                                                                Background="{DynamicResource BgElevated}" ClipToBounds="True">
-                                                            <Panel>
-                                                                <Image Width="22" Height="22"
-                                                                                     HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                                     IsVisible="{Binding !HasIcon}" Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
-                                                                <Image Source="{Binding Icon}" Stretch="UniformToFill"
-                                                                       IsVisible="{Binding HasIcon}"/>
-                                                            </Panel>
-                                                        </Border>
-                                                        <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
-                                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                <TextBlock Classes="Subtitle" Text="{Binding Title}"
-                                                                           TextTrimming="CharacterEllipsis"/>
-                                                                <TextBlock Classes="Caption" VerticalAlignment="Center"
-                                                                           Foreground="{DynamicResource TextMuted}"
-                                                                           Text="{Binding Version}" IsVisible="{Binding HasVersion}"/>
-                                                            </StackPanel>
-                                                            <TextBlock Classes="Caption" Text="{Binding Description}"
-                                                                       Foreground="{DynamicResource TextMuted}"
-                                                                       IsVisible="{Binding HasDescription}"
-                                                                       TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
-                                                        </StackPanel>
-                                                        <ToggleButton Grid.Column="4" Classes="switch"
-                                                                      VerticalAlignment="Center"
-                                                                      IsChecked="{Binding Enabled}"/>
-                                                        <Button Grid.Column="6" Classes="ghost" VerticalAlignment="Center"
-                                                                Padding="8" Click="OnRemoveModClick" ToolTip.Tip="Remove">
-                                                            <Image Width="16" Height="16" Source="{icon:LucideImage Kind=Trash2, Brush={StaticResource TextMuted}}"/>
-                                                        </Button>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-                                <StackPanel x:Name="ModsEmptyState" IsVisible="False"
-                                            VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
-                                    <Border Width="64" Height="64" CornerRadius="999" HorizontalAlignment="Center"
-                                            Background="{DynamicResource BgElevated}">
-                                        <Image Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
-                                    </Border>
-                                    <TextBlock x:Name="ModsEmptyText" HorizontalAlignment="Center"
-                                               Foreground="{DynamicResource TextSecondary}" Text="No mods installed"/>
-                                </StackPanel>
+
+                                <Border DockPanel.Dock="Bottom" Padding="18,12">
+                                    <Button x:Name="AddModButton" Classes="secondary" Content="Add jar"
+                                            HorizontalAlignment="Left"/>
+                                </Border>
+
+                                <Grid Margin="14,12,10,4">
+                                    <!-- Plain ItemsControl (no virtualization, no selection): each card is
+                                         created once and never recycled, so hover/toggle can't blink it. -->
+                                    <ScrollViewer behaviors:SmoothScroll.Enabled="True"
+                                                  HorizontalScrollBarVisibility="Disabled"
+                                                  VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+                                <ItemsControl x:Name="ModsList" Background="Transparent">
+                                                                        <ItemsControl.ItemTemplate>
+                                                                            <DataTemplate x:DataType="vm:InstalledModVm">
+                                                                                <Border Classes="card flat" Padding="10" MinHeight="84" Margin="0,0,0,8">
+                                                                                    <Grid ColumnDefinitions="Auto,10,*,10,Auto,6,Auto">
+                                                                                        <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10"
+                                                                                                VerticalAlignment="Center"
+                                                                                                Background="{DynamicResource BgElevated}" ClipToBounds="True">
+                                                                                            <Panel>
+                                                                                                <Image Width="22" Height="22"
+                                                                                                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                                                                     IsVisible="{Binding !HasIcon}" Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
+                                                                                                <Image Source="{Binding Icon}" Stretch="UniformToFill"
+                                                                                                       IsVisible="{Binding HasIcon}"/>
+                                                                                            </Panel>
+                                                                                        </Border>
+                                                                                        <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                                                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                                                <TextBlock Classes="Subtitle" Text="{Binding Title}"
+                                                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                                                <TextBlock Classes="Caption" VerticalAlignment="Center"
+                                                                                                           Foreground="{DynamicResource TextMuted}"
+                                                                                                           Text="{Binding Version}" IsVisible="{Binding HasVersion}"/>
+                                                                                            </StackPanel>
+                                                                                            <TextBlock Classes="Caption" Text="{Binding Description}"
+                                                                                                       Foreground="{DynamicResource TextMuted}"
+                                                                                                       IsVisible="{Binding HasDescription}"
+                                                                                                       TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                                                                                        </StackPanel>
+                                                                                        <ToggleButton Grid.Column="4" Classes="switch"
+                                                                                                      VerticalAlignment="Center"
+                                                                                                      IsChecked="{Binding Enabled}"/>
+                                                                                        <Button Grid.Column="6" Classes="ghost" VerticalAlignment="Center"
+                                                                                                Padding="8" Click="OnRemoveModClick" ToolTip.Tip="Remove">
+                                                                                            <Image Width="16" Height="16" Source="{icon:LucideImage Kind=Trash2, Brush={StaticResource TextMuted}}"/>
+                                                                                        </Button>
+                                                                                    </Grid>
+                                                                                </Border>
+                                                                            </DataTemplate>
+                                                                        </ItemsControl.ItemTemplate>
+                                                                    </ItemsControl>
+                                    </ScrollViewer>
+                                    <StackPanel x:Name="ModsEmptyState" IsVisible="False"
+                                                VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+                                        <Border Width="64" Height="64" CornerRadius="999" HorizontalAlignment="Center"
+                                                Background="{DynamicResource BgElevated}">
+                                            <Image Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
+                                        </Border>
+                                        <TextBlock x:Name="ModsEmptyText" HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondary}" Text="No mods installed"/>
+                                    </StackPanel>
                                 </Grid>
                             </DockPanel>
                         </Border>
 
-                        <DockPanel Grid.Column="2">
-                            <!-- Search source. CurseForge is temporarily disabled ("coming soon")
-                                 while its integration is finished. Brand icons go here once the real
-                                 logo assets (Assets/modrinth.*, Assets/curseforge.*) are added. -->
-                            <Border DockPanel.Dock="Top" Background="{DynamicResource BgElevated}" CornerRadius="10"
-                                    Padding="3" HorizontalAlignment="Left" Margin="0,0,0,8">
-                                <StackPanel Orientation="Horizontal" Spacing="2">
-                                    <RadioButton x:Name="SrcModrinth" Classes="segment" GroupName="contentsrc" IsChecked="True">
-                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                            <Viewbox Width="14" Height="14" VerticalAlignment="Center">
-                                                <Path Fill="#1BD96A" Data="M12.252.004a11.78 11.768 0 0 0-8.92 3.73a11 11 0 0 0-2.17 3.11a11.37 11.359 0 0 0-1.16 5.169c0 1.42.17 2.5.6 3.77c.24.759.77 1.899 1.17 2.529a12.3 12.298 0 0 0 8.85 5.639c.44.05 2.54.07 2.76.02c.2-.04.22.1-.26-1.7l-.36-1.37l-1.01-.06a8.5 8.489 0 0 1-5.18-1.8a5.3 5.3 0 0 1-1.3-1.26c0-.05.34-.28.74-.5a37.572 37.545 0 0 1 2.88-1.629c.03 0 .5.45 1.06.98l1 .97l2.07-.43l2.06-.43l1.47-1.47c.8-.8 1.48-1.5 1.48-1.52c0-.09-.42-1.63-.46-1.7c-.04-.06-.2-.03-1.02.18c-.53.13-1.2.3-1.45.4l-.48.15l-.53.53l-.53.53l-.93.1l-.93.07l-.52-.5a2.7 2.7 0 0 1-.96-1.7l-.13-.6l.43-.57c.68-.9.68-.9 1.46-1.1c.4-.1.65-.2.83-.33c.13-.099.65-.579 1.14-1.069l.9-.9l-.7-.7l-.7-.7l-1.95.54c-1.07.3-1.96.53-1.97.53c-.03 0-2.23 2.48-2.63 2.97l-.29.35l.28 1.03c.16.56.3 1.16.31 1.34l.03.3l-.34.23c-.37.23-2.22 1.3-2.84 1.63c-.36.2-.37.2-.44.1c-.08-.1-.23-.6-.32-1.03c-.18-.86-.17-2.75.02-3.73a8.84 8.84 0 0 1 7.9-6.93c.43-.03.77-.08.78-.1c.06-.17.5-2.999.47-3.039c-.01-.02-.1-.02-.2-.03Zm3.68.67c-.2 0-.3.1-.37.38c-.06.23-.46 2.42-.46 2.52c0 .04.1.11.22.16a8.51 8.499 0 0 1 2.99 2a8.38 8.379 0 0 1 2.16 3.449a6.9 6.9 0 0 1 .4 2.8c0 1.07 0 1.27-.1 1.73a9.4 9.4 0 0 1-1.76 3.769c-.32.4-.98 1.06-1.37 1.38c-.38.32-1.54 1.1-1.7 1.14c-.1.03-.1.06-.07.26c.03.18.64 2.56.7 2.78l.06.06a12.07 12.058 0 0 0 7.27-9.4c.13-.77.13-2.58 0-3.4a11.96 11.948 0 0 0-5.73-8.578c-.7-.42-2.05-1.06-2.25-1.06Z"/>
-                                            </Viewbox>
-                                            <TextBlock Text="Modrinth" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </RadioButton>
-                                    <RadioButton x:Name="SrcCurseForge" Classes="segment" GroupName="contentsrc">
-                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                            <Viewbox Width="14" Height="14" VerticalAlignment="Center" Opacity="0.5">
-                                                <Path Fill="#F16436" Data="M18.326 9.215s4.9-.773 5.674-3.027h-7.507V4.4H0l2.032 2.358v2.415s5.127-.266 7.11 1.237c2.714 2.516-3.053 5.917-3.053 5.917l-.99 3.273c1.547-1.473 4.494-3.377 9.899-3.286c-2.057.65-4.125 1.665-5.735 3.286h10.925l-1.029-3.273s-7.918-4.668-.833-7.112"/>
-                                            </Viewbox>
-                                            <TextBlock x:Name="SrcCurseForgeLabel" Text="CurseForge" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </RadioButton>
-                                </StackPanel>
-                            </Border>
-                            <!-- Big search field with an inline magnifier, Modrinth-style; the wrapper
-                                 border lights up via :focus-within while the inner TextBox stays bare. -->
-                            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,4">
-                                <Border Grid.Column="0" Classes="searchwrap" Background="{DynamicResource BgInput}"
-                                        BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"
-                                        CornerRadius="{DynamicResource RadiusMd}" Padding="12,0" MinHeight="38">
-                                    <DockPanel VerticalAlignment="Center">
-                                        <Image DockPanel.Dock="Left" Width="16" Height="16" Margin="0,0,8,0"
-                                               VerticalAlignment="Center"
-                                               Source="{icon:LucideImage Kind=Search, Brush={StaticResource TextMuted}}"/>
-                                        <TextBox x:Name="ModrinthQueryBox" Classes="bare" Watermark="Search Modrinth..."
-                                                 VerticalContentAlignment="Center" MinHeight="34"/>
-                                    </DockPanel>
+                        <!-- BROWSE: what you can add -->
+                        <Border Grid.Column="2" Classes="card" Padding="0">
+                            <DockPanel>
+                                <!-- Source picker. CurseForge is temporarily disabled ("coming soon")
+                                     while its integration is finished. -->
+                                <Border DockPanel.Dock="Top" Margin="18,16,18,0" HorizontalAlignment="Left"
+                                        Background="{DynamicResource BgElevated}" CornerRadius="10" Padding="3">
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                                                <RadioButton x:Name="SrcModrinth" Classes="segment" GroupName="contentsrc" IsChecked="True">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                                        <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                                                            <Path Fill="#1BD96A" Data="M12.252.004a11.78 11.768 0 0 0-8.92 3.73a11 11 0 0 0-2.17 3.11a11.37 11.359 0 0 0-1.16 5.169c0 1.42.17 2.5.6 3.77c.24.759.77 1.899 1.17 2.529a12.3 12.298 0 0 0 8.85 5.639c.44.05 2.54.07 2.76.02c.2-.04.22.1-.26-1.7l-.36-1.37l-1.01-.06a8.5 8.489 0 0 1-5.18-1.8a5.3 5.3 0 0 1-1.3-1.26c0-.05.34-.28.74-.5a37.572 37.545 0 0 1 2.88-1.629c.03 0 .5.45 1.06.98l1 .97l2.07-.43l2.06-.43l1.47-1.47c.8-.8 1.48-1.5 1.48-1.52c0-.09-.42-1.63-.46-1.7c-.04-.06-.2-.03-1.02.18c-.53.13-1.2.3-1.45.4l-.48.15l-.53.53l-.53.53l-.93.1l-.93.07l-.52-.5a2.7 2.7 0 0 1-.96-1.7l-.13-.6l.43-.57c.68-.9.68-.9 1.46-1.1c.4-.1.65-.2.83-.33c.13-.099.65-.579 1.14-1.069l.9-.9l-.7-.7l-.7-.7l-1.95.54c-1.07.3-1.96.53-1.97.53c-.03 0-2.23 2.48-2.63 2.97l-.29.35l.28 1.03c.16.56.3 1.16.31 1.34l.03.3l-.34.23c-.37.23-2.22 1.3-2.84 1.63c-.36.2-.37.2-.44.1c-.08-.1-.23-.6-.32-1.03c-.18-.86-.17-2.75.02-3.73a8.84 8.84 0 0 1 7.9-6.93c.43-.03.77-.08.78-.1c.06-.17.5-2.999.47-3.039c-.01-.02-.1-.02-.2-.03Zm3.68.67c-.2 0-.3.1-.37.38c-.06.23-.46 2.42-.46 2.52c0 .04.1.11.22.16a8.51 8.499 0 0 1 2.99 2a8.38 8.379 0 0 1 2.16 3.449a6.9 6.9 0 0 1 .4 2.8c0 1.07 0 1.27-.1 1.73a9.4 9.4 0 0 1-1.76 3.769c-.32.4-.98 1.06-1.37 1.38c-.38.32-1.54 1.1-1.7 1.14c-.1.03-.1.06-.07.26c.03.18.64 2.56.7 2.78l.06.06a12.07 12.058 0 0 0 7.27-9.4c.13-.77.13-2.58 0-3.4a11.96 11.948 0 0 0-5.73-8.578c-.7-.42-2.05-1.06-2.25-1.06Z"/>
+                                                                        </Viewbox>
+                                                                        <TextBlock Text="Modrinth" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                </RadioButton>
+                                                                <RadioButton x:Name="SrcCurseForge" Classes="segment" GroupName="contentsrc">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                                        <Viewbox Width="14" Height="14" VerticalAlignment="Center" Opacity="0.5">
+                                                                            <Path Fill="#F16436" Data="M18.326 9.215s4.9-.773 5.674-3.027h-7.507V4.4H0l2.032 2.358v2.415s5.127-.266 7.11 1.237c2.714 2.516-3.053 5.917-3.053 5.917l-.99 3.273c1.547-1.473 4.494-3.377 9.899-3.286c-2.057.65-4.125 1.665-5.735 3.286h10.925l-1.029-3.273s-7.918-4.668-.833-7.112"/>
+                                                                        </Viewbox>
+                                                                        <TextBlock x:Name="SrcCurseForgeLabel" Text="CurseForge" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                </RadioButton>
+                                                            </StackPanel>
                                 </Border>
-                                <Button Grid.Column="1" x:Name="ModrinthSearchButton" Classes="secondary"
-                                        Content="Search" Margin="8,0,0,0" VerticalAlignment="Stretch"/>
-                            </Grid>
-                            <TextBlock DockPanel.Dock="Top" x:Name="ModrinthStatus" Classes="Caption"
-                                       Margin="2,0,0,6" TextTrimming="CharacterEllipsis" Text=""/>
-                            <!-- Advanced: pick a specific version for the selected result. -->
-                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
-                                <TextBlock x:Name="LblModVersion" Text="Version:" VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}"/>
-                                <ComboBox x:Name="ModrinthVersionCombo" Width="230"/>
-                                <Button x:Name="ModrinthDownloadButton" Classes="ghost" Content="Download to instance"/>
-                            </StackPanel>
-                            <Grid>
-                                <ListBox x:Name="ModrinthList" Background="Transparent" BorderThickness="0" Padding="0,0,8,0"
-                                         behaviors:SmoothScroll.Enabled="True"
-                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                    <!-- Non-virtualized: containers are created once and never recycled,
-                                         so hover/scroll can't blink cards or replay the fade. -->
-                                    <ListBox.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel/>
-                                        </ItemsPanelTemplate>
-                                    </ListBox.ItemsPanel>
-                                    <ListBox.Styles>
-                                        <Style Selector="ListBoxItem">
-                                            <Setter Property="Padding" Value="0"/>
-                                            <Setter Property="Margin" Value="0,0,0,8"/>
-                                            <Setter Property="Background" Value="Transparent"/>
-                                        </Style>
-                                        <Style Selector="ListBoxItem:selected Border.card">
-                                            <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
-                                        </Style>
-                                    </ListBox.Styles>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:ModrinthHitVm">
-                                            <Border Classes="card flat" Padding="10" MinHeight="84" Opacity="{Binding CardOpacity}">
-                                                <Grid ColumnDefinitions="Auto,10,*,10,Auto">
-                                                    <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10"
-                                                            Background="{DynamicResource BgElevated}" ClipToBounds="True">
-                                                        <Panel>
-                                                            <Image Width="22" Height="22"
-                                                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                                                 IsVisible="{Binding !HasIcon}" Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
-                                                            <Image Source="{Binding Icon}" Stretch="UniformToFill"
-                                                                   IsVisible="{Binding HasIcon}"/>
-                                                        </Panel>
-                                                    </Border>
-                                                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
-                                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                                            <TextBlock Classes="Subtitle" Text="{Binding Title}"
-                                                                       TextTrimming="CharacterEllipsis"/>
-                                                            <TextBlock Classes="Caption" VerticalAlignment="Center"
-                                                                       Foreground="{DynamicResource TextMuted}" Text="{Binding Author}"/>
-                                                        </StackPanel>
-                                                        <TextBlock Classes="Caption" Text="{Binding Description}"
-                                                                   TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
-                                                        <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <Image Width="11" Height="11" VerticalAlignment="Center"
-                                                                   Source="{icon:LucideImage Kind=Download, Brush={StaticResource TextMuted}}"/>
-                                                            <TextBlock Classes="Caption" Foreground="{DynamicResource TextMuted}"
-                                                                       Text="{Binding DownloadsText}" VerticalAlignment="Center"/>
-                                                        </StackPanel>
-                                                    </StackPanel>
-                                                    <Panel Grid.Column="4" VerticalAlignment="Center" MinWidth="96">
-                                                        <Button Classes="primary" HorizontalAlignment="Center"
-                                                                Content="Install" IsVisible="{Binding CanInstall}"
-                                                                Click="OnModrinthInstallClick"/>
-                                                        <ProgressBar Width="70" Height="4" IsIndeterminate="True"
-                                                                     VerticalAlignment="Center" HorizontalAlignment="Center"
-                                                                     IsVisible="{Binding Installing}"/>
-                                                        <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding Installed}"
-                                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                            <Image Width="16" Height="16"
-                                                                                 VerticalAlignment="Center" Source="{icon:LucideImage Kind=Check, Brush={StaticResource Success}}"/>
-                                                            <TextBlock Classes="Caption" Text="{Binding InstalledLabel}"
-                                                                       VerticalAlignment="Center"
-                                                                       Foreground="{DynamicResource Success}"/>
-                                                        </StackPanel>
-                                                    </Panel>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                                <StackPanel x:Name="ModrinthEmptyState" IsVisible="False"
-                                            VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
-                                    <Border Width="72" Height="72" CornerRadius="999" HorizontalAlignment="Center"
-                                            Background="{DynamicResource BgElevated}">
-                                        <Image Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               Source="{icon:LucideImage Kind=Search, Brush={StaticResource TextMuted}}"/>
+
+                                <!-- Search field with an inline magnifier; the wrapper lights up via
+                                     :focus-within while the inner TextBox stays bare. -->
+                                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="18,12,18,0">
+                                    <Border Grid.Column="0" Classes="searchwrap" Background="{DynamicResource BgInput}"
+                                            BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"
+                                            CornerRadius="{DynamicResource RadiusMd}" Padding="13,0" MinHeight="42">
+                                        <DockPanel VerticalAlignment="Center">
+                                            <Image DockPanel.Dock="Left" Width="16" Height="16" Margin="0,0,9,0"
+                                                   VerticalAlignment="Center"
+                                                   Source="{icon:LucideImage Kind=Search, Brush={StaticResource TextMuted}}"/>
+                                            <TextBox x:Name="ModrinthQueryBox" Classes="bare" Watermark="Search Modrinth..."
+                                                     VerticalContentAlignment="Center" MinHeight="38"/>
+                                        </DockPanel>
                                     </Border>
-                                    <TextBlock x:Name="ModrinthEmptyText" HorizontalAlignment="Center"
-                                               Foreground="{DynamicResource TextSecondary}" Text="Search for mods"/>
-                                </StackPanel>
-                            </Grid>
-                        </DockPanel>
+                                    <Button Grid.Column="1" x:Name="ModrinthSearchButton" Classes="secondary"
+                                            Content="Search" Margin="9,0,0,0" VerticalAlignment="Stretch"/>
+                                </Grid>
+
+                                <TextBlock DockPanel.Dock="Top" x:Name="ModrinthStatus" Classes="Caption"
+                                           Margin="20,8,18,0" TextTrimming="CharacterEllipsis" Text=""
+                                           Foreground="{DynamicResource TextMuted}"/>
+
+                                <!-- Advanced: pick a specific version for the selected result. -->
+                                <Border DockPanel.Dock="Bottom" Padding="18,12"
+                                        BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,1,0,0">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock x:Name="LblModVersion" Text="Version:" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                        <ComboBox x:Name="ModrinthVersionCombo" Width="220"/>
+                                        <Button x:Name="ModrinthDownloadButton" Classes="ghost"
+                                                Content="Download to instance"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Grid Margin="14,12,10,4">
+                            <ListBox x:Name="ModrinthList" Background="Transparent" BorderThickness="0" Padding="0,0,8,0"
+                                                                     behaviors:SmoothScroll.Enabled="True"
+                                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                                <!-- Non-virtualized: containers are created once and never recycled,
+                                                                     so hover/scroll can't blink cards or replay the fade. -->
+                                                                <ListBox.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <StackPanel/>
+                                                                    </ItemsPanelTemplate>
+                                                                </ListBox.ItemsPanel>
+                                                                <ListBox.Styles>
+                                                                    <Style Selector="ListBoxItem">
+                                                                        <Setter Property="Padding" Value="0"/>
+                                                                        <Setter Property="Margin" Value="0,0,0,8"/>
+                                                                        <Setter Property="Background" Value="Transparent"/>
+                                                                    </Style>
+                                                                    <Style Selector="ListBoxItem:selected Border.card">
+                                                                        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
+                                                                    </Style>
+                                                                </ListBox.Styles>
+                                                                <ListBox.ItemTemplate>
+                                                                    <DataTemplate x:DataType="vm:ModrinthHitVm">
+                                                                        <Border Classes="card flat" Padding="10" MinHeight="84" Opacity="{Binding CardOpacity}">
+                                                                            <Grid ColumnDefinitions="Auto,10,*,10,Auto">
+                                                                                <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10"
+                                                                                        Background="{DynamicResource BgElevated}" ClipToBounds="True">
+                                                                                    <Panel>
+                                                                                        <Image Width="22" Height="22"
+                                                                                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                                                             IsVisible="{Binding !HasIcon}" Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
+                                                                                        <Image Source="{Binding Icon}" Stretch="UniformToFill"
+                                                                                               IsVisible="{Binding HasIcon}"/>
+                                                                                    </Panel>
+                                                                                </Border>
+                                                                                <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                                        <TextBlock Classes="Subtitle" Text="{Binding Title}"
+                                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                                        <TextBlock Classes="Caption" VerticalAlignment="Center"
+                                                                                                   Foreground="{DynamicResource TextMuted}" Text="{Binding Author}"/>
+                                                                                    </StackPanel>
+                                                                                    <TextBlock Classes="Caption" Text="{Binding Description}"
+                                                                                               TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                                        <Image Width="11" Height="11" VerticalAlignment="Center"
+                                                                                               Source="{icon:LucideImage Kind=Download, Brush={StaticResource TextMuted}}"/>
+                                                                                        <TextBlock Classes="Caption" Foreground="{DynamicResource TextMuted}"
+                                                                                                   Text="{Binding DownloadsText}" VerticalAlignment="Center"/>
+                                                                                    </StackPanel>
+                                                                                </StackPanel>
+                                                                                <Panel Grid.Column="4" VerticalAlignment="Center" MinWidth="96">
+                                                                                    <Button Classes="primary" HorizontalAlignment="Center"
+                                                                                            Content="Install" IsVisible="{Binding CanInstall}"
+                                                                                            Click="OnModrinthInstallClick"/>
+                                                                                    <ProgressBar Width="70" Height="4" IsIndeterminate="True"
+                                                                                                 VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                                                                 IsVisible="{Binding Installing}"/>
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding Installed}"
+                                                                                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                                        <Image Width="16" Height="16"
+                                                                                                             VerticalAlignment="Center" Source="{icon:LucideImage Kind=Check, Brush={StaticResource Success}}"/>
+                                                                                        <TextBlock Classes="Caption" Text="{Binding InstalledLabel}"
+                                                                                                   VerticalAlignment="Center"
+                                                                                                   Foreground="{DynamicResource Success}"/>
+                                                                                    </StackPanel>
+                                                                                </Panel>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ListBox.ItemTemplate>
+                                                            </ListBox>
+                                    <StackPanel x:Name="ModrinthEmptyState" IsVisible="False"
+                                                VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10">
+                                        <Border Width="72" Height="72" CornerRadius="999" HorizontalAlignment="Center"
+                                                Background="{DynamicResource BgElevated}">
+                                            <Image Width="30" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Source="{icon:LucideImage Kind=Search, Brush={StaticResource TextMuted}}"/>
+                                        </Border>
+                                        <TextBlock x:Name="ModrinthEmptyText" HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondary}" Text="Search for mods"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DockPanel>
+                        </Border>
                     </Grid>
                 </DockPanel>
 

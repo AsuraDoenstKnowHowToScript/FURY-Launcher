@@ -5,8 +5,10 @@
 // "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using CommunityToolkit.Mvvm.Input;
 using Launcher.Core.Services;
 
@@ -26,7 +28,7 @@ public sealed class ChangelogItemVm
         HtmlUrl = note.HtmlUrl;
         IsCurrent = isCurrent;
         DateText = note.PublishedUtc == default ? "" : note.PublishedUtc.ToLocalTime().ToString("dd MMM yyyy");
-        Summary = Flatten(note.Body);
+        Lines = Parse(note.Body);
         Channel = note.IsBeta ? "BETA" : "STABLE";
 
         // The item opens its own release page, so the template needs no parent lookup.
@@ -48,26 +50,69 @@ public sealed class ChangelogItemVm
     public string Channel { get; }
     public bool IsBeta { get; }
     public string DateText { get; }
-    public string Summary { get; }
+
+    /// <summary>The release body, parsed into renderable blocks.</summary>
+    public IReadOnlyList<ChangelogLineVm> Lines { get; }
+
     public string HtmlUrl { get; }
 
     /// <summary>True for the build that is running right now.</summary>
     public bool IsCurrent { get; }
 
-    /// <summary>Strips markdown decoration down to readable lines, capped so a card stays a card.</summary>
-    private static string Flatten(string body)
+    /// <summary>How many blocks a card shows before the rest is left to the release page.</summary>
+    private const int MaxBlocks = 12;
+
+    /// <summary>
+    /// Turns a markdown release body into display blocks. The important part is rejoining the
+    /// hard wraps: GitHub bodies break mid-sentence at ~72 columns, and printing those raw is
+    /// what makes a changelog look shredded. Consecutive plain lines become one paragraph;
+    /// headings and list items keep their own identity.
+    /// </summary>
+    private static IReadOnlyList<ChangelogLineVm> Parse(string body)
     {
-        if (string.IsNullOrWhiteSpace(body)) return "";
+        var blocks = new List<ChangelogLineVm>();
+        if (string.IsNullOrWhiteSpace(body)) return blocks;
 
-        var lines = body.Replace("\r\n", "\n").Split('\n')
-            .Select(l => l.Trim())
-            .Where(l => l.Length > 0)
-            .Select(l => l.TrimStart('#', ' ').Trim())
-            .Select(l => l.StartsWith("- ") || l.StartsWith("* ") ? "· " + l[2..].Trim() : l)
-            .Select(l => l.Replace("**", "").Replace("`", ""))
-            .Take(10)
-            .ToArray();
+        var paragraph = new StringBuilder();
 
-        return string.Join("\n", lines);
+        void FlushParagraph()
+        {
+            if (paragraph.Length == 0) return;
+            blocks.Add(new ChangelogLineVm(Clean(paragraph.ToString()), isHeading: false, isBullet: false));
+            paragraph.Clear();
+        }
+
+        foreach (var raw in body.Replace("\r\n", "\n").Split('\n'))
+        {
+            var line = raw.Trim();
+
+            if (line.Length == 0) { FlushParagraph(); continue; }
+
+            if (line.StartsWith('#'))
+            {
+                FlushParagraph();
+                blocks.Add(new ChangelogLineVm(Clean(line.TrimStart('#', ' ')), isHeading: true, isBullet: false));
+            }
+            else if (line.StartsWith("- ") || line.StartsWith("* "))
+            {
+                FlushParagraph();
+                blocks.Add(new ChangelogLineVm(Clean(line[2..]), isHeading: false, isBullet: true));
+            }
+            else
+            {
+                // A wrapped continuation of the current paragraph.
+                if (paragraph.Length > 0) paragraph.Append(' ');
+                paragraph.Append(line);
+            }
+
+            if (blocks.Count >= MaxBlocks) break;
+        }
+        FlushParagraph();
+
+        return blocks.Count > MaxBlocks ? blocks.Take(MaxBlocks).ToList() : blocks;
     }
+
+    /// <summary>Drops the markdown decoration that has no meaning once rendered as plain text.</summary>
+    private static string Clean(string s)
+        => s.Replace("**", "").Replace("`", "").Replace("__", "").Trim();
 }
