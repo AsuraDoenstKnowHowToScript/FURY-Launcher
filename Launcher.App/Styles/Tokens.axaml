@@ -108,4 +108,132 @@
     <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{StaticResource TextSecondaryColor}"/>
     <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
 
+    <!-- ============================================================
+         The rest of the interactive palette, restated the same way.
+         Controls.axaml styles the resting look of these controls, but a control has a
+         state for every combination of pointer, press, focus and selection, and any state
+         a style does not name is still painted from the theme's stock palette. Those stock
+         colours are built for a light-grey Fluent surface, so on this one they arrive as a
+         pale wash — which is the flash. Restating the keys here means there is no stock
+         colour left to arrive: whichever value wins a given state, it is one of ours.
+         Keys the theme does not know are ignored, so nothing here can break a control.
+         ============================================================ -->
+
+    <!-- Dropdowns. The closed box never changes fill; only the outline answers the pointer. -->
+    <SolidColorBrush x:Key="ComboBoxBackground" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBackgroundFocused" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="{StaticResource BgSurfaceColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="{StaticResource BorderStrongColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBorderBrushDisabled" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushUnfocused" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="ComboBoxForeground" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxForegroundPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxForegroundPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxForegroundFocused" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxForegroundFocusedPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundPointerOver" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundPressed" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundFocused" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundFocusedPressed" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocused" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxEditableDropDownGlyphForeground" Color="{StaticResource TextSecondaryColor}"/>
+
+    <!-- The open list. -->
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource BgSurfaceColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownForeground" Color="{StaticResource TextPrimaryColor}"/>
+
+    <!-- Rows in the open list. Selected is an accent tint, never the full purple. -->
+    <SolidColorBrush x:Key="ComboBoxItemBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{StaticResource AccentColor}" Opacity="0.15"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedUnfocused" Color="{StaticResource AccentColor}" Opacity="0.15"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.22"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPressed" Color="{StaticResource AccentColor}" Opacity="0.28"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="ComboBoxItemForeground" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedUnfocused" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemPillFillBrush" Color="{StaticResource AccentColor}"/>
+
+    <!-- Text fields, including the read-only log box. Same rule: the fill never moves. -->
+    <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="{StaticResource BgSurfaceColor}"/>
+    <SolidColorBrush x:Key="TextControlBorderBrush" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{StaticResource BorderStrongColor}"/>
+    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="TextControlForeground" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextControlForegroundFocused" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="TextControlPlaceholderForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
+    <!-- The inline clear button inside a text field. -->
+    <SolidColorBrush x:Key="TextControlButtonBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="TextControlButtonBackgroundPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="TextControlButtonBorderBrush" Color="Transparent"/>
+    <SolidColorBrush x:Key="TextControlButtonBorderBrushPointerOver" Color="Transparent"/>
+    <SolidColorBrush x:Key="TextControlButtonBorderBrushPressed" Color="Transparent"/>
+    <SolidColorBrush x:Key="TextControlButtonForeground" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="TextControlButtonForegroundPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextControlButtonForegroundPressed" Color="{StaticResource TextSecondaryColor}"/>
+
+    <!-- Checkboxes: the box is an input surface off, accent on, and the tick is never grey. -->
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedDisabled" Color="{StaticResource BgSurfaceColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="{StaticResource BorderStrongColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedDisabled" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="{StaticResource AccentHoverColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="{StaticResource AccentPressedColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedDisabled" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="{StaticResource AccentHoverColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="{StaticResource AccentPressedColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedDisabled" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="{StaticResource OnAccentColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="{StaticResource OnAccentColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="{StaticResource OnAccentColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundUncheckedDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundCheckedPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="CheckBoxForegroundCheckedDisabled" Color="{StaticResource TextMutedColor}"/>
+
 </ResourceDictionary>
