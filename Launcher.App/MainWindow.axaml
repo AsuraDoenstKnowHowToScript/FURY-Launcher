@@ -715,7 +715,11 @@
 
                                 <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
 
-                                <!-- Behaviour toggles: each one is wired, none is decorative. -->
+                                <!-- Behaviour toggles: each one is wired, none is decorative.
+                                     These use the launcher's own sliding switch, the same one the
+                                     instance list uses. The stock Fluent ToggleSwitch paints its
+                                     off-state knob pure white and washes the track white on hover,
+                                     which is the flash that showed up here and nowhere else. -->
                                 <Grid ColumnDefinitions="*,16,Auto" VerticalAlignment="Center">
                                     <StackPanel Grid.Column="0" Spacing="2">
                                         <TextBlock x:Name="LblKeepOpen" Text="Keep the launcher open"/>
@@ -723,7 +727,7 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextMuted}"/>
                                     </StackPanel>
-                                    <ToggleSwitch Grid.Column="2" x:Name="KeepOpenToggle"
+                                    <ToggleButton Grid.Column="2" x:Name="KeepOpenToggle" Classes="switch"
                                                   VerticalAlignment="Center"/>
                                 </Grid>
 
@@ -734,7 +738,7 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextMuted}"/>
                                     </StackPanel>
-                                    <ToggleSwitch Grid.Column="2" x:Name="HwAccelToggle"
+                                    <ToggleButton Grid.Column="2" x:Name="HwAccelToggle" Classes="switch"
                                                   VerticalAlignment="Center"/>
                                 </Grid>
 
