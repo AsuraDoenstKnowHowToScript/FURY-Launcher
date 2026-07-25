@@ -3,6 +3,7 @@
              xmlns:icon="using:IconPacks.Avalonia.Lucide"
              xmlns:vm="using:Launcher.App.ViewModels"
              xmlns:behaviors="using:Launcher.App.Behaviors"
+             xmlns:ctl="using:Launcher.App.Controls"
              x:Class="Launcher.App.Views.AccountsView"
              x:DataType="vm:AccountsViewModel">
 
@@ -52,7 +53,7 @@
             <Grid ColumnDefinitions="360,20,*">
 
                 <!-- Left: the account cards (the selector) -->
-                <Border Grid.Column="0" Classes="card" Padding="18" VerticalAlignment="Top">
+                <ctl:PanelCard Grid.Column="0" ShowHeader="False" Padding="18" VerticalAlignment="Top">
                     <StackPanel Spacing="14">
                         <TextBlock Classes="Subtitle" Text="{Binding ListHeaderText}"/>
                         <ListBox ItemsSource="{Binding Cards}"
@@ -111,10 +112,10 @@
                         <Button Classes="secondary" Content="{Binding DeleteText}"
                                 Command="{Binding DeleteCommand}" HorizontalAlignment="Left"/>
                     </StackPanel>
-                </Border>
+                </ctl:PanelCard>
 
                 <!-- Right: editor for the selected account -->
-                <Border Grid.Column="2" Classes="card" Padding="20">
+                <ctl:PanelCard Grid.Column="2" ShowHeader="False" Padding="20">
                     <Panel>
                         <TextBlock Text="{Binding SelectHintText}" IsVisible="{Binding HintVisible}"
                                    Foreground="{DynamicResource TextMuted}"
@@ -232,7 +233,7 @@
                             </Grid>
                         </StackPanel>
                     </Panel>
-                </Border>
+                </ctl:PanelCard>
             </Grid>
 
             <!-- How it works (DockPanel so the help text wraps instead of overflowing) -->

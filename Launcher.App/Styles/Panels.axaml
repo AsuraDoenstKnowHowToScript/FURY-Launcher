@@ -3,7 +3,13 @@
         xmlns:ctl="using:Launcher.App.Controls">
 
     <!-- A ControlTheme is a resource, not a style: it belongs in Styles.Resources, keyed by the
-         control type, so Avalonia picks it up automatically for every PanelCard. -->
+         control type, so Avalonia picks it up automatically for every PanelCard.
+
+         Three tiers, so the treatment stays a signal instead of wallpaper:
+           .feature  headline panels — dot grid + glow + the big watermark
+           (default) ordinary sections — dot grid + a softer glow, no watermark
+           .subtle   supporting surfaces — a faint dot grid and nothing else
+         The watermark is opt-in on purpose: if every panel shouted, none would. -->
     <Styles.Resources>
 
         <!-- The dot grid. A VisualBrush tiled every 22px: one faint dot drawn once and repeated by
@@ -19,38 +25,43 @@
             </VisualBrush.Visual>
         </VisualBrush>
 
-        <!-- Depth: a violet bloom pushed into the top-right corner, fading out well before the
-             opposite edge. This is what stops a panel from reading as a flat rectangle. -->
-        <RadialGradientBrush x:Key="PanelGlow" Center="86%,2%" GradientOrigin="86%,2%"
-                             RadiusX="85%" RadiusY="85%">
-            <GradientStop Offset="0" Color="#4A3691"/>
-            <GradientStop Offset="0.55" Color="#2A2145"/>
+        <!-- Depth: a violet bloom in the top-right corner, deliberately restrained — it should
+             give the surface weight, not read as a coloured panel. -->
+        <RadialGradientBrush x:Key="PanelGlow" Center="88%,0%" GradientOrigin="88%,0%"
+                             RadiusX="70%" RadiusY="70%">
+            <GradientStop Offset="0" Color="#3B2D6B"/>
+            <GradientStop Offset="0.5" Color="#241D38"/>
             <GradientStop Offset="1" Color="#00181422"/>
         </RadialGradientBrush>
 
         <ControlTheme x:Key="{x:Type ctl:PanelCard}" TargetType="ctl:PanelCard">
             <Setter Property="Padding" Value="20"/>
+            <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <!-- Ordinary sections keep the glow at half strength. -->
+            <Setter Property="TextureOpacity" Value="0.5"/>
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border CornerRadius="{DynamicResource RadiusLg}" BorderThickness="1"
                             BorderBrush="{DynamicResource BorderSubtle}"
-                            Background="{DynamicResource BgSurface}"
+                            Background="{TemplateBinding Background}"
                             BoxShadow="0 4 16 0 #45000000"
                             ClipToBounds="True">
                         <Panel>
                             <!-- Texture stack, bottom to top: glow, dots, watermark, content. -->
-                            <Border Background="{StaticResource PanelGlow}"
+                            <Border Name="PART_Glow" Background="{StaticResource PanelGlow}"
                                     Opacity="{TemplateBinding TextureOpacity}"/>
-                            <Border Background="{StaticResource DotGrid}" Opacity="0.055"/>
+                            <Border Name="PART_Dots" Background="{StaticResource DotGrid}" Opacity="0.055"/>
 
-                            <Image Source="{TemplateBinding Icon}"
+                            <!-- Anchored inside the corner rather than bleeding off it, so it reads
+                                 as a deliberate mark instead of a cropped accident. -->
+                            <Image Name="PART_Watermark" Source="{TemplateBinding Icon}"
                                    Width="{TemplateBinding WatermarkSize}"
                                    Height="{TemplateBinding WatermarkSize}"
                                    HorizontalAlignment="Right" VerticalAlignment="Top"
-                                   Margin="0,-30,-26,0" Opacity="0.06"
-                                   IsHitTestVisible="False"/>
+                                   Margin="0,10,14,0" Opacity="0.13"
+                                   IsVisible="False" IsHitTestVisible="False"/>
 
                             <DockPanel Margin="{TemplateBinding Padding}">
                                 <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,11,*" Margin="0,0,0,16"
@@ -77,6 +88,25 @@
                     </Border>
                 </ControlTemplate>
             </Setter>
+
+            <!-- Headline: the watermark appears and the glow goes to full. -->
+            <Style Selector="^.feature">
+                <Setter Property="TextureOpacity" Value="1"/>
+            </Style>
+            <Style Selector="^.feature /template/ Image#PART_Watermark">
+                <Setter Property="IsVisible" Value="True"/>
+            </Style>
+            <Style Selector="^.feature /template/ Border#PART_Dots">
+                <Setter Property="Opacity" Value="0.07"/>
+            </Style>
+
+            <!-- Supporting: keep the texture, drop the drama. -->
+            <Style Selector="^.subtle">
+                <Setter Property="TextureOpacity" Value="0"/>
+            </Style>
+            <Style Selector="^.subtle /template/ Border#PART_Dots">
+                <Setter Property="Opacity" Value="0.03"/>
+            </Style>
         </ControlTheme>
 
     </Styles.Resources>

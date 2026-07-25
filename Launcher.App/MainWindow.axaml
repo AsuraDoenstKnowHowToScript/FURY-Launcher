@@ -132,17 +132,18 @@
                         <!-- Hero: the selected instance + the big PLAY button, promoted to a top
                              banner so playing is the first thing the page is about. The violet
                              sweep is inline so it beats the card style's flat background. -->
-                        <Border DockPanel.Dock="Top" Classes="card" x:Name="HeroCard" Margin="0,0,0,16" Padding="26,22"
-                                BoxShadow="0 8 30 0 #386D28D9">
+                        <ctl:PanelCard DockPanel.Dock="Top" Classes="feature" x:Name="HeroCard"
+                                       ShowHeader="False" Margin="0,0,0,16" Padding="26,22" WatermarkSize="150"
+                                       Icon="{icon:LucideImage Kind=Play, Brush={StaticResource TextSecondary}}">
                             <!-- Same sweep as the dashboard greeting band, so the two landing
                                  surfaces read as one family. -->
-                            <Border.Background>
+                            <ctl:PanelCard.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
                                     <GradientStop Offset="0" Color="#2E2054"/>
                                     <GradientStop Offset="0.55" Color="#1C1728"/>
                                     <GradientStop Offset="1" Color="#16141E"/>
                                 </LinearGradientBrush>
-                            </Border.Background>
+                            </ctl:PanelCard.Background>
                             <StackPanel Spacing="14">
                                 <Grid ColumnDefinitions="*,16,Auto">
                                     <StackPanel Grid.Column="0" Spacing="3" VerticalAlignment="Center"
@@ -213,7 +214,7 @@
                                 <TextBlock x:Name="PlayStatus" Classes="Caption" Text="" TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextSecondary}"/>
                             </StackPanel>
-                        </Border>
+                        </ctl:PanelCard>
 
                         <!-- Log drawer: collapsed by default; opens automatically on error. -->
                         <Expander x:Name="LogDrawer" DockPanel.Dock="Bottom" IsExpanded="False"
@@ -423,7 +424,7 @@
                     <Grid ColumnDefinitions="5*,16,7*">
 
                         <!-- INSTALLED: what this instance already has -->
-                        <Border Grid.Column="0" Classes="card" Padding="0">
+                        <ctl:PanelCard Grid.Column="0" ShowHeader="False" Padding="0">
                             <DockPanel>
                                 <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,10,Auto,Auto,*" Margin="18,16,18,14">
                                     <Border Grid.Column="0" Width="32" Height="32" CornerRadius="9"
@@ -511,10 +512,10 @@
                                     </StackPanel>
                                 </Grid>
                             </DockPanel>
-                        </Border>
+                        </ctl:PanelCard>
 
                         <!-- BROWSE: what you can add -->
-                        <Border Grid.Column="2" Classes="card" Padding="0">
+                        <ctl:PanelCard Grid.Column="2" ShowHeader="False" Padding="0">
                             <DockPanel>
                                 <!-- Source picker. CurseForge is temporarily disabled ("coming soon")
                                      while its integration is finished. -->
@@ -658,7 +659,7 @@
                                     </StackPanel>
                                 </Grid>
                             </DockPanel>
-                        </Border>
+                        </ctl:PanelCard>
                     </Grid>
                 </DockPanel>
 
@@ -679,59 +680,53 @@
                               behaviors:SmoothScroll.Enabled="True">
                     <StackPanel Margin="24" Spacing="16" MaxWidth="1180" HorizontalAlignment="Stretch">
 
-                        <!-- About: the brand block gets the biggest watermark, it is the title card. -->
-                        <ctl:PanelCard ShowHeader="False" Padding="26,24" WatermarkSize="210"
-                                       Icon="{icon:LucideImage Kind=Rocket, Brush={StaticResource TextSecondary}}">
-                            <StackPanel Spacing="10">
-                                <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"/>
-                                <Border CornerRadius="999" Padding="10,3" HorizontalAlignment="Left"
-                                        Background="{DynamicResource AccentSubtle}"
-                                        BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
-                                    <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version"
-                                               Foreground="{DynamicResource TextPrimary}"/>
-                                </Border>
-                                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap"
-                                           Foreground="{DynamicResource TextSecondary}" Text=""/>
-                                <TextBlock x:Name="AboutContact" TextWrapping="Wrap"
-                                           Foreground="{DynamicResource TextMuted}" Text=""/>
+                        <!-- Page header, same rhythm as Home and the dashboard. -->
+                        <StackPanel Spacing="3" Margin="0,0,0,2" ClipToBounds="True">
+                            <TextBlock x:Name="LblSettingsTitle" Classes="Title" Text="Settings"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="LblSettingsHint" Classes="Caption" Text=""
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
 
-                                <Border Height="1" Background="{DynamicResource BorderSubtle}" Margin="0,8"/>
-
-                                <Grid ColumnDefinitions="Auto,10,Auto,16,Auto,12,*" VerticalAlignment="Center">
-                                    <TextBlock Grid.Column="0" x:Name="LblLanguage" Text="Language:"
-                                               VerticalAlignment="Center"
-                                               Foreground="{DynamicResource TextMuted}"/>
-                                    <ComboBox Grid.Column="2" x:Name="LanguageCombo" Width="180"/>
-                                    <Button Grid.Column="4" x:Name="CheckUpdatesButton" Classes="secondary"
-                                            Content="Check for updates"/>
-                                    <TextBlock Grid.Column="6" x:Name="UpdateCheckStatus" Text=""
-                                               VerticalAlignment="Center" TextWrapping="Wrap"
-                                               Foreground="{DynamicResource TextSecondary}"/>
-                                </Grid>
-                            </StackPanel>
+                        <!-- General: preferences that change how the launcher behaves. -->
+                        <ctl:PanelCard x:Name="GeneralPanel" Header="General"
+                                       Icon="{icon:LucideImage Kind=Settings, Brush={StaticResource TextSecondary}}">
+                            <Grid ColumnDefinitions="Auto,12,220,*" VerticalAlignment="Center">
+                                <TextBlock Grid.Column="0" x:Name="LblLanguage" Text="Language:"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                                <ComboBox Grid.Column="2" x:Name="LanguageCombo"
+                                          HorizontalAlignment="Stretch"/>
+                            </Grid>
                         </ctl:PanelCard>
 
                         <!-- Java: detect real runtimes, pick a default, or install a Temurin JRE. -->
                         <ctl:PanelCard x:Name="JavaPanel" Header="Java"
                                        Icon="{icon:LucideImage Kind=Coffee, Brush={StaticResource TextSecondary}}">
-                            <StackPanel Spacing="12">
+                            <StackPanel Spacing="14">
                                 <Grid ColumnDefinitions="Auto,12,*">
                                     <Button Grid.Column="0" x:Name="DetectJavaButton" Classes="secondary"
                                             Content="Detect / fix Java"/>
                                     <ComboBox Grid.Column="2" x:Name="DefaultJavaCombo"
                                               HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                                 </Grid>
-                                <Grid ColumnDefinitions="Auto,10,Auto,10,Auto,*">
+
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                                <Grid ColumnDefinitions="Auto,12,150,12,Auto,*">
                                     <TextBlock Grid.Column="0" x:Name="LblInstallJava" Text="Install Java:"
                                                VerticalAlignment="Center"
                                                Foreground="{DynamicResource TextMuted}"/>
-                                    <ComboBox Grid.Column="2" x:Name="JavaInstallCombo" Width="140"
-                                              VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Column="2" x:Name="JavaInstallCombo"
+                                              HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                                     <Button Grid.Column="4" x:Name="InstallJavaButton" Classes="secondary"
                                             Content="Install"/>
                                 </Grid>
+
                                 <TextBlock x:Name="JavaStatus" Text="" TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextSecondary}"/>
+
                                 <Border x:Name="JavaOracleWarnBox" IsVisible="False" CornerRadius="10" Padding="13,11"
                                         Background="{DynamicResource BgElevated}"
                                         BorderBrush="{DynamicResource Warning}" BorderThickness="1">
@@ -761,6 +756,39 @@
                                              IsReadOnly="True" TextWrapping="NoWrap" Background="Transparent"
                                              BorderThickness="0" VerticalContentAlignment="Top"/>
                                 </Border>
+                            </StackPanel>
+                        </ctl:PanelCard>
+
+                        <!-- About: the identity block, and the only panel here that gets the full
+                             treatment — it is the one that is meant to feel like a title card. -->
+                        <ctl:PanelCard Classes="feature" ShowHeader="False" Padding="26,24" WatermarkSize="168"
+                                       Icon="{icon:LucideImage Kind=Rocket, Brush={StaticResource TextSecondary}}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"
+                                               VerticalAlignment="Center"/>
+                                    <Border CornerRadius="999" Padding="11,4" VerticalAlignment="Center"
+                                            Background="{DynamicResource AccentSubtle}"
+                                            BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                                        <TextBlock x:Name="AboutVersion" Classes="Mono" Text="version"
+                                                   Foreground="{DynamicResource TextPrimary}"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                    <Button x:Name="CheckUpdatesButton" Classes="secondary"
+                                            Content="Check for updates"/>
+                                    <TextBlock x:Name="UpdateCheckStatus" Text="" VerticalAlignment="Center"
+                                               TextWrapping="Wrap" MaxWidth="520"
+                                               Foreground="{DynamicResource TextSecondary}"/>
+                                </StackPanel>
+
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}" Margin="0,4"/>
+
+                                <TextBlock x:Name="AboutCopyright" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondary}" Text=""/>
+                                <TextBlock x:Name="AboutContact" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextMuted}" Text=""/>
                             </StackPanel>
                         </ctl:PanelCard>
                     </StackPanel>

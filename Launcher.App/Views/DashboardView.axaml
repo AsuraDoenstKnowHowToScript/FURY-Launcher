@@ -19,14 +19,15 @@
             <StackPanel Spacing="16">
 
                 <!-- Greeting + the one action that matters: keep playing -->
-                <Border Classes="card" Padding="26,22">
-                    <Border.Background>
+                <ctl:PanelCard Classes="feature" ShowHeader="False" Padding="26,22" WatermarkSize="150"
+                               Icon="{icon:LucideImage Kind=Gamepad2, Brush={StaticResource TextSecondary}}">
+                    <ctl:PanelCard.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
                             <GradientStop Offset="0" Color="#2E2054"/>
                             <GradientStop Offset="0.55" Color="#1C1728"/>
                             <GradientStop Offset="1" Color="#16141E"/>
                         </LinearGradientBrush>
-                    </Border.Background>
+                    </ctl:PanelCard.Background>
                     <!-- The actions column is sized first (Auto); the greeting takes what is left and
                          trims. ClipToBounds is the belt-and-braces part: even if a very long word
                          cannot trim, it is clipped instead of being painted over the buttons. -->
@@ -64,7 +65,7 @@
                             </Button>
                         </StackPanel>
                     </Grid>
-                </Border>
+                </ctl:PanelCard>
 
                 <!-- Four numbers that answer "how is my setup doing" -->
                 <Grid ColumnDefinitions="*,12,*,12,*,12,*">
@@ -205,7 +206,7 @@
 
         <!-- ========================== CHANGELOG RAIL ========================== -->
         <!-- Header and tabs stay put; only the list of releases scrolls. -->
-        <Border Grid.Column="2" Classes="card" Padding="18">
+        <ctl:PanelCard Grid.Column="2" ShowHeader="False" Padding="18">
             <Grid RowDefinitions="Auto,Auto,*">
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="9">
                     <Image Width="17" Height="17" VerticalAlignment="Center"
@@ -297,6 +298,6 @@
                     </ItemsControl>
                 </ScrollViewer>
             </Grid>
-        </Border>
+        </ctl:PanelCard>
     </Grid>
 </UserControl>

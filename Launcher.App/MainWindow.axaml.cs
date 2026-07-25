@@ -276,6 +276,9 @@ public partial class MainWindow : AppWindow, IDialogService
         NavMods.Content = Loc.T("nav.content");
         NavAccounts.Content = Loc.T("nav.accounts");
         NavSettings.Content = Loc.T("nav.settings");
+        LblSettingsTitle.Text = Loc.T("nav.settings");
+        LblSettingsHint.Text = Loc.T("settings.subtitle");
+        GeneralPanel.Header = Loc.T("settings.general");
         JavaPanel.Header = Loc.T("settings.java");
         LblInstallJava.Text = Loc.T("java.installlabel");
         InstallJavaButton.Content = Loc.T("btn.install");
