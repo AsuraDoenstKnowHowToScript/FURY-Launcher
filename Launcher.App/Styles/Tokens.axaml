@@ -113,8 +113,8 @@
     <SolidColorBrush x:Key="NavigationViewItemBackgroundCheckedDisabled" Color="Transparent"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrush" Color="Transparent"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushDisabled" Color="Transparent"/>
-    <SolidColorBrush x:Key="NavigationViewItemBorderBrushPointerOver" Color="Transparent"/>
-    <SolidColorBrush x:Key="NavigationViewItemBorderBrushPressed" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushPressed" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelected" Color="{StaticResource AccentColor}" Opacity="0.55"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelectedPressed" Color="{StaticResource AccentColor}" Opacity="0.55"/>
@@ -234,6 +234,15 @@
     <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
     <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedDisabled" Color="{StaticResource TextMutedColor}"/>
     <SolidColorBrush x:Key="ComboBoxItemPillFillBrush" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrush" Color="Transparent"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrushDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrushPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrushPressed" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelected" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedUnfocused" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedPressed" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemBorderBrushSelectedDisabled" Color="Transparent"/>
 
     <!-- Text fields, including the read-only log box. Same rule: the fill never moves. -->
     <SolidColorBrush x:Key="TextControlBackground" Color="{StaticResource BgInputColor}"/>
@@ -256,7 +265,7 @@
     <SolidColorBrush x:Key="TextControlButtonBackgroundPointerOver" Color="Transparent"/>
     <SolidColorBrush x:Key="TextControlButtonBackgroundPressed" Color="{StaticResource AccentColor}" Opacity="0.16"/>
     <SolidColorBrush x:Key="TextControlButtonBorderBrush" Color="Transparent"/>
-    <SolidColorBrush x:Key="TextControlButtonBorderBrushPointerOver" Color="Transparent"/>
+    <SolidColorBrush x:Key="TextControlButtonBorderBrushPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
     <SolidColorBrush x:Key="TextControlButtonBorderBrushPressed" Color="Transparent"/>
     <SolidColorBrush x:Key="TextControlButtonForeground" Color="{StaticResource TextMutedColor}"/>
     <SolidColorBrush x:Key="TextControlButtonForegroundPointerOver" Color="{StaticResource TextPrimaryColor}"/>

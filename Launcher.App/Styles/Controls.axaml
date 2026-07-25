@@ -159,22 +159,27 @@
     <Style Selector="Button.ghost /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
+        <!-- The border is always there, just invisible at rest. Growing one on hover would
+             move everything inside by a pixel, which is its own kind of flicker. -->
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
         <Setter Property="Transitions">
-            <Transitions><BrushTransition Property="Foreground" Duration="0:0:0.12"/></Transitions>
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="0:0:0.12"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+            </Transitions>
         </Setter>
     </Style>
     <!-- Hover paints nothing. The text and icon coming up to full is the entire cue. -->
     <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
     <Style Selector="Button.ghost:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
     </Style>
 
@@ -189,7 +194,7 @@
         </Setter>
     </Style>
     <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
     </Style>
     <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
         <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
@@ -233,8 +238,12 @@
     <Style Selector="ListBoxItem">
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
     </Style>
+    <!-- No outline on the row itself. Most rows in this app wrap a Border.card, which lights
+         its own outline on hover; giving the row one too would draw two rings inside each
+         other. Rows without a card lift their text instead. -->
     <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
     <!-- Selected: subtle accent tint, not the full purple -->
     <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
@@ -318,10 +327,12 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Name="Pill" CornerRadius="10" Padding="16,7" Background="Transparent">
+                <Border Name="Pill" CornerRadius="10" Padding="16,7" Background="Transparent"
+                        BorderThickness="1">
                     <Border.Transitions>
                         <Transitions>
                             <BrushTransition Property="Background" Duration="0:0:0.14"/>
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.14"/>
                         </Transitions>
                     </Border.Transitions>
                     <ContentPresenter Content="{TemplateBinding Content}"
@@ -330,11 +341,16 @@
             </ControlTemplate>
         </Setter>
     </Style>
+    <Style Selector="RadioButton.segment /template/ Border#Pill">
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
     <Style Selector="RadioButton.segment:pointerover /template/ Border#Pill">
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
     </Style>
     <Style Selector="RadioButton.segment:checked /template/ Border#Pill">
         <Setter Property="Background" Value="{DynamicResource Accent}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Accent}"/>
     </Style>
     <Style Selector="RadioButton.segment:checked">
         <Setter Property="Foreground" Value="{DynamicResource OnAccent}"/>
@@ -424,7 +440,7 @@
     </Style>
     <Style Selector="ComboBox:pointerover /template/ Border#Background">
         <Setter Property="Background" Value="{DynamicResource BgInput}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
     </Style>
     <Style Selector="ComboBox:focus /template/ Border#Background">
         <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
@@ -468,6 +484,7 @@
     <Style Selector="ComboBoxItem">
         <Setter Property="Padding" Value="11,8"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusSm}"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Margin" Value="0,1"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
@@ -480,14 +497,17 @@
     </Style>
     <Style Selector="ComboBoxItem:pointerover">
         <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
     <Style Selector="ComboBoxItem:selected">
         <Setter Property="Background" Value="{DynamicResource AccentSubtle}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
     <Style Selector="ComboBoxItem:selected:pointerover">
         <Setter Property="Background" Value="{DynamicResource AccentSubtle}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentOutline}"/>
     </Style>
 
     <!-- Read-only variant: same card, no hover response. A lift and an accent outline promise
