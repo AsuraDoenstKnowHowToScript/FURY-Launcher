@@ -10,6 +10,7 @@
         x:Class="Launcher.App.MainWindow"
         Width="1280" Height="860"
         MinWidth="1120" MinHeight="740"
+        WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BgBase}"
         Foreground="{DynamicResource TextPrimary}"
         FontWeight="SemiBold"
@@ -93,10 +94,17 @@
                 <Grid x:Name="HomePanel" Margin="24">
                     <DockPanel>
                         <!-- Header: title + instance-level actions -->
-                        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
-                            <TextBlock Grid.Column="0" x:Name="LblInstances" Classes="Title"
-                                       Text="Instances" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,16,Auto" Margin="0,0,0,18">
+                            <StackPanel Grid.Column="0" Spacing="3" VerticalAlignment="Center"
+                                        ClipToBounds="True">
+                                <TextBlock x:Name="LblInstances" Classes="Title" Text="Instances"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="LblInstancesHint" Classes="Caption" Text=""
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                                        VerticalAlignment="Center">
                                 <Button x:Name="ImportButton" Classes="secondary">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <TextBlock x:Name="ImportButtonLabel" Text="Import" VerticalAlignment="Center"/>
@@ -123,23 +131,26 @@
                         <!-- Hero: the selected instance + the big PLAY button, promoted to a top
                              banner so playing is the first thing the page is about. The violet
                              sweep is inline so it beats the card style's flat background. -->
-                        <Border DockPanel.Dock="Top" Classes="card" x:Name="HeroCard" Margin="0,0,0,16" Padding="20,18"
+                        <Border DockPanel.Dock="Top" Classes="card" x:Name="HeroCard" Margin="0,0,0,16" Padding="26,22"
                                 BoxShadow="0 8 30 0 #386D28D9">
+                            <!-- Same sweep as the dashboard greeting band, so the two landing
+                                 surfaces read as one family. -->
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                                    <GradientStop Offset="0" Color="#2B1E4E"/>
-                                    <GradientStop Offset="0.5" Color="#1C1728"/>
+                                    <GradientStop Offset="0" Color="#2E2054"/>
+                                    <GradientStop Offset="0.55" Color="#1C1728"/>
                                     <GradientStop Offset="1" Color="#16141E"/>
                                 </LinearGradientBrush>
                             </Border.Background>
-                            <StackPanel Spacing="12">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                            <StackPanel Spacing="14">
+                                <Grid ColumnDefinitions="*,16,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="3" VerticalAlignment="Center"
+                                                ClipToBounds="True">
                                         <TextBlock x:Name="HeroName" Classes="Display" Text="—" TextTrimming="CharacterEllipsis"/>
                                         <TextBlock x:Name="HeroMeta" Classes="Caption"
                                                    Foreground="{DynamicResource TextSecondary}" Text=""/>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                         <!-- Frequent utilities stay visible; rare/destructive go in the overflow. -->
                                         <Button x:Name="EditInstanceButton" Classes="secondary" Content="Edit" MinHeight="48"/>
                                         <Button x:Name="OpenFolderButton" Classes="secondary" Content="Folder" MinHeight="48"/>
@@ -205,9 +216,13 @@
 
                         <!-- Log drawer: collapsed by default; opens automatically on error. -->
                         <Expander x:Name="LogDrawer" DockPanel.Dock="Bottom" IsExpanded="False"
-                                  Margin="0,12,0,0" HorizontalAlignment="Stretch">
+                                  Margin="0,14,0,0" HorizontalAlignment="Stretch">
                             <Expander.Header>
-                                <TextBlock x:Name="LblLog" Text="Log"/>
+                                <StackPanel Orientation="Horizontal" Spacing="9">
+                                    <Image Width="15" Height="15" VerticalAlignment="Center"
+                                           Source="{icon:LucideImage Kind=FileText, Brush={StaticResource TextMuted}}"/>
+                                    <TextBlock x:Name="LblLog" Text="Log" VerticalAlignment="Center"/>
+                                </StackPanel>
                             </Expander.Header>
                             <TextBox x:Name="LogBox" Classes="Mono" Height="180" AcceptsReturn="True" IsReadOnly="True"
                                      TextWrapping="NoWrap" VerticalContentAlignment="Top"/>
@@ -236,21 +251,39 @@
                                     </ListBox.Styles>
                                     <ListBox.ItemTemplate>
                                         <DataTemplate x:DataType="models:Instance">
-                                            <Border Classes="card flat" Width="212" Padding="16">
-                                                <StackPanel Spacing="8">
-                                                    <TextBlock Classes="Subtitle" Text="{Binding Name}"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                    <Border Background="{DynamicResource BgElevated}" CornerRadius="999"
+                                            <!-- Loader-tinted badge, name, then the technical line at the
+                                                 bottom: the same header-chip rhythm the dashboard uses. -->
+                                            <Border Classes="card flat" Width="236" MinHeight="132" Padding="16">
+                                                <DockPanel>
+                                                    <Border DockPanel.Dock="Top" Width="40" Height="40" CornerRadius="11"
+                                                            HorizontalAlignment="Left" Margin="0,0,0,12"
+                                                            Background="{DynamicResource BgElevated}"
                                                             BorderThickness="1"
-                                                            BorderBrush="{Binding Loader, Converter={StaticResource LoaderColor}}"
-                                                            Padding="9,3" HorizontalAlignment="Left">
-                                                        <TextBlock Classes="Caption"
-                                                                   Foreground="{Binding Loader, Converter={StaticResource LoaderColor}}"
-                                                                   Text="{Binding Loader}"/>
+                                                            BorderBrush="{Binding Loader, Converter={StaticResource LoaderColor}}">
+                                                        <Image Width="19" Height="19" HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               Source="{icon:LucideImage Kind=Boxes, Brush={StaticResource TextSecondary}}"/>
                                                     </Border>
-                                                    <TextBlock Classes="Caption" Foreground="{DynamicResource TextMuted}"
-                                                               Text="{Binding McVersion}"/>
-                                                </StackPanel>
+
+                                                    <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,8,*"
+                                                          Margin="0,10,0,0">
+                                                        <Border Grid.Column="0" CornerRadius="999" Padding="9,3"
+                                                                Background="{DynamicResource BgElevated}"
+                                                                BorderThickness="1"
+                                                                BorderBrush="{Binding Loader, Converter={StaticResource LoaderColor}}">
+                                                            <TextBlock Classes="Caption" Text="{Binding Loader}"
+                                                                       Foreground="{Binding Loader, Converter={StaticResource LoaderColor}}"/>
+                                                        </Border>
+                                                        <TextBlock Grid.Column="2" Classes="Caption"
+                                                                   Text="{Binding McVersion}" VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Foreground="{DynamicResource TextMuted}"/>
+                                                    </Grid>
+
+                                                    <TextBlock Classes="Subtitle" Text="{Binding Name}"
+                                                               VerticalAlignment="Top" TextWrapping="Wrap"
+                                                               MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                                                </DockPanel>
                                             </Border>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>

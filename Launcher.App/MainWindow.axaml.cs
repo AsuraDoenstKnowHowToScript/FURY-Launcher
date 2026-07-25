@@ -287,6 +287,7 @@ public partial class MainWindow : AppWindow, IDialogService
 
         // Instances tab
         LblInstances.Text = Loc.T("instances.list");
+        LblInstancesHint.Text = Loc.T("home.subtitle");
         AddInstanceLabel.Text = Loc.T("home.newtitle");
         EditInstanceButton.Content = Loc.T("btn.edit");
         OpenFolderButton.Content = Loc.T("btn.folder");
