@@ -46,6 +46,10 @@
     <SolidColorBrush x:Key="AccentPressed" Color="{StaticResource AccentPressedColor}"/>
     <!-- Accent at ~15%, for a selected list item, not the full purple -->
     <SolidColorBrush x:Key="AccentSubtle" Color="{StaticResource AccentColor}" Opacity="0.15"/>
+    <!-- The only fill hover is ever allowed to use. Hovering must never brighten something
+         towards grey or white: on this palette that reads as a flash, not as a response.
+         A violet whisper is the launcher answering, and it stays out of the way. -->
+    <SolidColorBrush x:Key="AccentWash" Color="{StaticResource AccentColor}" Opacity="0.10"/>
     <!-- Accent at ~55%: hover/focus outlines that glow without shouting -->
     <SolidColorBrush x:Key="AccentOutline" Color="{StaticResource AccentColor}" Opacity="0.55"/>
     <SolidColorBrush x:Key="OnAccent" Color="{StaticResource OnAccentColor}"/>
@@ -101,8 +105,8 @@
          outline, which is enough to find at a glance without competing with the page. -->
     <SolidColorBrush x:Key="NavigationViewItemBackground" Color="Transparent"/>
     <SolidColorBrush x:Key="NavigationViewItemBackgroundDisabled" Color="Transparent"/>
-    <SolidColorBrush x:Key="NavigationViewItemBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
-    <SolidColorBrush x:Key="NavigationViewItemBackgroundPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundPointerOver" Color="{StaticResource AccentColor}" Opacity="0.10"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundPressed" Color="{StaticResource AccentColor}" Opacity="0.16"/>
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="{StaticResource AccentColor}" Opacity="0.16"/>
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.22"/>
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedPressed" Color="{StaticResource AccentColor}" Opacity="0.26"/>
@@ -150,7 +154,7 @@
          goes nowhere visible, whichever value gets there first.
          Pressed sits below the resting layer: buttons look pushed in, not lit up. -->
     <SolidColorBrush x:Key="ButtonBackground" Color="{StaticResource BgElevatedColor}"/>
-    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
     <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{StaticResource BgSurfaceColor}"/>
     <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="{StaticResource BgSurfaceColor}"/>
     <SolidColorBrush x:Key="ButtonBorderBrush" Color="{StaticResource BorderSubtleColor}"/>
@@ -206,19 +210,19 @@
 
     <!-- The open list. -->
     <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="{StaticResource BgSurfaceColor}"/>
-    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
-    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPressed" Color="{StaticResource BgHoverColor}"/>
-    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerPressed" Color="{StaticResource BgHoverColor}"/>
-    <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
-    <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerOver" Color="{StaticResource AccentColor}" Opacity="0.10"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPressed" Color="{StaticResource AccentColor}" Opacity="0.16"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackgroundPointerPressed" Color="{StaticResource AccentColor}" Opacity="0.16"/>
+    <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerOver" Color="{StaticResource AccentColor}" Opacity="0.10"/>
+    <SolidColorBrush x:Key="ComboBoxFocusedDropDownBackgroundPointerPressed" Color="{StaticResource AccentColor}" Opacity="0.16"/>
     <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="{StaticResource BorderSubtleColor}"/>
     <SolidColorBrush x:Key="ComboBoxDropDownForeground" Color="{StaticResource TextPrimaryColor}"/>
 
     <!-- Rows in the open list. Selected is an accent tint, never the full purple. -->
     <SolidColorBrush x:Key="ComboBoxItemBackground" Color="Transparent"/>
     <SolidColorBrush x:Key="ComboBoxItemBackgroundDisabled" Color="Transparent"/>
-    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
-    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="{StaticResource AccentColor}" Opacity="0.10"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="{StaticResource AccentColor}" Opacity="0.16"/>
     <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="{StaticResource AccentColor}" Opacity="0.15"/>
     <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedUnfocused" Color="{StaticResource AccentColor}" Opacity="0.15"/>
     <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.22"/>
@@ -253,8 +257,8 @@
     <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="{StaticResource TextMutedColor}"/>
     <SolidColorBrush x:Key="TextControlPlaceholderForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
     <!-- The inline clear button inside a text field. -->
-    <SolidColorBrush x:Key="TextControlButtonBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
-    <SolidColorBrush x:Key="TextControlButtonBackgroundPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="TextControlButtonBackgroundPointerOver" Color="{StaticResource AccentColor}" Opacity="0.10"/>
+    <SolidColorBrush x:Key="TextControlButtonBackgroundPressed" Color="{StaticResource AccentColor}" Opacity="0.16"/>
     <SolidColorBrush x:Key="TextControlButtonBorderBrush" Color="Transparent"/>
     <SolidColorBrush x:Key="TextControlButtonBorderBrushPointerOver" Color="Transparent"/>
     <SolidColorBrush x:Key="TextControlButtonBorderBrushPressed" Color="Transparent"/>
@@ -264,8 +268,8 @@
 
     <!-- Checkboxes: the box is an input surface off, accent on, and the tick is never grey. -->
     <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="{StaticResource BgInputColor}"/>
-    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="{StaticResource BgElevatedColor}"/>
-    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="{StaticResource BgInputColor}"/>
+    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="{StaticResource BgInputColor}"/>
     <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedDisabled" Color="{StaticResource BgSurfaceColor}"/>
     <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="{StaticResource BorderStrongColor}"/>
     <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="{StaticResource AccentColor}"/>
