@@ -78,11 +78,67 @@
 
     <!-- Theme overrides: give the nav pane its own (slightly deeper) layer so the
          sidebar reads as chrome and the content as the page. Unknown keys are ignored
-         by the theme, so these are safe no-ops on other platforms/themes. -->
-    <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#100E16"/>
-    <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#100E16"/>
+         by the theme, so these are safe no-ops on other platforms/themes.
+
+         The pane falls off vertically instead of sitting flat. It is the tallest surface
+         in the window, and a single flat tone over that height reads as a slab; the
+         gradient is small enough that you would not name it, which is the point. -->
+    <LinearGradientBrush x:Key="NavigationViewDefaultPaneBackground" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#16131F"/>
+        <GradientStop Offset="1" Color="#0B0A11"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="NavigationViewExpandedPaneBackground" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#16131F"/>
+        <GradientStop Offset="1" Color="#0B0A11"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent"/>
     <sys:Double x:Key="ScrollBarSize">10</sys:Double>
+
+    <!-- Sidebar items. Same rule as every other control here: a state left unnamed is
+         painted from the stock palette, and the sidebar was still on it.
+         Resting is transparent so the pane itself shows through and the items read as a
+         list, not a stack of buttons. Selected is the accent at low alpha with a matching
+         outline, which is enough to find at a glance without competing with the page. -->
+    <SolidColorBrush x:Key="NavigationViewItemBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundPointerOver" Color="{StaticResource BgElevatedColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundPressed" Color="{StaticResource BgHoverColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="{StaticResource AccentColor}" Opacity="0.16"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.22"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedPressed" Color="{StaticResource AccentColor}" Opacity="0.26"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundChecked" Color="{StaticResource AccentColor}" Opacity="0.16"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundCheckedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.22"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundCheckedPressed" Color="{StaticResource AccentColor}" Opacity="0.26"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundCheckedDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrush" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushPointerOver" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushPressed" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelected" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelectedPressed" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelectedDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushChecked" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushCheckedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushCheckedPressed" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <SolidColorBrush x:Key="NavigationViewItemBorderBrushCheckedDisabled" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemForeground" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundSelected" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundSelectedPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundSelectedPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundSelectedDisabled" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundChecked" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundCheckedPointerOver" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundCheckedPressed" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemForegroundCheckedDisabled" Color="{StaticResource TextMutedColor}"/>
+    <!-- Group labels above each run of items, and the bar that marks the current section. -->
+    <SolidColorBrush x:Key="NavigationViewItemHeaderForeground" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="NavigationViewItemSeparatorForeground" Color="{StaticResource BorderSubtleColor}"/>
+    <SolidColorBrush x:Key="NavigationViewSelectionIndicatorForeground" Color="{StaticResource AccentColor}"/>
 
     <!-- Button state brushes, restated in our palette.
          The Fluent theme sets these on the button's content presenter for :pointerover

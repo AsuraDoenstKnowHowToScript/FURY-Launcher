@@ -202,6 +202,10 @@ public static class Loc
             ["mods.vanillatip"] = "Vanilla instances do not support mods. Use Fabric/Forge/NeoForge.",
             ["mods.createmodded"] = "Create modded instance",
             ["account.offline"] = "Offline",
+            // --- sidebar ---
+            ["nav.group.play"] = "Play",
+            ["nav.group.manage"] = "Manage",
+            ["nav.noaccount"] = "No account selected",
             // --- dashboard ---
             ["nav.dashboard"] = "Dashboard",
             ["dash.subtitle"] = "Your instances and your hours, at a glance.",
@@ -480,6 +484,10 @@ public static class Loc
             ["mods.vanillatip"] = "Instâncias Vanilla não suportam mods. Use Fabric/Forge/NeoForge.",
             ["mods.createmodded"] = "Criar instância modada",
             ["account.offline"] = "Offline",
+            // --- barra lateral ---
+            ["nav.group.play"] = "Jogar",
+            ["nav.group.manage"] = "Gerenciar",
+            ["nav.noaccount"] = "Nenhuma conta selecionada",
             // --- painel ---
             ["nav.dashboard"] = "Painel",
             ["dash.subtitle"] = "Suas instâncias e suas horas, num relance.",

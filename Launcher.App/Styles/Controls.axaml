@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:uic="using:FluentAvalonia.UI.Controls">
+        xmlns:uic="using:FluentAvalonia.UI.Controls"
+        xmlns:uip="using:FluentAvalonia.UI.Controls.Primitives">
 
     <!-- Global text defaults. Text is never the accent colour, always a grey.
          SemiBold weight: lighter weights of Outfit read too thin for low-vision users. -->
@@ -19,11 +20,35 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
-    <!-- Left navigation items: a bit larger + bolder, with room to breathe. -->
+    <!-- ============================ SIDEBAR ============================ -->
+    <!-- Items read as a list inside the pane rather than a column of buttons: transparent
+         at rest, inset from both edges so the rounded selection has somewhere to sit, and
+         only the current one carries a fill. The colours for every state come from
+         Tokens.axaml; what is set here is shape and rhythm. -->
     <Style Selector="uic|NavigationViewItem">
-        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Height" Value="46"/>
+        <Setter Property="Height" Value="42"/>
+        <Setter Property="Margin" Value="8,2"/>
+    </Style>
+    <!-- The presenter is the part that actually paints an item, so the corner and the
+         outline belong to it, not to the item. -->
+    <Style Selector="uic|NavigationViewItem /template/ uip|NavigationViewItemPresenter#NVIPresenter">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <!-- Group labels. Small, muted and spaced away from the run above, so they separate
+         the list without being mistaken for something clickable. -->
+    <Style Selector="uic|NavigationViewItemHeader">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Margin" Value="10,14,10,2"/>
     </Style>
 
     <!-- ============================ BUTTONS ============================ -->

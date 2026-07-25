@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -243,6 +244,7 @@ public partial class MainWindow : AppWindow, IDialogService
         // Import/Export/Delete Click handlers are wired in XAML (they live inside
         // flyouts, a separate namescope, so no code-behind field is generated).
         ActiveAccountChip.Click += OnActiveChipClick;
+        NavAccountChip.Click += OnActiveChipClick;
 
         // --- empty-state + Vanilla-mods shortcuts ---
         EmptyStateNewButton.Click += OnEmptyStateNew;
@@ -294,7 +296,10 @@ public partial class MainWindow : AppWindow, IDialogService
     /// <summary>Applies every static UI string from <see cref="Loc"/> for the current language.</summary>
     private void ApplyLanguage()
     {
-        // Tabs
+        // Tabs. Group labels are upper-cased here rather than in the translations, so a
+        // language whose casing rules differ still goes through its own culture.
+        NavGroupPlay.Content = Loc.T("nav.group.play").ToUpper(CultureInfo.CurrentCulture);
+        NavGroupManage.Content = Loc.T("nav.group.manage").ToUpper(CultureInfo.CurrentCulture);
         NavDashboard.Content = Loc.T("nav.dashboard");
         NavHome.Content = Loc.T("nav.home");
         NavMods.Content = Loc.T("nav.content");
@@ -404,7 +409,11 @@ public partial class MainWindow : AppWindow, IDialogService
     /// <summary>Left-nav navigation: show the chosen section, hide the rest.</summary>
     private void OnNavSelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
     {
-        var item = e.SelectedItem as NavigationViewItem;
+        // The pane also holds group headers, which are not NavigationViewItem. They are not
+        // selectable, so this should never fire for one, but bailing out beats hiding every
+        // section and leaving the window blank if that assumption ever stops holding.
+        if (e.SelectedItem is not NavigationViewItem item) return;
+
         DashboardPanel.IsVisible = ReferenceEquals(item, NavDashboard);
         HomePanel.IsVisible = ReferenceEquals(item, NavHome);
         ModsPanel.IsVisible = ReferenceEquals(item, NavMods);
@@ -714,6 +723,9 @@ public partial class MainWindow : AppWindow, IDialogService
     /// <summary>Home chip: shows the active account's avatar + nick, or a placeholder.</summary>
     private void UpdateActiveAccountChip()
     {
+        // Two chips show the active account: the hero on Home, and the sidebar footer, which
+        // is the only one visible from every tab. They are fed from here together so they can
+        // never disagree about who is playing.
         var acc = _accountsVm.ActiveAccount;
         if (acc == null)
         {
@@ -721,13 +733,29 @@ public partial class MainWindow : AppWindow, IDialogService
             ActiveAccountFace.Source = null;
             ActiveAccountHat.Source = null;
             ActiveAccountFallback.IsVisible = true;
+
+            NavAccountName.Text = "\u2014";
+            NavAccountKind.Text = Loc.T("nav.noaccount");
+            NavAccountFace.Source = null;
+            NavAccountHat.Source = null;
+            NavAccountFallback.IsVisible = true;
             return;
         }
-        ActiveAccountName.Text = string.IsNullOrWhiteSpace(acc.Username) ? "\u2014" : acc.Username;
+        var name = string.IsNullOrWhiteSpace(acc.Username) ? "\u2014" : acc.Username;
         var card = _accountsVm.Cards.FirstOrDefault(v => v.Id == acc.Id);
+
+        ActiveAccountName.Text = name;
         ActiveAccountFace.Source = card?.Face;
         ActiveAccountHat.Source = card?.Hat;
         ActiveAccountFallback.IsVisible = card?.Face == null;
+
+        NavAccountName.Text = name;
+        // The card's badge already says Microsoft, Offline or session expired; reuse it
+        // rather than deriving the same thing a second way.
+        NavAccountKind.Text = card?.Badge ?? "";
+        NavAccountFace.Source = card?.Face;
+        NavAccountHat.Source = card?.Hat;
+        NavAccountFallback.IsVisible = card?.Face == null;
     }
 
     private void OnActiveChipClick(object? sender, RoutedEventArgs e)

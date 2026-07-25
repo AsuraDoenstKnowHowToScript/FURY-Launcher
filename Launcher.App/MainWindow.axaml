@@ -48,16 +48,32 @@
                             IsSettingsVisible="False" IsBackButtonVisible="False"
                             IsPaneToggleButtonVisible="False">
 
+            <!-- Brand block: the mark, the wordmark and the build, then a rule that closes
+                 the block off from the list below it. -->
             <uic:NavigationView.PaneHeader>
-                <StackPanel Margin="10,12,8,16" Spacing="1">
-                    <TextBlock Text="FURY" FontFamily="{DynamicResource FontUi}" FontSize="26"
-                               FontWeight="Bold" Foreground="{DynamicResource BrandGradient}"/>
-                    <TextBlock x:Name="NavVersion" Classes="Mono" Text="" FontSize="12"
-                               Foreground="{DynamicResource TextMuted}"/>
+                <StackPanel Margin="16,14,16,8" Spacing="14">
+                    <Grid ColumnDefinitions="Auto,11,*">
+                        <Border Grid.Column="0" Width="38" Height="38" CornerRadius="11"
+                                ClipToBounds="True" VerticalAlignment="Center"
+                                Background="{DynamicResource AccentSubtle}"
+                                BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
+                            <Image Source="/Assets/fl-icon.png" Stretch="UniformToFill" Margin="1"/>
+                        </Border>
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center" ClipToBounds="True">
+                            <TextBlock Text="FURY" FontFamily="{DynamicResource FontUi}" FontSize="21"
+                                       FontWeight="Bold" Foreground="{DynamicResource BrandGradient}"/>
+                            <TextBlock x:Name="NavVersion" Classes="Mono" Text="" FontSize="11"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </Grid>
+                    <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
                 </StackPanel>
             </uic:NavigationView.PaneHeader>
 
+            <!-- Grouped: what you do with the launcher, then what you manage in it. -->
             <uic:NavigationView.MenuItems>
+                <uic:NavigationViewItemHeader x:Name="NavGroupPlay" Content="PLAY"/>
                 <uic:NavigationViewItem x:Name="NavDashboard" Content="Dashboard">
                     <uic:NavigationViewItem.IconSource>
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=Gamepad2, Brush={StaticResource TextSecondary}}"/>
@@ -68,6 +84,7 @@
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=LayoutGrid, Brush={StaticResource TextSecondary}}"/>
                     </uic:NavigationViewItem.IconSource>
                 </uic:NavigationViewItem>
+                <uic:NavigationViewItemHeader x:Name="NavGroupManage" Content="MANAGE"/>
                 <uic:NavigationViewItem x:Name="NavMods" Content="Mods">
                     <uic:NavigationViewItem.IconSource>
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextSecondary}}"/>
@@ -87,6 +104,41 @@
                     </uic:NavigationViewItem.IconSource>
                 </uic:NavigationViewItem>
             </uic:NavigationView.FooterMenuItems>
+
+            <!-- Who is playing, pinned to the bottom of the pane. The hero on Home says the
+                 same thing, but only on Home; this is the answer from anywhere in the app.
+                 Clicking it goes to Accounts, the one place the choice is actually made. -->
+            <uic:NavigationView.PaneFooter>
+                <StackPanel Margin="8,6,8,10" Spacing="8">
+                    <Border Height="1" Margin="6,0" Background="{DynamicResource BorderSubtle}"/>
+                    <Button x:Name="NavAccountChip" Classes="ghost" Padding="8,7"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+                        <Grid ColumnDefinitions="Auto,10,*">
+                            <Border Grid.Column="0" Width="28" Height="28" CornerRadius="8"
+                                    ClipToBounds="True" VerticalAlignment="Center"
+                                    Background="{DynamicResource BgElevated}">
+                                <Panel>
+                                    <Image x:Name="NavAccountFallback" Width="14" Height="14"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Source="{icon:LucideImage Kind=User, Brush={StaticResource TextMuted}}"/>
+                                    <!-- Skin crops are 8px art; smoothing them turns a face to mush. -->
+                                    <Image x:Name="NavAccountFace" Stretch="Uniform"
+                                           RenderOptions.BitmapInterpolationMode="None"/>
+                                    <Image x:Name="NavAccountHat" Stretch="Uniform"
+                                           RenderOptions.BitmapInterpolationMode="None"/>
+                                </Panel>
+                            </Border>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" ClipToBounds="True">
+                                <TextBlock x:Name="NavAccountName" Text="&#x2014;" FontSize="13"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="NavAccountKind" Text="" FontSize="11"
+                                           FontWeight="Medium" TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource TextMuted}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </uic:NavigationView.PaneFooter>
 
             <!-- One content host; sections toggle visibility from NavView.SelectionChanged. -->
             <Grid Margin="0">
