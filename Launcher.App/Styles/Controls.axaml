@@ -324,4 +324,14 @@
         <Setter Property="RenderTransform" Value="translateY(-2px)"/>
     </Style>
 
+    <!-- Read-only variant: same card, no hover response. A lift and an accent outline promise
+         that clicking does something, so rows that are purely informational (a playtime
+         ranking, a release note) opt out instead of lying about being interactive.
+         Declared after the hover rule so it wins for the properties it resets. -->
+    <Style Selector="Border.card.flat.static:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}"/>
+        <Setter Property="RenderTransform" Value="translateY(0px)"/>
+    </Style>
+
 </Styles>
