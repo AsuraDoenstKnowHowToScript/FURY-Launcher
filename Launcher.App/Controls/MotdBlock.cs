@@ -69,10 +69,12 @@ public sealed class MotdBlock : TextBlock
                     new TextDecoration { Location = TextDecorationLocation.Underline },
                     new TextDecoration { Location = TextDecorationLocation.Strikethrough },
                 };
+            // Qualified: this class derives from TextBlock, which has its own TextDecorations
+            // property, so the bare name resolves to that instead of the static presets.
             else if (run.Underline)
-                inline.TextDecorations = TextDecorations.Underline;
+                inline.TextDecorations = Avalonia.Media.TextDecorations.Underline;
             else if (run.Strikethrough)
-                inline.TextDecorations = TextDecorations.Strikethrough;
+                inline.TextDecorations = Avalonia.Media.TextDecorations.Strikethrough;
 
             inlines.Add(inline);
         }
