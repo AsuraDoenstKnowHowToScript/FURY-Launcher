@@ -335,6 +335,16 @@
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="CornerRadius" Value="{DynamicResource RadiusMd}"/>
+        <!-- Without these the selected text sits against the top of the box: the box grew to
+             MinHeight but its content kept the theme's default alignment. -->
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    </Style>
+    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ComboBox /template/ TextBlock#PlaceholderTextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
     <Style Selector="ComboBox /template/ Border#Background">
         <Setter Property="Background" Value="{DynamicResource BgInput}"/>

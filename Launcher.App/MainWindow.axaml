@@ -704,13 +704,66 @@
                         <!-- General: preferences that change how the launcher behaves. -->
                         <ctl:PanelCard x:Name="GeneralPanel" Header="General"
                                        Icon="{icon:LucideImage Kind=Settings, Brush={StaticResource TextSecondary}}">
-                            <Grid ColumnDefinitions="Auto,12,220,*" VerticalAlignment="Center">
-                                <TextBlock Grid.Column="0" x:Name="LblLanguage" Text="Language:"
-                                           VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TextMuted}"/>
-                                <ComboBox Grid.Column="2" x:Name="LanguageCombo"
-                                          HorizontalAlignment="Stretch"/>
-                            </Grid>
+                            <StackPanel Spacing="14">
+                                <Grid ColumnDefinitions="Auto,12,220,*" VerticalAlignment="Center">
+                                    <TextBlock Grid.Column="0" x:Name="LblLanguage" Text="Language:"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextMuted}"/>
+                                    <ComboBox Grid.Column="2" x:Name="LanguageCombo"
+                                              HorizontalAlignment="Stretch"/>
+                                </Grid>
+
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                                <!-- Behaviour toggles: each one is wired, none is decorative. -->
+                                <Grid ColumnDefinitions="*,16,Auto" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock x:Name="LblKeepOpen" Text="Keep the launcher open"/>
+                                        <TextBlock x:Name="LblKeepOpenHint" Classes="Caption" Text=""
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="2" x:Name="KeepOpenToggle"
+                                                  VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,16,Auto" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock x:Name="LblHwAccel" Text="Hardware acceleration"/>
+                                        <TextBlock x:Name="LblHwAccelHint" Classes="Caption" Text=""
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="2" x:Name="HwAccelToggle"
+                                                  VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                                <!-- JVM preset used to pre-fill new instances. -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Name="LblJvmPreset" Text="JVM preset for new instances"/>
+                                    <Grid ColumnDefinitions="260,12,Auto,*">
+                                        <ComboBox Grid.Column="0" x:Name="JvmPresetCombo"
+                                                  HorizontalAlignment="Stretch"/>
+                                        <TextBlock Grid.Column="2" x:Name="JvmPresetHint" Classes="Caption"
+                                                   VerticalAlignment="Center" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                    </Grid>
+                                    <TextBox x:Name="DefaultJvmArgsBox" Classes="Mono"
+                                             Watermark="-XX:+UseG1GC ..."/>
+                                </StackPanel>
+
+                                <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
+
+                                <Grid ColumnDefinitions="*,16,Auto" VerticalAlignment="Center">
+                                    <TextBlock Grid.Column="0" x:Name="LblResetHint" Classes="Caption" Text=""
+                                               TextWrapping="Wrap" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextMuted}"/>
+                                    <Button Grid.Column="2" x:Name="ResetSettingsButton" Classes="secondary"
+                                            Content="Reset to defaults"/>
+                                </Grid>
+                            </StackPanel>
                         </ctl:PanelCard>
 
                         <!-- Java: detect real runtimes, pick a default, or install a Temurin JRE. -->

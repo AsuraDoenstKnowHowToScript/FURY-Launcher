@@ -83,6 +83,19 @@ public partial class MainWindow : AppWindow, IDialogService
     private Instance? _editing;      // instance selected for editing (Instances tab)
     private readonly AccountsViewModel _accountsVm; // owns the Accounts screen + the active account
     private readonly DashboardViewModel _dashboardVm; // owns the Dashboard screen
+    private LauncherSettings _settings = new();     // cached preferences, saved on every change
+    private bool _suppressSettingEvents;            // guards the toggles during programmatic fills
+
+    /// <summary>JVM presets offered in Settings, in the order the dropdown lists them.</summary>
+    private static readonly (string Key, string Args)[] JvmPresets =
+    {
+        ("jvm.none", ""),
+        ("jvm.balanced", "-XX:+UseG1GC -XX:MaxGCPauseMillis=50"),
+        ("jvm.performance",
+            "-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 " +
+            "-XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:G1NewSizePercent=30 " +
+            "-XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20"),
+    };
     private CancellationTokenSource? _launchCts;
     private bool _suppressLangEvent; // guards the language dropdown during programmatic set
     private List<string> _versions = new(); // Minecraft versions shown in the create/edit dropdown
@@ -143,6 +156,17 @@ public partial class MainWindow : AppWindow, IDialogService
         LanguageCombo.ItemsSource = LanguageInfo.All.Select(LanguageInfo.NativeName).ToList();
         LanguageCombo.SelectedIndex = Array.IndexOf(LanguageInfo.All, Loc.Current);
         LanguageCombo.SelectionChanged += OnLanguageChanged;
+
+        // --- preferences: each control writes straight back to settings.json ---
+        KeepOpenToggle.IsCheckedChanged += (_, _) => SavePreference(s => s.KeepLauncherOpen = KeepOpenToggle.IsChecked ?? true);
+        HwAccelToggle.IsCheckedChanged += (_, _) => SavePreference(s =>
+        {
+            s.HardwareAcceleration = HwAccelToggle.IsChecked ?? true;
+            if (!_suppressSettingEvents) Notify(Loc.T("settings.restart"));
+        });
+        JvmPresetCombo.SelectionChanged += OnJvmPresetChanged;
+        DefaultJvmArgsBox.LostFocus += (_, _) => SavePreference(s => s.DefaultJvmArgs = DefaultJvmArgsBox.Text ?? "");
+        ResetSettingsButton.Click += OnResetSettings;
         Loc.Changed += () => Dispatcher.UIThread.Post(ApplyLanguage);
         ApplyLanguage();
 
@@ -279,6 +303,15 @@ public partial class MainWindow : AppWindow, IDialogService
         LblSettingsTitle.Text = Loc.T("nav.settings");
         LblSettingsHint.Text = Loc.T("settings.subtitle");
         GeneralPanel.Header = Loc.T("settings.general");
+        LblKeepOpen.Text = Loc.T("settings.keepopen");
+        LblKeepOpenHint.Text = Loc.T("settings.keepopen.hint");
+        LblHwAccel.Text = Loc.T("settings.hwaccel");
+        LblHwAccelHint.Text = Loc.T("settings.hwaccel.hint");
+        LblJvmPreset.Text = Loc.T("settings.jvmpreset");
+        JvmPresetHint.Text = Loc.T("settings.jvmpreset.hint");
+        LblResetHint.Text = Loc.T("settings.reset.hint");
+        ResetSettingsButton.Content = Loc.T("settings.reset");
+        LoadPreferenceControls();   // the preset names are localized too
         JavaPanel.Header = Loc.T("settings.java");
         LblInstallJava.Text = Loc.T("java.installlabel");
         InstallJavaButton.Content = Loc.T("btn.install");
@@ -533,7 +566,9 @@ public partial class MainWindow : AppWindow, IDialogService
     {
         // Restore the saved UI language before anything else so first paint is localized.
         var settings = await _core.Settings.LoadAsync();
+        _settings = settings;
         ApplySavedLanguage(settings.Language);
+        LoadPreferenceControls();
 
         // Apply the saved default Java and scan the machine for runtimes.
         _core.Game.DefaultJavaPath = settings.DefaultJavaPath;
@@ -697,6 +732,60 @@ public partial class MainWindow : AppWindow, IDialogService
 
     private void OnActiveChipClick(object? sender, RoutedEventArgs e)
         => NavView.SelectedItem = NavAccounts;
+
+    // ============================ PREFERENCES ============================
+
+    /// <summary>Fills the Settings controls from the cached preferences without re-firing handlers.</summary>
+    private void LoadPreferenceControls()
+    {
+        _suppressSettingEvents = true;
+        KeepOpenToggle.IsChecked = _settings.KeepLauncherOpen;
+        HwAccelToggle.IsChecked = _settings.HardwareAcceleration;
+        DefaultJvmArgsBox.Text = _settings.DefaultJvmArgs;
+
+        JvmPresetCombo.ItemsSource = JvmPresets.Select(p => Loc.T(p.Key)).Append(Loc.T("jvm.custom")).ToList();
+        var match = Array.FindIndex(JvmPresets, p => p.Args == _settings.DefaultJvmArgs);
+        JvmPresetCombo.SelectedIndex = match >= 0 ? match : JvmPresets.Length; // last entry = custom
+        _suppressSettingEvents = false;
+    }
+
+    /// <summary>Applies a change to the cached preferences and persists it.</summary>
+    private void SavePreference(Action<LauncherSettings> apply)
+    {
+        if (_suppressSettingEvents) return;
+        apply(_settings);
+        _ = SafeAsync(() => _core.Settings.SaveAsync(_settings));
+    }
+
+    private void OnJvmPresetChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressSettingEvents) return;
+        var idx = JvmPresetCombo.SelectedIndex;
+        if (idx < 0 || idx >= JvmPresets.Length) return; // "custom": leave the text as the user typed it
+
+        DefaultJvmArgsBox.Text = JvmPresets[idx].Args;
+        SavePreference(s => s.DefaultJvmArgs = JvmPresets[idx].Args);
+    }
+
+    private async void OnResetSettings(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
+    {
+        if (!await ConfirmAsync(Loc.T("settings.reset"), Loc.T("settings.reset.confirm"))) return;
+
+        // Preferences only: the active account and the instance list are not preferences and must
+        // survive a reset, so they are carried over rather than wiped.
+        var fresh = new LauncherSettings
+        {
+            ActiveAccountId = _settings.ActiveAccountId,
+            Language = _settings.Language,
+        };
+        _settings = fresh;
+        await _core.Settings.SaveAsync(_settings);
+
+        _core.Game.DefaultJavaPath = null;
+        LoadPreferenceControls();
+        RebuildJavaCombos();
+        Notify(Loc.T("settings.reset.done"));
+    });
 
     /// <summary>
     /// Dashboard "Play": selects the instance in the Home list (so the hero, the log view and
@@ -1146,6 +1235,8 @@ public partial class MainWindow : AppWindow, IDialogService
 
             await _core.Game.LaunchAsync(inst, session, _launchCts.Token);
             ProgressRow.IsVisible = false; // download done; the game is starting
+            // Get out of the way once the game is up, if that is what the user asked for.
+            if (!_settings.KeepLauncherOpen) WindowState = WindowState.Minimized;
         }
         catch (OperationCanceledException)
         {
@@ -1459,7 +1550,8 @@ public partial class MainWindow : AppWindow, IDialogService
                 LoaderCombo.SelectedIndex = Array.IndexOf(_loaders, LoaderType.Fabric);
             MinRamBox.Text = "512";
             MaxRamBox.Text = "2048";
-            JvmArgsBox.Text = "";
+            // Pre-fill from the preset chosen in Settings, so a new instance starts tuned.
+            JvmArgsBox.Text = _settings.DefaultJvmArgs;
             JavaPathBox.Text = "";
             SyncInstanceJavaCombo();
             InstanceStatus.Text = "";

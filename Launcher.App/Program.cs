@@ -39,8 +39,29 @@ internal static class Program
         }
     }
 
-    public static AppBuilder BuildAvaloniaApp() => AppBuilder
-        .Configure<App>()
-        .UsePlatformDetect()
-        .LogToTrace();
+    public static AppBuilder BuildAvaloniaApp()
+    {
+        var builder = AppBuilder.Configure<App>().UsePlatformDetect().LogToTrace();
+
+        // The renderer has to be chosen before the app starts, so this reads the preference
+        // straight off disk rather than through the app's services. Any failure keeps the
+        // platform default: a bad settings file must never stop the launcher from opening.
+        try
+        {
+            var settings = new SettingsService(new LauncherPaths()).LoadAsync().GetAwaiter().GetResult();
+            if (!settings.HardwareAcceleration)
+            {
+                builder = builder.With(new Avalonia.Win32PlatformOptions
+                {
+                    RenderingMode = new[] { Avalonia.Win32.Win32RenderingMode.Software }
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("[startup] could not read the rendering preference", ex);
+        }
+
+        return builder;
+    }
 }

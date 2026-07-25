@@ -97,6 +97,7 @@ public static class SmoothScroll
                 _sv = sv;
                 _current = sv.Offset.Y;
                 _target = _current;
+                EnableSubPixel(sv);
             }
 
             var max = Math.Max(0, sv.Extent.Height - sv.Viewport.Height);
@@ -140,6 +141,21 @@ public static class SmoothScroll
             // target instead or a fast flick would bleed into the parent.
             var y = _animating && ReferenceEquals(sv, _sv) ? _target : sv.Offset.Y;
             return deltaY > 0 ? y > 0.5 : y < max - 0.5;
+        }
+
+        /// <summary>
+        /// The last piece of actually-smooth scrolling, and the one that is easy to miss: layout
+        /// rounding. With it on (the default) every arrange is snapped to a whole device pixel, so
+        /// a fractional offset never renders where it was asked to — the eased motion lands on
+        /// 5px, 4px, 3px, 2px, 1px, 1px... and the unequal steps read as stuttering no matter how
+        /// clean the animation is. Turning it off for the scrolled subtree lets the content sit at
+        /// fractional positions while it moves. The animation finishes on an exact whole number,
+        /// so text is back on the pixel grid whenever the view is at rest.
+        /// </summary>
+        private static void EnableSubPixel(ScrollViewer sv)
+        {
+            if (!sv.UseLayoutRounding) return;
+            sv.UseLayoutRounding = false; // inherited, so the scrolled content follows
         }
 
         private void RequestFrame()
