@@ -257,14 +257,26 @@
                                                  bottom: the same header-chip rhythm the dashboard uses. -->
                                             <Border Classes="card flat" Width="236" MinHeight="132" Padding="16">
                                                 <DockPanel>
-                                                    <Border DockPanel.Dock="Top" Width="40" Height="40" CornerRadius="11"
+                                                    <!-- Loader glyph: an anvil for Forge, a hammer for its
+                                                         NeoForge fork, a thread spool for Fabric, plain
+                                                         blocks for Vanilla. Each is declared normally and
+                                                         switched on by the loader test. -->
+                                                    <Border DockPanel.Dock="Top" Width="42" Height="42" CornerRadius="11"
                                                             HorizontalAlignment="Left" Margin="0,0,0,12"
                                                             Background="{DynamicResource BgElevated}"
                                                             BorderThickness="1"
                                                             BorderBrush="{Binding Loader, Converter={StaticResource LoaderColor}}">
-                                                        <Image Width="19" Height="19" HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center"
-                                                               Source="{icon:LucideImage Kind=Boxes, Brush={StaticResource TextSecondary}}"/>
+                                                        <Panel Width="20" Height="20" HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center">
+                                                            <Image Source="{icon:LucideImage Kind=Anvil, Brush={StaticResource TextSecondary}}"
+                                                                   IsVisible="{Binding Loader, Converter={StaticResource LoaderIs}, ConverterParameter=Forge}"/>
+                                                            <Image Source="{icon:LucideImage Kind=Hammer, Brush={StaticResource TextSecondary}}"
+                                                                   IsVisible="{Binding Loader, Converter={StaticResource LoaderIs}, ConverterParameter=NeoForge}"/>
+                                                            <Image Source="{icon:LucideImage Kind=Spool, Brush={StaticResource TextSecondary}}"
+                                                                   IsVisible="{Binding Loader, Converter={StaticResource LoaderIs}, ConverterParameter=Fabric}"/>
+                                                            <Image Source="{icon:LucideImage Kind=Blocks, Brush={StaticResource TextSecondary}}"
+                                                                   IsVisible="{Binding Loader, Converter={StaticResource LoaderIs}, ConverterParameter=Vanilla}"/>
+                                                        </Panel>
                                                     </Border>
 
                                                     <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,8,*"

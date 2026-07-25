@@ -9,6 +9,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <conv:LoaderColorConverter x:Key="LoaderColor"/>
+            <conv:LoaderIsConverter x:Key="LoaderIs"/>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Styles/Tokens.axaml"/>
             </ResourceDictionary.MergedDictionaries>
