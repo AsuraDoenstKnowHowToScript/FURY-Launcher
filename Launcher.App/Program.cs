@@ -51,9 +51,9 @@ internal static class Program
             var settings = new SettingsService(new LauncherPaths()).LoadAsync().GetAwaiter().GetResult();
             if (!settings.HardwareAcceleration)
             {
-                builder = builder.With(new Avalonia.Win32PlatformOptions
+                builder = builder.With(new Win32PlatformOptions
                 {
-                    RenderingMode = new[] { Avalonia.Win32.Win32RenderingMode.Software }
+                    RenderingMode = new[] { Win32RenderingMode.Software }
                 });
             }
         }
