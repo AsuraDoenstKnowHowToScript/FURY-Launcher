@@ -83,7 +83,8 @@ public partial class MainWindow : AppWindow, IDialogService
 
     private Instance? _editing;      // instance selected for editing (Instances tab)
     private readonly AccountsViewModel _accountsVm; // owns the Accounts screen + the active account
-    private readonly DashboardViewModel _dashboardVm; // owns the Dashboard screen
+    private readonly DashboardViewModel _dashboardVm;
+    private readonly ServersViewModel _serversVm; // owns the Dashboard screen
     private LauncherSettings _settings = new();     // cached preferences, saved on every change
     private bool _suppressSettingEvents;            // guards the toggles during programmatic fills
 
@@ -141,6 +142,9 @@ public partial class MainWindow : AppWindow, IDialogService
 
         // Dashboard: its own view model too. It only raises intents; the window still owns
         // navigation and the launch pipeline.
+        _serversVm = new ServersViewModel(_core, this);
+        ServersPanel.DataContext = _serversVm;
+
         _dashboardVm = new DashboardViewModel(_core, _selected, this);
         DashboardPanel.DataContext = _dashboardVm;
         _dashboardVm.PlayRequested += (_, inst) => PlayFromDashboard(inst);
@@ -303,6 +307,7 @@ public partial class MainWindow : AppWindow, IDialogService
         NavDashboard.Content = Loc.T("nav.dashboard");
         NavHome.Content = Loc.T("nav.home");
         NavMods.Content = Loc.T("nav.content");
+        NavServers.Content = Loc.T("nav.servers");
         NavAccounts.Content = Loc.T("nav.accounts");
         NavSettings.Content = Loc.T("nav.settings");
         LblSettingsTitle.Text = Loc.T("nav.settings");
@@ -417,6 +422,7 @@ public partial class MainWindow : AppWindow, IDialogService
         DashboardPanel.IsVisible = ReferenceEquals(item, NavDashboard);
         HomePanel.IsVisible = ReferenceEquals(item, NavHome);
         ModsPanel.IsVisible = ReferenceEquals(item, NavMods);
+        ServersPanel.IsVisible = ReferenceEquals(item, NavServers);
         AccountsPanel.IsVisible = ReferenceEquals(item, NavAccounts);
         SettingsPanel.IsVisible = ReferenceEquals(item, NavSettings);
 
@@ -426,12 +432,17 @@ public partial class MainWindow : AppWindow, IDialogService
         var shown = DashboardPanel.IsVisible ? (Control)DashboardPanel
                   : HomePanel.IsVisible ? HomePanel
                   : ModsPanel.IsVisible ? ModsPanel
+                  : ServersPanel.IsVisible ? ServersPanel
                   : AccountsPanel.IsVisible ? AccountsPanel
                   : SettingsPanel;
         PlayPageTransition(shown);
 
         // Numbers go stale while you play; recompute whenever the dashboard comes back up.
         if (ReferenceEquals(item, NavDashboard)) _ = SafeAsync(_dashboardVm.RefreshAsync);
+
+        // Server status is only true for as long as it takes to read it, so the list is pinged
+        // when the tab is opened rather than kept warm in the background.
+        if (ReferenceEquals(item, NavServers)) _ = SafeAsync(_serversVm.RefreshAsync);
 
         if (ReferenceEquals(item, NavMods))
         {
@@ -565,10 +576,13 @@ public partial class MainWindow : AppWindow, IDialogService
     }
 
     /// <summary>Copies the current log text to the clipboard.</summary>
-    private async Task CopyLogAsync()
+    private async Task CopyLogAsync() => await CopyAsync(_logText);
+
+    /// <inheritdoc/>
+    public async Task CopyAsync(string text)
     {
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        if (clipboard != null) await clipboard.SetTextAsync(_logText);
+        if (clipboard != null) await clipboard.SetTextAsync(text);
     }
 
     private async Task InitAsync()

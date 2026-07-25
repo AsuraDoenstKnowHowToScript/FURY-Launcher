@@ -90,6 +90,11 @@
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextSecondary}}"/>
                     </uic:NavigationViewItem.IconSource>
                 </uic:NavigationViewItem>
+                <uic:NavigationViewItem x:Name="NavServers" Content="Servers">
+                    <uic:NavigationViewItem.IconSource>
+                        <uic:ImageIconSource Source="{icon:LucideImage Kind=Server, Brush={StaticResource TextSecondary}}"/>
+                    </uic:NavigationViewItem.IconSource>
+                </uic:NavigationViewItem>
                 <uic:NavigationViewItem x:Name="NavAccounts" Content="Accounts">
                     <uic:NavigationViewItem.IconSource>
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=User, Brush={StaticResource TextSecondary}}"/>
@@ -732,6 +737,11 @@
                      driven by AccountsViewModel. The window only hosts it and reads the
                      active account from the view model when launching. -->
                 <views:AccountsView x:Name="AccountsPanel" IsVisible="False"/>
+
+                <!-- ============================ SERVERS ============================ -->
+                <!-- Same arrangement as Accounts: the screen lives in Views/ServersView.axaml
+                     and the window only hosts it. -->
+                <views:ServersView x:Name="ServersPanel" IsVisible="False"/>
 
                 <!-- =============================== DASHBOARD =============================== -->
                 <!-- The landing screen: greeting, real play time per instance and the launcher's

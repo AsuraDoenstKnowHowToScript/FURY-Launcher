@@ -60,9 +60,16 @@ public sealed class LauncherPaths
     /// <summary>Stored skin/cape image files.</summary>
     public string AppearanceDir => Path.Combine(Root, "appearances");
 
+    /// <summary>Servers the user pinned in the Servers tab. The ones they actually joined are
+    /// read from each instance's own servers.dat instead, so this file only holds additions.</summary>
+    public string PinnedServersFile => Path.Combine(Root, "servers.json");
+
     public string InstanceDir(Instance i) => Path.Combine(InstancesDir, i.FolderName);
     public string InstanceConfig(Instance i) => Path.Combine(InstanceDir(i), "instance.json");
     public string InstanceMinecraft(Instance i) => Path.Combine(InstanceDir(i), ".minecraft");
+
+    /// <summary>The game's own multiplayer list for an instance.</summary>
+    public string InstanceServersDat(Instance i) => Path.Combine(InstanceMinecraft(i), "servers.dat");
     public string InstanceModsDir(Instance i) => Path.Combine(InstanceMinecraft(i), "mods");
     public string InstanceConfigDir(Instance i) => Path.Combine(InstanceMinecraft(i), "config");
     public string InstanceShaderpacksDir(Instance i) => Path.Combine(InstanceMinecraft(i), "shaderpacks");

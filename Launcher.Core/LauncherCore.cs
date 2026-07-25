@@ -34,6 +34,8 @@ public sealed class LauncherCore : IDisposable
     public SettingsService Settings { get; }
     public VersionListService Versions { get; }
     public UpdateService Updates { get; }
+    public ServerPingService ServerPing { get; }
+    public ServerDirectory Servers { get; }
 
     /// <param name="root">Data root; defaults to <c>%APPDATA%/FURY Launcher</c>.</param>
     public LauncherCore(string? root = null)
@@ -80,6 +82,10 @@ public sealed class LauncherCore : IDisposable
         Game.RunningChanged += (_, e) => Playtime.OnRunningChanged(e.InstanceId, e.Running);
         Versions = new VersionListService(_http);
         Updates = new UpdateService(_http);
+        // Multiplayer: everything shown about a server is pinged from the server itself, and the
+        // list of servers the user has joined is read from the game's own servers.dat.
+        ServerPing = new ServerPingService();
+        Servers = new ServerDirectory(Paths, Instances);
     }
 
     public void Dispose() => _http.Dispose();

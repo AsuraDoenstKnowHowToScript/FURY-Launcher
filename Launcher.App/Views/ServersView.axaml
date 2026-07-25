@@ -1,0 +1,235 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:icon="using:IconPacks.Avalonia.Lucide"
+             xmlns:ctl="using:Launcher.App.Controls"
+             xmlns:vm="using:Launcher.App.ViewModels"
+             xmlns:behaviors="using:Launcher.App.Behaviors"
+             x:Class="Launcher.App.Views.ServersView"
+             x:DataType="vm:ServersViewModel">
+
+    <ScrollViewer behaviors:SmoothScroll.Enabled="True">
+        <StackPanel Margin="24" Spacing="16" MaxWidth="1180" HorizontalAlignment="Stretch">
+
+            <!-- Page header, same rhythm as every other screen. -->
+            <Grid ColumnDefinitions="*,16,Auto" Margin="0,0,0,2">
+                <StackPanel Grid.Column="0" Spacing="3" ClipToBounds="True">
+                    <TextBlock Classes="Title" Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Classes="Caption" Text="{Binding Subtitle}"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource TextMuted}"/>
+                </StackPanel>
+                <Button Grid.Column="2" Classes="secondary" VerticalAlignment="Center"
+                        Content="{Binding RefreshLabel}" Command="{Binding RefreshCommand}"/>
+            </Grid>
+
+            <!-- Your servers: read from the game's own multiplayer list, plus anything pinned. -->
+            <ctl:PanelCard Classes="feature" Header="{Binding MineHeader}" WatermarkSize="150"
+                           Icon="{icon:LucideImage Kind=Server, Brush={StaticResource TextSecondary}}">
+                <StackPanel Spacing="12">
+
+                    <Grid ColumnDefinitions="*,10,Auto">
+                        <TextBox Grid.Column="0" Text="{Binding NewAddress}"
+                                 Watermark="{Binding AddWatermark}"/>
+                        <Button Grid.Column="2" Classes="primary" VerticalAlignment="Stretch"
+                                Content="{Binding AddLabel}" Command="{Binding AddCommand}"/>
+                    </Grid>
+
+                    <TextBlock Classes="Caption" Text="{Binding EmptyText}" TextWrapping="Wrap"
+                               IsVisible="{Binding MineEmpty}"
+                               Foreground="{DynamicResource TextMuted}"/>
+
+                    <ItemsControl ItemsSource="{Binding Mine}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:ServerCardVm">
+                                <Border Classes="card flat" Margin="0,0,0,8" Padding="14,12">
+                                    <Grid ColumnDefinitions="Auto,13,*,14,Auto,10,Auto">
+
+                                        <!-- Server icon: 64x64 pixel art, so no smoothing. -->
+                                        <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10"
+                                                ClipToBounds="True" VerticalAlignment="Center"
+                                                Background="{DynamicResource BgInput}">
+                                            <Panel>
+                                                <Image Width="20" Height="20"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       IsVisible="{Binding !HasIcon}"
+                                                       Source="{icon:LucideImage Kind=Server, Brush={StaticResource TextMuted}}"/>
+                                                <Image Source="{Binding Icon}" Stretch="Uniform"
+                                                       RenderOptions.BitmapInterpolationMode="None"/>
+                                            </Panel>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center"
+                                                    ClipToBounds="True">
+                                            <Grid ColumnDefinitions="Auto,8,Auto,*">
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="15"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <Border Grid.Column="2" CornerRadius="999" Padding="8,2"
+                                                        VerticalAlignment="Center"
+                                                        IsVisible="{Binding HasInstance}"
+                                                        Background="{DynamicResource AccentSubtle}"
+                                                        BorderBrush="{DynamicResource AccentOutline}"
+                                                        BorderThickness="1">
+                                                    <TextBlock Text="{Binding InstanceName}" FontSize="10"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource TextSecondary}"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- The MOTD in the server's own colours, as the game shows it. -->
+                                            <ctl:MotdBlock Runs="{Binding Motd}" FontSize="12"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           IsVisible="{Binding Online}"/>
+                                            <TextBlock Text="{Binding OfflineText}" FontSize="12"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       IsVisible="{Binding Offline}"
+                                                       Foreground="{DynamicResource Danger}"/>
+                                            <TextBlock Text="{Binding Address}" Classes="Mono" FontSize="11"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4" Spacing="3" VerticalAlignment="Center"
+                                                    HorizontalAlignment="Right">
+                                            <StackPanel Orientation="Horizontal" Spacing="7"
+                                                        HorizontalAlignment="Right">
+                                                <ctl:PingBars Bars="{Binding Bars}" VerticalAlignment="Center"
+                                                              LitBrush="{DynamicResource Success}"/>
+                                                <TextBlock Text="{Binding Latency}" Classes="Mono" FontSize="11"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextMuted}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Players}" Classes="Mono" FontSize="12"
+                                                       HorizontalAlignment="Right"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding Version}" FontSize="10"
+                                                       HorizontalAlignment="Right" MaxWidth="160"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="6"
+                                                    VerticalAlignment="Center">
+                                            <Button Classes="ghost" Padding="9,7"
+                                                    Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).CopyAddressCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <Image Width="15" Height="15"
+                                                       Source="{icon:LucideImage Kind=Copy, Brush={StaticResource TextSecondary}}"/>
+                                            </Button>
+                                            <Button Classes="ghost" Padding="9,7" IsVisible="{Binding IsPinned}"
+                                                    Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).RemoveCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <Image Width="15" Height="15"
+                                                       Source="{icon:LucideImage Kind=Trash2, Brush={StaticResource Danger}}"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ctl:PanelCard>
+
+            <!-- Public servers by region. A starting point, live-pinged like everything else. -->
+            <ctl:PanelCard Header="{Binding PopularHeader}"
+                           Icon="{icon:LucideImage Kind=Globe, Brush={StaticResource TextSecondary}}">
+                <StackPanel Spacing="12">
+
+                    <ItemsControl ItemsSource="{Binding Regions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="8"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:RegionTabVm">
+                                <RadioButton Classes="segment" GroupName="ServerRegions"
+                                             IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                             Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).SelectRegionCommand}"
+                                             CommandParameter="{Binding}">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <TextBlock Text="{Binding Code}" Classes="Mono" FontSize="11"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </RadioButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Classes="Caption" Text="{Binding DirectoryNote}" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextMuted}"/>
+
+                    <ItemsControl ItemsSource="{Binding Popular}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:ServerCardVm">
+                                <Border Classes="card flat" Margin="0,0,0,8" Padding="14,12">
+                                    <Grid ColumnDefinitions="Auto,13,*,14,Auto,10,Auto">
+                                        <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10"
+                                                ClipToBounds="True" VerticalAlignment="Center"
+                                                Background="{DynamicResource BgInput}">
+                                            <Panel>
+                                                <Image Width="20" Height="20"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       IsVisible="{Binding !HasIcon}"
+                                                       Source="{icon:LucideImage Kind=Server, Brush={StaticResource TextMuted}}"/>
+                                                <Image Source="{Binding Icon}" Stretch="Uniform"
+                                                       RenderOptions.BitmapInterpolationMode="None"/>
+                                            </Panel>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center"
+                                                    ClipToBounds="True">
+                                            <TextBlock Text="{Binding Name}" FontSize="15"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <ctl:MotdBlock Runs="{Binding Motd}" FontSize="12"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           IsVisible="{Binding Online}"/>
+                                            <TextBlock Text="{Binding OfflineText}" FontSize="12"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       IsVisible="{Binding Offline}"
+                                                       Foreground="{DynamicResource Danger}"/>
+                                            <TextBlock Text="{Binding Address}" Classes="Mono" FontSize="11"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="4" Spacing="3" VerticalAlignment="Center"
+                                                    HorizontalAlignment="Right">
+                                            <StackPanel Orientation="Horizontal" Spacing="7"
+                                                        HorizontalAlignment="Right">
+                                                <ctl:PingBars Bars="{Binding Bars}" VerticalAlignment="Center"
+                                                              LitBrush="{DynamicResource Success}"/>
+                                                <TextBlock Text="{Binding Latency}" Classes="Mono" FontSize="11"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextMuted}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Players}" Classes="Mono" FontSize="12"
+                                                       HorizontalAlignment="Right"
+                                                       Foreground="{DynamicResource TextSecondary}"/>
+                                            <TextBlock Text="{Binding Version}" FontSize="10"
+                                                       HorizontalAlignment="Right" MaxWidth="160"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource TextMuted}"/>
+                                        </StackPanel>
+
+                                        <Button Grid.Column="6" Classes="ghost" Padding="9,7"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).CopyAddressCommand}"
+                                                CommandParameter="{Binding}">
+                                            <Image Width="15" Height="15"
+                                                   Source="{icon:LucideImage Kind=Copy, Brush={StaticResource TextSecondary}}"/>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ctl:PanelCard>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

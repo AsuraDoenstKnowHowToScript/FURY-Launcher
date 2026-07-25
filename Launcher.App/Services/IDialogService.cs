@@ -33,4 +33,7 @@ public interface IDialogService
 
     /// <summary>Runs an async action, surfacing any error exactly the way the window does.</summary>
     Task RunGuardedAsync(Func<Task> action);
+
+    /// <summary>Puts text on the system clipboard. Needs the window, which owns the TopLevel.</summary>
+    Task CopyAsync(string text);
 }
