@@ -33,7 +33,10 @@ rem ---------- 4) Rodar ----------
 echo [3/3] Iniciando FURY Launcher...
 echo.
 rem WinExe nao anexa console: redireciona stderr p/ log, senao um crash some sem mensagem.
-"Launcher.App\bin\Release\net8.0\FURY Launcher.exe" 2>"%~dp0crash.log"
+rem O projeto tem como alvo net8.0-windows; o fallback cobre um TFM antigo.
+set "EXE=Launcher.App\bin\Release\net8.0-windows\FURY Launcher.exe"
+if not exist "%EXE%" set "EXE=Launcher.App\bin\Release\net8.0\FURY Launcher.exe"
+"%EXE%" 2>"%~dp0crash.log"
 if errorlevel 1 (
   echo.
   echo [ERRO] O aplicativo terminou com erro. Detalhes ^(crash.log^):
