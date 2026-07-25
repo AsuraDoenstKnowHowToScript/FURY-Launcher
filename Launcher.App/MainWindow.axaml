@@ -182,7 +182,8 @@
                                                 </Panel>
                                             </Border>
                                             <TextBlock x:Name="ActiveAccountName" Text="—" VerticalAlignment="Center"
-                                                       FontWeight="SemiBold"/>
+                                                       FontWeight="SemiBold" MaxWidth="180"
+                                                       TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Button>
                                     <!-- Hidden: kept in sync with the card grid so play logic is unchanged. -->
@@ -357,7 +358,8 @@
                                         <TextBlock x:Name="LblModInstance" Text="Instance:" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextMuted}"/>
                                         <TextBlock x:Name="ModsInstanceName" Text="&#x2014;" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextSecondary}"/>
+                                                   Foreground="{DynamicResource TextSecondary}"
+                                                   MaxWidth="200" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </Border>
                                 <Button x:Name="RefreshModsButton" Classes="secondary" Content="Refresh"/>

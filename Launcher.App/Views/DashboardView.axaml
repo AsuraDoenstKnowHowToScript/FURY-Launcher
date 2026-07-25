@@ -26,19 +26,26 @@
                             <GradientStop Offset="1" Color="#16141E"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    <Grid ColumnDefinitions="*,Auto">
-                        <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Classes="Display" Text="{Binding Greeting}"/>
-                                <TextBlock Classes="Display" Text="{Binding UserName}"
+                    <!-- The actions column is sized first (Auto); the greeting takes what is left and
+                         trims. ClipToBounds is the belt-and-braces part: even if a very long word
+                         cannot trim, it is clipped instead of being painted over the buttons. -->
+                    <Grid ColumnDefinitions="*,16,Auto">
+                        <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center"
+                                    ClipToBounds="True" MinWidth="0">
+                            <!-- A Grid, not a horizontal StackPanel: a StackPanel measures its children
+                                 with infinite width, so the text would never shrink or ellipsize. -->
+                            <Grid ColumnDefinitions="Auto,10,*">
+                                <TextBlock Grid.Column="0" Classes="Display" Text="{Binding Greeting}"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="2" Classes="Display" Text="{Binding UserName}"
                                            Foreground="{DynamicResource BrandGradient}"
                                            TextTrimming="CharacterEllipsis"/>
-                            </StackPanel>
-                            <TextBlock Text="{Binding SubtitleText}"
+                            </Grid>
+                            <TextBlock Text="{Binding SubtitleText}" TextTrimming="CharacterEllipsis"
                                        Foreground="{DynamicResource TextSecondary}"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10"
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10"
                                     VerticalAlignment="Center">
                             <Button Classes="secondary" MinHeight="50" Padding="18,0"
                                     Content="{Binding BrowseText}" Command="{Binding BrowseCommand}"/>
