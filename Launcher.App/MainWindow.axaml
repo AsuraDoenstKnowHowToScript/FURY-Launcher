@@ -51,21 +51,16 @@
             <!-- Brand block: the mark, the wordmark and the build, then a rule that closes
                  the block off from the list below it. -->
             <uic:NavigationView.PaneHeader>
-                <StackPanel Margin="16,14,16,8" Spacing="14">
-                    <Grid ColumnDefinitions="Auto,11,*">
-                        <!-- The mark, and nothing else. It already has its own silhouette, so a
-                             tile behind it was a second border around a shape that has one. -->
-                        <Image Grid.Column="0" Source="/Assets/bonfire-icon.png"
-                               Width="38" Height="38" Stretch="Uniform"
-                               VerticalAlignment="Center"/>
-                        <StackPanel Grid.Column="2" VerticalAlignment="Center" ClipToBounds="True">
-                            <TextBlock Text="Bonfire" FontFamily="{DynamicResource FontUi}" FontSize="21"
-                                       FontWeight="Bold" Foreground="{DynamicResource BrandGradient}"/>
-                            <TextBlock x:Name="NavVersion" Classes="Mono" Text="" FontSize="11"
-                                       TextTrimming="CharacterEllipsis"
-                                       Foreground="{DynamicResource TextMuted}"/>
-                        </StackPanel>
-                    </Grid>
+                <!-- Wordmark only. The mark is already on the title bar and the taskbar, so a
+                     third copy of it here is the same identity stated three times in one glance. -->
+                <StackPanel Margin="18,16,16,10" Spacing="14">
+                    <StackPanel ClipToBounds="True">
+                        <TextBlock Text="Bonfire" FontFamily="{DynamicResource FontUi}" FontSize="23"
+                                   FontWeight="Bold" Foreground="{DynamicResource BrandGradient}"/>
+                        <TextBlock x:Name="NavVersion" Classes="Mono" Text="" FontSize="11"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextMuted}"/>
+                    </StackPanel>
                     <Border Height="1" Background="{DynamicResource BorderSubtle}"/>
                 </StackPanel>
             </uic:NavigationView.PaneHeader>
