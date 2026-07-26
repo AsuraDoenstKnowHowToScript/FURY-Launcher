@@ -15,5 +15,7 @@ public enum ContentKind
 {
     Mod,
     Shader,
-    Datapack
+    Datapack,
+    /// <summary>A whole pack: its own Minecraft version, loader and mod list, installed as a set.</summary>
+    Modpack
 }

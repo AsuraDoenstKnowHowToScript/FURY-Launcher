@@ -44,7 +44,7 @@
         <!-- Toggle button hidden: its glyph comes from a symbol font that tofus on
              Windows 10, and the content is set locally in the template so a style
              override can't win. A 4-item pane reads fine always-open. -->
-        <uic:NavigationView x:Name="NavView" PaneDisplayMode="Left" OpenPaneLength="220"
+        <uic:NavigationView x:Name="NavView" PaneDisplayMode="Left" OpenPaneLength="252"
                             IsSettingsVisible="False" IsBackButtonVisible="False"
                             IsPaneToggleButtonVisible="False">
 
@@ -73,7 +73,6 @@
 
             <!-- Grouped: what you do with the launcher, then what you manage in it. -->
             <uic:NavigationView.MenuItems>
-                <uic:NavigationViewItemHeader x:Name="NavGroupPlay" Content="PLAY"/>
                 <uic:NavigationViewItem x:Name="NavDashboard" Content="Dashboard">
                     <uic:NavigationViewItem.IconSource>
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=Gamepad2, Brush={StaticResource TextSecondary}}"/>
@@ -84,10 +83,15 @@
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=LayoutGrid, Brush={StaticResource TextSecondary}}"/>
                     </uic:NavigationViewItem.IconSource>
                 </uic:NavigationViewItem>
-                <uic:NavigationViewItemHeader x:Name="NavGroupManage" Content="MANAGE"/>
+                <uic:NavigationViewItemSeparator/>
                 <uic:NavigationViewItem x:Name="NavMods" Content="Mods">
                     <uic:NavigationViewItem.IconSource>
                         <uic:ImageIconSource Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextSecondary}}"/>
+                    </uic:NavigationViewItem.IconSource>
+                </uic:NavigationViewItem>
+                <uic:NavigationViewItem x:Name="NavModpacks" Content="Modpacks">
+                    <uic:NavigationViewItem.IconSource>
+                        <uic:ImageIconSource Source="{icon:LucideImage Kind=Boxes, Brush={StaticResource TextSecondary}}"/>
                     </uic:NavigationViewItem.IconSource>
                 </uic:NavigationViewItem>
                 <uic:NavigationViewItem x:Name="NavServers" Content="Servers">
@@ -742,6 +746,9 @@
                 <!-- Same arrangement as Accounts: the screen lives in Views/ServersView.axaml
                      and the window only hosts it. -->
                 <views:ServersView x:Name="ServersPanel" IsVisible="False"/>
+
+                <!-- ============================ MODPACKS ============================ -->
+                <views:ModpacksView x:Name="ModpacksPanel" IsVisible="False"/>
 
                 <!-- =============================== DASHBOARD =============================== -->
                 <!-- The landing screen: greeting, real play time per instance and the launcher's

@@ -39,40 +39,100 @@ public sealed class MrpackService
         _instances = instances;
     }
 
+    /// <summary>What a pack declares about itself, readable without installing anything.</summary>
+    public sealed record PackInfo(string Name, string McVersion, LoaderType Loader, int FileCount);
+
+    /// <summary>
+    /// Reads modrinth.index.json only. Needed before installing into an existing instance, so the
+    /// user can be told what the pack will turn that instance into before it happens.
+    /// </summary>
+    public async Task<PackInfo> ReadInfoAsync(string mrpackPath, CancellationToken ct = default)
+    {
+        var index = await ReadIndexAsync(mrpackPath, ct).ConfigureAwait(false);
+        var (mcVersion, loader) = ResolveTarget(index);
+        return new PackInfo(
+            string.IsNullOrWhiteSpace(index.Name) ? "Modrinth pack" : index.Name!,
+            mcVersion, loader, ClientFiles(index).Count);
+    }
+
     /// <summary>Creates a new instance from a <c>.mrpack</c>, downloading its files.</summary>
     public async Task<Instance> ImportAsync(
         string mrpackPath, IProgress<(int done, int total)>? progress = null, CancellationToken ct = default)
     {
-        if (!File.Exists(mrpackPath))
-            throw new FileNotFoundException("Arquivo .mrpack nao encontrado.", mrpackPath);
-
-        MrpackIndex index;
-        await using (var fs = File.OpenRead(mrpackPath))
-        using (var zipRead = new ZipArchive(fs, ZipArchiveMode.Read))
-        {
-            var entry = zipRead.GetEntry(IndexEntry)
-                ?? throw new InvalidOperationException("Modpack invalido: modrinth.index.json ausente.");
-            await using var es = entry.Open();
-            index = await JsonSerializer.DeserializeAsync<MrpackIndex>(es, JsonOptions, ct).ConfigureAwait(false)
-                    ?? throw new InvalidOperationException("Modpack invalido: modrinth.index.json ilegivel.");
-        }
-
-        var deps = index.Dependencies ?? new Dictionary<string, string>();
-        if (!deps.TryGetValue("minecraft", out var mcVersion) || string.IsNullOrWhiteSpace(mcVersion))
-            throw new InvalidOperationException("Modpack nao informa a versao do Minecraft.");
-        var loader = ResolveLoader(deps);
+        var index = await ReadIndexAsync(mrpackPath, ct).ConfigureAwait(false);
+        var (mcVersion, loader) = ResolveTarget(index);
 
         var name = string.IsNullOrWhiteSpace(index.Name) ? "Modrinth pack" : index.Name;
         var instance = await _instances.CreateAsync(name, mcVersion, loader, ct).ConfigureAwait(false);
-        var mcDir = _paths.InstanceMinecraft(instance);
-        Directory.CreateDirectory(mcDir);
+        await InstallAsync(instance, mrpackPath, index, progress, ct).ConfigureAwait(false);
+        return instance;
+    }
 
-        // Files to install (skip anything explicitly unsupported on the client).
-        var files = (index.Files ?? new List<MrpackFile>())
+    /// <summary>
+    /// Installs a pack into an instance that already exists, switching that instance to the
+    /// Minecraft version and loader the pack needs. Separate from <see cref="ImportAsync"/> so the
+    /// choice between a fresh instance and an existing one belongs to the caller, not to us.
+    /// </summary>
+    public async Task<Instance> InstallIntoAsync(
+        Instance instance, string mrpackPath,
+        IProgress<(int done, int total)>? progress = null, CancellationToken ct = default)
+    {
+        var index = await ReadIndexAsync(mrpackPath, ct).ConfigureAwait(false);
+        var (mcVersion, loader) = ResolveTarget(index);
+
+        // A pack is a Minecraft version, a loader and a mod list together; installing the mods
+        // into an instance still running something else would produce a launch that fails on the
+        // first mod. Pointing the instance at the pack's target is what makes it actually run.
+        if (!string.Equals(instance.McVersion, mcVersion, StringComparison.OrdinalIgnoreCase) ||
+            instance.Loader != loader)
+        {
+            instance.McVersion = mcVersion;
+            instance.Loader = loader;
+            instance.LoaderVersion = null; // reinstalled on next launch for the new loader
+            await _instances.UpdateAsync(instance, ct).ConfigureAwait(false);
+        }
+
+        await InstallAsync(instance, mrpackPath, index, progress, ct).ConfigureAwait(false);
+        return instance;
+    }
+
+    private async Task<MrpackIndex> ReadIndexAsync(string mrpackPath, CancellationToken ct)
+    {
+        if (!File.Exists(mrpackPath))
+            throw new FileNotFoundException("Arquivo .mrpack nao encontrado.", mrpackPath);
+
+        await using var fs = File.OpenRead(mrpackPath);
+        using var zipRead = new ZipArchive(fs, ZipArchiveMode.Read);
+        var entry = zipRead.GetEntry(IndexEntry)
+            ?? throw new InvalidOperationException("Modpack invalido: modrinth.index.json ausente.");
+        await using var es = entry.Open();
+        return await JsonSerializer.DeserializeAsync<MrpackIndex>(es, JsonOptions, ct).ConfigureAwait(false)
+               ?? throw new InvalidOperationException("Modpack invalido: modrinth.index.json ilegivel.");
+    }
+
+    private static (string McVersion, LoaderType Loader) ResolveTarget(MrpackIndex index)
+    {
+        var deps = index.Dependencies ?? new Dictionary<string, string>();
+        if (!deps.TryGetValue("minecraft", out var mcVersion) || string.IsNullOrWhiteSpace(mcVersion))
+            throw new InvalidOperationException("Modpack nao informa a versao do Minecraft.");
+        return (mcVersion, ResolveLoader(deps));
+    }
+
+    /// <summary>Files to install: anything the pack does not mark as server-only.</summary>
+    private static List<MrpackFile> ClientFiles(MrpackIndex index) =>
+        (index.Files ?? new List<MrpackFile>())
             .Where(f => f.Env?.Client is not "unsupported")
             .Where(f => f.Downloads is { Count: > 0 } && !string.IsNullOrWhiteSpace(f.Path))
             .ToList();
 
+    private async Task InstallAsync(
+        Instance instance, string mrpackPath, MrpackIndex index,
+        IProgress<(int done, int total)>? progress, CancellationToken ct)
+    {
+        var mcDir = _paths.InstanceMinecraft(instance);
+        Directory.CreateDirectory(mcDir);
+
+        var files = ClientFiles(index);
         var total = files.Count;
         var done = 0;
         progress?.Report((done, total));
@@ -110,8 +170,6 @@ public sealed class MrpackService
                 await src.CopyToAsync(dst, ct).ConfigureAwait(false);
             }
         }
-
-        return instance;
     }
 
     private static LoaderType ResolveLoader(IDictionary<string, string> deps)

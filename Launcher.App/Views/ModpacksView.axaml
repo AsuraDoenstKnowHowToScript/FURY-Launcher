@@ -1,0 +1,121 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:icon="using:IconPacks.Avalonia.Lucide"
+             xmlns:ctl="using:Launcher.App.Controls"
+             xmlns:vm="using:Launcher.App.ViewModels"
+             xmlns:behaviors="using:Launcher.App.Behaviors"
+             x:Class="Launcher.App.Views.ModpacksView"
+             x:DataType="vm:ModpacksViewModel">
+
+    <!-- Same shape as Servers: the page does not scroll, only the list inside the card. -->
+    <Grid Margin="24" MaxWidth="1180" HorizontalAlignment="Center"
+          RowDefinitions="Auto,16,*">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*">
+            <StackPanel Grid.Column="0" Spacing="3" ClipToBounds="True">
+                <TextBlock Classes="Title" Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Classes="Caption" Text="{Binding Subtitle}" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextMuted}"/>
+            </StackPanel>
+        </Grid>
+
+        <ctl:PanelCard Grid.Row="2" Classes="feature" Header="{Binding BrowseHeader}" WatermarkSize="140"
+                       Icon="{icon:LucideImage Kind=Package, Brush={StaticResource TextSecondary}}">
+            <Grid RowDefinitions="Auto,12,Auto,14,*">
+
+                <!-- Search. -->
+                <Grid Grid.Row="0" ColumnDefinitions="*,10,Auto">
+                    <TextBox Grid.Column="0" Text="{Binding Query}"
+                             Watermark="{Binding SearchWatermark}"/>
+                    <Button Grid.Column="2" Classes="secondary" VerticalAlignment="Stretch"
+                            Content="{Binding SearchLabel}" Command="{Binding SearchCommand}"/>
+                </Grid>
+
+                <!-- The one decision this page asks for, made once instead of per card. A pack is
+                     a Minecraft version, a loader and a mod list together, so installing it either
+                     creates an instance or takes one over. -->
+                <Grid Grid.Row="2" ColumnDefinitions="Auto,12,*">
+                    <TextBlock Grid.Column="0" Text="{Binding TargetLabel}" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextMuted}"/>
+                    <ComboBox Grid.Column="2" HorizontalAlignment="Stretch"
+                              ItemsSource="{Binding Targets}"
+                              SelectedItem="{Binding SelectedTarget}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="vm:InstallTargetVm">
+                                <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
+
+                <Panel Grid.Row="4">
+                    <TextBlock Classes="Caption" Text="{Binding EmptyText}" TextWrapping="Wrap"
+                               VerticalAlignment="Top" IsVisible="{Binding Empty}"
+                               Foreground="{DynamicResource TextMuted}"/>
+
+                    <ScrollViewer behaviors:SmoothScroll.Enabled="True"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Results}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="vm:ModpackCardVm">
+                                    <Border Classes="card flat" Margin="0,0,0,8" Padding="13,11">
+                                        <Grid ColumnDefinitions="Auto,13,*,14,Auto">
+
+                                            <Border Grid.Column="0" Width="52" Height="52" CornerRadius="10"
+                                                    ClipToBounds="True" VerticalAlignment="Center"
+                                                    Background="{DynamicResource BgInput}">
+                                                <Panel>
+                                                    <Image Width="20" Height="20"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           IsVisible="{Binding !HasIcon}"
+                                                           Source="{icon:LucideImage Kind=Package, Brush={StaticResource TextMuted}}"/>
+                                                    <Image Source="{Binding Icon}" Stretch="UniformToFill"/>
+                                                </Panel>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center"
+                                                        ClipToBounds="True">
+                                                <Grid ColumnDefinitions="Auto,9,Auto,*">
+                                                    <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="15"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Author}" FontSize="11"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource TextMuted}"/>
+                                                </Grid>
+                                                <TextBlock Text="{Binding Description}" FontSize="12"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource TextSecondary}"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Image Width="12" Height="12" VerticalAlignment="Center"
+                                                           Source="{icon:LucideImage Kind=Download, Brush={StaticResource TextMuted}}"/>
+                                                    <TextBlock Text="{Binding Downloads}" Classes="Mono" FontSize="11"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource TextMuted}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="4" Spacing="4" VerticalAlignment="Center"
+                                                        MinWidth="128">
+                                                <Button Classes="primary" HorizontalAlignment="Stretch"
+                                                        IsVisible="{Binding Idle}"
+                                                        Content="{Binding $parent[ItemsControl].((vm:ModpacksViewModel)DataContext).InstallLabel}"
+                                                        Command="{Binding $parent[ItemsControl].((vm:ModpacksViewModel)DataContext).InstallCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                                <TextBlock Text="{Binding Progress}" Classes="Mono" FontSize="11"
+                                                           HorizontalAlignment="Center"
+                                                           IsVisible="{Binding HasProgress}"
+                                                           Foreground="{DynamicResource TextSecondary}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Panel>
+            </Grid>
+        </ctl:PanelCard>
+    </Grid>
+</UserControl>

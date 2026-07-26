@@ -130,6 +130,23 @@ public sealed class ModService
         Instance instance, string query, ContentKind kind = ContentKind.Mod, int offset = 0, CancellationToken ct = default)
         => _modrinth.SearchAsync(query, instance.McVersion, instance.Loader, kind, offset, ct);
 
+    /// <summary>
+    /// Browses modpacks. Unlike every other search here this one takes no instance, because a pack
+    /// is not installed into a context: it brings its own Minecraft version and loader.
+    /// </summary>
+    public Task<IReadOnlyList<ModrinthHit>> SearchModpacksAsync(
+        string query, CancellationToken ct = default)
+        => _modrinth.SearchAsync(query, "", LoaderType.Vanilla, ContentKind.Modpack, 0, ct);
+
+    /// <summary>Every published version of a modpack, newest first, unfiltered by game version.</summary>
+    public Task<IReadOnlyList<ModrinthVersion>> GetModpackVersionsAsync(
+        string projectId, CancellationToken ct = default)
+        => _modrinth.GetVersionsAsync(projectId, "", LoaderType.Vanilla, ContentKind.Modpack, ct);
+
+    /// <summary>Downloads a file straight to disk. Used for the .mrpack before it is unpacked.</summary>
+    public Task DownloadFileAsync(string url, string destPath, CancellationToken ct = default)
+        => _modrinth.DownloadFileAsync(url, destPath, ct);
+
     /// <summary>Lists the versions of a project compatible with the instance (for the version chooser).</summary>
     public Task<IReadOnlyList<ModrinthVersion>> GetModrinthVersionsAsync(
         Instance instance, string projectId, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)

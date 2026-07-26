@@ -49,12 +49,15 @@ public sealed class ModrinthClient
     public async Task<IReadOnlyList<ModrinthVersion>> GetVersionsAsync(
         string projectId, string mcVersion, LoaderType loader, ContentKind kind = ContentKind.Mod, CancellationToken ct = default)
     {
-        var versions = $"[\"{mcVersion}\"]";
-        var url = $"{BaseUrl}/project/{Uri.EscapeDataString(projectId)}/version" +
-                  $"?game_versions={Uri.EscapeDataString(versions)}";
+        // Empty means "every version this project has", which is how a modpack is browsed: the
+        // pack decides the Minecraft version rather than being filtered against one.
+        var url = $"{BaseUrl}/project/{Uri.EscapeDataString(projectId)}/version";
+        if (!string.IsNullOrWhiteSpace(mcVersion))
+            url += $"?game_versions={Uri.EscapeDataString($"[\"{mcVersion}\"]")}";
         // Only mods pin the instance loader; shaders/datapacks use their own loader tags.
         if (kind == ContentKind.Mod)
-            url += $"&loaders={Uri.EscapeDataString($"[\"{LoaderName(loader)}\"]")}";
+            url += (url.Contains('?') ? "&" : "?") +
+                   $"loaders={Uri.EscapeDataString($"[\"{LoaderName(loader)}\"]")}";
 
         await using var stream = await _http.GetStreamAsync(url, ct).ConfigureAwait(false);
         var list = await JsonSerializer.DeserializeAsync<List<ModrinthVersion>>(stream, JsonStore.Options, ct).ConfigureAwait(false);
@@ -159,11 +162,12 @@ public sealed class ModrinthClient
 
     private static string BuildFacets(string mcVersion, LoaderType loader, ContentKind kind)
     {
-        var parts = new List<string>
-        {
-            $"[\"project_type:{ProjectType(kind)}\"]",
-            $"[\"versions:{mcVersion}\"]"
-        };
+        var parts = new List<string> { $"[\"project_type:{ProjectType(kind)}\"]" };
+        // A modpack brings its own Minecraft version, so browsing them unfiltered is the point:
+        // you pick the pack first and the version comes with it. Passing a version still narrows.
+        if (!string.IsNullOrWhiteSpace(mcVersion))
+            parts.Add($"[\"versions:{mcVersion}\"]");
+        // Only mods are tagged by loader. A modpack declares its loader inside the pack itself.
         if (kind == ContentKind.Mod)
             parts.Add($"[\"categories:{LoaderName(loader)}\"]");
         return "[" + string.Join(",", parts) + "]";
@@ -173,6 +177,7 @@ public sealed class ModrinthClient
     {
         ContentKind.Shader => "shader",
         ContentKind.Datapack => "datapack",
+        ContentKind.Modpack => "modpack",
         _ => "mod"
     };
 

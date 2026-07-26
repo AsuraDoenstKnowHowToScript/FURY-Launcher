@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -84,7 +83,8 @@ public partial class MainWindow : AppWindow, IDialogService
     private Instance? _editing;      // instance selected for editing (Instances tab)
     private readonly AccountsViewModel _accountsVm; // owns the Accounts screen + the active account
     private readonly DashboardViewModel _dashboardVm;
-    private readonly ServersViewModel _serversVm; // owns the Dashboard screen
+    private readonly ServersViewModel _serversVm;
+    private readonly ModpacksViewModel _modpacksVm; // owns the Dashboard screen
     private LauncherSettings _settings = new();     // cached preferences, saved on every change
     private bool _suppressSettingEvents;            // guards the toggles during programmatic fills
 
@@ -144,6 +144,11 @@ public partial class MainWindow : AppWindow, IDialogService
         // navigation and the launch pipeline.
         _serversVm = new ServersViewModel(_core, this);
         ServersPanel.DataContext = _serversVm;
+
+        _modpacksVm = new ModpacksViewModel(_core, this);
+        ModpacksPanel.DataContext = _modpacksVm;
+        // A pack that lands becomes an instance, so the instance grid has to catch up.
+        _modpacksVm.InstalledInto += (_, _) => Dispatcher.UIThread.Post(() => _ = SafeAsync(RefreshInstancesAsync));
 
         _dashboardVm = new DashboardViewModel(_core, _selected, this);
         DashboardPanel.DataContext = _dashboardVm;
@@ -300,13 +305,11 @@ public partial class MainWindow : AppWindow, IDialogService
     /// <summary>Applies every static UI string from <see cref="Loc"/> for the current language.</summary>
     private void ApplyLanguage()
     {
-        // Tabs. Group labels are upper-cased here rather than in the translations, so a
-        // language whose casing rules differ still goes through its own culture.
-        NavGroupPlay.Content = Loc.T("nav.group.play").ToUpper(CultureInfo.CurrentCulture);
-        NavGroupManage.Content = Loc.T("nav.group.manage").ToUpper(CultureInfo.CurrentCulture);
+        // Tabs
         NavDashboard.Content = Loc.T("nav.dashboard");
         NavHome.Content = Loc.T("nav.home");
         NavMods.Content = Loc.T("nav.content");
+        NavModpacks.Content = Loc.T("nav.modpacks");
         NavServers.Content = Loc.T("nav.servers");
         NavAccounts.Content = Loc.T("nav.accounts");
         NavSettings.Content = Loc.T("nav.settings");
@@ -422,6 +425,7 @@ public partial class MainWindow : AppWindow, IDialogService
         DashboardPanel.IsVisible = ReferenceEquals(item, NavDashboard);
         HomePanel.IsVisible = ReferenceEquals(item, NavHome);
         ModsPanel.IsVisible = ReferenceEquals(item, NavMods);
+        ModpacksPanel.IsVisible = ReferenceEquals(item, NavModpacks);
         ServersPanel.IsVisible = ReferenceEquals(item, NavServers);
         AccountsPanel.IsVisible = ReferenceEquals(item, NavAccounts);
         SettingsPanel.IsVisible = ReferenceEquals(item, NavSettings);
@@ -432,6 +436,7 @@ public partial class MainWindow : AppWindow, IDialogService
         var shown = DashboardPanel.IsVisible ? (Control)DashboardPanel
                   : HomePanel.IsVisible ? HomePanel
                   : ModsPanel.IsVisible ? ModsPanel
+                  : ModpacksPanel.IsVisible ? ModpacksPanel
                   : ServersPanel.IsVisible ? ServersPanel
                   : AccountsPanel.IsVisible ? AccountsPanel
                   : SettingsPanel;
@@ -443,6 +448,9 @@ public partial class MainWindow : AppWindow, IDialogService
         // Server status is only true for as long as it takes to read it, so the list is pinged
         // when the tab is opened rather than kept warm in the background.
         if (ReferenceEquals(item, NavServers)) _ = SafeAsync(_serversVm.RefreshAsync);
+
+        // The install targets are the instance list, which changes elsewhere in the app.
+        if (ReferenceEquals(item, NavModpacks)) _ = SafeAsync(_modpacksVm.EnterAsync);
 
         if (ReferenceEquals(item, NavMods))
         {

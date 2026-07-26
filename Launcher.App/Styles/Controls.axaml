@@ -26,15 +26,15 @@
          only the current one carries a fill. The colours for every state come from
          Tokens.axaml; what is set here is shape and rhythm. -->
     <Style Selector="uic|NavigationViewItem">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Height" Value="42"/>
-        <Setter Property="Margin" Value="8,2"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Height" Value="52"/>
+        <Setter Property="Margin" Value="10,3"/>
     </Style>
     <!-- The presenter is the part that actually paints an item, so the corner and the
          outline belong to it, not to the item. -->
     <Style Selector="uic|NavigationViewItem /template/ uip|NavigationViewItemPresenter#NVIPresenter">
-        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="CornerRadius" Value="14"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Transitions">
             <Transitions>
@@ -46,12 +46,11 @@
             </Transitions>
         </Setter>
     </Style>
-    <!-- Group labels. Small, muted and spaced away from the run above, so they separate
-         the list without being mistaken for something clickable. -->
-    <Style Selector="uic|NavigationViewItemHeader">
-        <Setter Property="FontSize" Value="11"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Margin" Value="10,14,10,2"/>
+    <!-- Groups are separated by a rule in the pane rather than by a caption. The labels were
+         two more lines of small text in a place that has room for five items, and the split
+         between playing and managing is obvious enough without being narrated. -->
+    <Style Selector="uic|NavigationViewItemSeparator">
+        <Setter Property="Margin" Value="18,10"/>
     </Style>
 
     <!-- ============================ BUTTONS ============================ -->
