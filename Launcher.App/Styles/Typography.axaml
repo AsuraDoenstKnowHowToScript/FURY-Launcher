@@ -1,41 +1,43 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Type scale. Apply with Classes="Display" / "Title" / ... on a TextBlock. -->
+    <!-- Type scale. Apply with Classes="Display" / "Title" / ... on a TextBlock.
+
+         These set size and weight only. Colour is inherited, because a style setter beats
+         inheritance and a class that pins a colour makes its text unreadable the moment it
+         lands inside a container with a different one. -->
 
     <Style Selector="TextBlock.Display">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="FontSize" Value="30"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
 
     <Style Selector="TextBlock.Title">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="FontSize" Value="22"/>
         <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
 
     <Style Selector="TextBlock.Subtitle">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="FontSize" Value="16"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
 
     <Style Selector="TextBlock.Body">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
 
     <Style Selector="TextBlock.Caption">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+        <!-- Opacity rather than a colour, so a caption is one step quieter than whatever
+             contains it instead of always being the same grey. -->
+        <Setter Property="Opacity" Value="0.72"/>
     </Style>
 
     <!-- Mono: only where technical (log, version, path, JVM args). -->
@@ -43,7 +45,6 @@
         <Setter Property="FontFamily" Value="{DynamicResource FontMono}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
     </Style>
     <Style Selector="TextBox.Mono">
         <Setter Property="FontFamily" Value="{DynamicResource FontMono}"/>

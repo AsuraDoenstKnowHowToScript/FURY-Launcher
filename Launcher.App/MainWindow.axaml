@@ -53,12 +53,11 @@
             <uic:NavigationView.PaneHeader>
                 <StackPanel Margin="16,14,16,8" Spacing="14">
                     <Grid ColumnDefinitions="Auto,11,*">
-                        <Border Grid.Column="0" Width="38" Height="38" CornerRadius="11"
-                                ClipToBounds="True" VerticalAlignment="Center"
-                                Background="{DynamicResource AccentSubtle}"
-                                BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
-                            <Image Source="/Assets/bonfire-icon.png" Stretch="UniformToFill" Margin="1"/>
-                        </Border>
+                        <!-- The mark, and nothing else. It already has its own silhouette, so a
+                             tile behind it was a second border around a shape that has one. -->
+                        <Image Grid.Column="0" Source="/Assets/bonfire-icon.png"
+                               Width="38" Height="38" Stretch="Uniform"
+                               VerticalAlignment="Center"/>
                         <StackPanel Grid.Column="2" VerticalAlignment="Center" ClipToBounds="True">
                             <TextBlock Text="Bonfire" FontFamily="{DynamicResource FontUi}" FontSize="21"
                                        FontWeight="Bold" Foreground="{DynamicResource BrandGradient}"/>

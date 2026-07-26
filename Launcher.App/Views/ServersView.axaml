@@ -162,9 +162,11 @@
                                          Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).SelectRegionCommand}"
                                          CommandParameter="{Binding}">
                                 <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <!-- Inherits its colour so it flips with the pill: a fixed
+                                         grey was unreadable once the checked pill went pale.
+                                         Opacity, not a colour, keeps it secondary either way. -->
                                     <TextBlock Text="{Binding Code}" Classes="Mono" FontSize="11"
-                                               VerticalAlignment="Center"
-                                               Foreground="{DynamicResource TextMuted}"/>
+                                               VerticalAlignment="Center" Opacity="0.65"/>
                                     <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </RadioButton>

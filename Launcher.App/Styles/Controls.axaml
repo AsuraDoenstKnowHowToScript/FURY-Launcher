@@ -3,14 +3,18 @@
         xmlns:uic="using:FluentAvalonia.UI.Controls"
         xmlns:uip="using:FluentAvalonia.UI.Controls.Primitives">
 
-    <!-- Global text defaults. Text is never the accent colour, always a grey.
-         SemiBold weight: lighter weights of Outfit read too thin for low-vision users. -->
+    <!-- Global text defaults.
+
+         Deliberately no Foreground. A style setter beats inheritance, so setting it here made
+         every TextBlock ignore the colour of whatever contained it — which is fine until a
+         container is a pale button, and then its dark label is overruled by this and you get
+         light text on a light fill. The window sets Foreground once, so the default is the same
+         as it was; the difference is that a control can now actually colour its own content.
+
+         SemiBold: Inter is drawn for interfaces and stays crisp at the 11-13px this window is
+         full of, but anything lighter loses its stems on a dark background. -->
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource FontUi}"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
-        <!-- SemiBold. Inter is drawn for interfaces, so it stays crisp here where the previous
-             display face went spindly, but at 11-13px on a dark background anything lighter than
-             this loses its stems. -->
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
     <Style Selector="Button">
@@ -293,15 +297,7 @@
                         </Transitions>
                     </Border.Transitions>
                     <Border Name="Knob" Width="18" Height="18" CornerRadius="9"
-                            HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,0,0,0"
-                            Background="#ECEAF3">
-                        <Border.Transitions>
-                            <Transitions>
-                                <TransformOperationsTransition Property="RenderTransform"
-                                                               Duration="0:0:0.18" Easing="CubicEaseOut"/>
-                            </Transitions>
-                        </Border.Transitions>
-                    </Border>
+                            HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,0,0,0"/>
                 </Border>
             </ControlTemplate>
         </Setter>
@@ -325,11 +321,22 @@
         <Setter Property="Background" Value="{DynamicResource AccentHover}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource AccentHover}"/>
     </Style>
+    <!-- The knob has to contrast with its own track, and the track changes colour with state,
+         so the knob changes with it. A fixed pale knob disappeared into the pale "on" track. -->
     <Style Selector="ToggleButton.switch /template/ Border#Knob">
         <Setter Property="RenderTransform" Value="translateX(0px)"/>
+        <Setter Property="Background" Value="{DynamicResource TextSecondary}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform"
+                                               Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                <BrushTransition Property="Background" Duration="0:0:0.18"/>
+            </Transitions>
+        </Setter>
     </Style>
     <Style Selector="ToggleButton.switch:checked /template/ Border#Knob">
         <Setter Property="RenderTransform" Value="translateX(20px)"/>
+        <Setter Property="Background" Value="{DynamicResource OnAccent}"/>
     </Style>
 
     <!-- Segmented control: RadioButtons re-templated as pills inside a rounded track.
