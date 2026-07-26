@@ -19,7 +19,7 @@
                      SourceRect="0,0,22,22" DestinationRect="0,0,22,22">
             <VisualBrush.Visual>
                 <Panel Width="22" Height="22" Background="Transparent">
-                    <Ellipse Width="2.5" Height="2.5" Fill="#FFFFFF"
+                    <Ellipse Width="2" Height="2" Fill="#FFFFFF"
                              HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1,1,0,0"/>
                 </Panel>
             </VisualBrush.Visual>
@@ -29,30 +29,36 @@
              give the surface weight, not read as a coloured panel. -->
         <RadialGradientBrush x:Key="PanelGlow" Center="88%,0%" GradientOrigin="88%,0%"
                              RadiusX="70%" RadiusY="70%">
-            <GradientStop Offset="0" Color="#3B2D6B"/>
-            <GradientStop Offset="0.5" Color="#241D38"/>
+            <GradientStop Offset="0" Color="#382A63"/>
+            <GradientStop Offset="0.5" Color="#1B1630"/>
             <GradientStop Offset="1" Color="#00181422"/>
         </RadialGradientBrush>
 
         <ControlTheme x:Key="{x:Type ctl:PanelCard}" TargetType="ctl:PanelCard">
             <Setter Property="Padding" Value="20"/>
-            <Setter Property="Background" Value="{DynamicResource BgSurface}"/>
+            <Setter Property="Background" Value="{DynamicResource GlassSurface}"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="VerticalContentAlignment" Value="Stretch"/>
             <!-- Ordinary sections keep the glow at half strength. -->
             <Setter Property="TextureOpacity" Value="0.5"/>
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Border CornerRadius="{DynamicResource RadiusLg}" BorderThickness="1"
-                            BorderBrush="{DynamicResource BorderSubtle}"
+                    <Border CornerRadius="{DynamicResource RadiusXl}" BorderThickness="1"
+                            BorderBrush="{DynamicResource GlassBorder}"
                             Background="{TemplateBinding Background}"
-                            BoxShadow="0 4 16 0 #45000000"
+                            BoxShadow="0 8 32 0 #40000000"
                             ClipToBounds="True">
                         <Panel>
-                            <!-- Texture stack, bottom to top: glow, dots, watermark, content. -->
+                            <!-- Texture stack, bottom to top: glow, dots, edge light, watermark,
+                                 content. Nothing below the content is opaque, so the backdrop
+                                 shows through the whole stack and the panel reads as a film. -->
                             <Border Name="PART_Glow" Background="{StaticResource PanelGlow}"
                                     Opacity="{TemplateBinding TextureOpacity}"/>
-                            <Border Name="PART_Dots" Background="{StaticResource DotGrid}" Opacity="0.055"/>
+                            <Border Name="PART_Dots" Background="{StaticResource DotGrid}" Opacity="0.035"/>
+                            <!-- The bright line along the top edge. One detail, and the surface
+                                 stops being a rectangle and starts being a material. -->
+                            <Border Name="PART_Sheen" Background="{StaticResource GlassHighlight}"
+                                    Height="90" VerticalAlignment="Top" IsHitTestVisible="False"/>
 
                             <!-- Anchored inside the corner rather than bleeding off it, so it reads
                                  as a deliberate mark instead of a cropped accident. -->
@@ -92,12 +98,13 @@
             <!-- Headline: the watermark appears and the glow goes to full. -->
             <Style Selector="^.feature">
                 <Setter Property="TextureOpacity" Value="1"/>
+                <Setter Property="Background" Value="{DynamicResource GlassElevated}"/>
             </Style>
             <Style Selector="^.feature /template/ Image#PART_Watermark">
                 <Setter Property="IsVisible" Value="True"/>
             </Style>
             <Style Selector="^.feature /template/ Border#PART_Dots">
-                <Setter Property="Opacity" Value="0.07"/>
+                <Setter Property="Opacity" Value="0.05"/>
             </Style>
 
             <!-- Supporting: keep the texture, drop the drama. -->
@@ -105,7 +112,12 @@
                 <Setter Property="TextureOpacity" Value="0"/>
             </Style>
             <Style Selector="^.subtle /template/ Border#PART_Dots">
-                <Setter Property="Opacity" Value="0.03"/>
+                <Setter Property="Opacity" Value="0.02"/>
+            </Style>
+            <!-- Supporting surfaces get no edge light: the sheen is what marks a panel as a
+                 headline, and every panel having one is the same as none of them having one. -->
+            <Style Selector="^.subtle /template/ Border#PART_Sheen">
+                <Setter Property="IsVisible" Value="False"/>
             </Style>
         </ControlTheme>
 

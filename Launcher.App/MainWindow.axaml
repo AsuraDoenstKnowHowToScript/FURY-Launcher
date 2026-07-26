@@ -12,7 +12,7 @@
         Width="1280" Height="860"
         MinWidth="1120" MinHeight="740"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource BgBase}"
+        Background="{DynamicResource AppBackdrop}"
         Foreground="{DynamicResource TextPrimary}"
         FontWeight="SemiBold"
         Icon="/Assets/bonfire-icon.png"

@@ -18,15 +18,21 @@
          means a server's MOTD and the numbers next to it. -->
     <FontFamily x:Key="FontMinecraft">avares://Bonfire Launcher/Assets/Fonts/Monocraft.ttf#Monocraft</FontFamily>
 
-    <!-- Colours (raw). Four background layers, each a clear step brighter, all with a
-         faint violet cast so the purple accent feels native rather than pasted on. -->
-    <Color x:Key="BgBaseColor">#0C0B11</Color>
-    <Color x:Key="BgSurfaceColor">#16141E</Color>
-    <Color x:Key="BgElevatedColor">#211D2E</Color>
-    <Color x:Key="BgHoverColor">#282338</Color>
-    <Color x:Key="BgInputColor">#111017</Color>
-    <Color x:Key="BorderSubtleColor">#2A2637</Color>
-    <Color x:Key="BorderStrongColor">#3B3450</Color>
+    <!-- Colours (raw). The base layers are close to neutral now, with only a whisper of violet
+         left in them. When every surface is tinted, the accent has nothing to stand out against
+         and the whole window reads as one purple wash; pulling the saturation out of the layers
+         is what lets a single accent do the work.
+
+         Surfaces above the base are translucent rather than solid: a light film over whatever is
+         behind, which is what makes a panel read as glass instead of as a lighter grey rectangle.
+         The base is the only opaque layer, and it carries a gradient for the films to pick up. -->
+    <Color x:Key="BgBaseColor">#08080B</Color>
+    <Color x:Key="BgSurfaceColor">#12121A</Color>
+    <Color x:Key="BgElevatedColor">#1B1B26</Color>
+    <Color x:Key="BgHoverColor">#22222F</Color>
+    <Color x:Key="BgInputColor">#0D0D13</Color>
+    <Color x:Key="BorderSubtleColor">#22222E</Color>
+    <Color x:Key="BorderStrongColor">#33333F</Color>
     <Color x:Key="AccentColor">#6D28D9</Color>
     <Color x:Key="AccentHoverColor">#7C3AED</Color>
     <Color x:Key="AccentPressedColor">#5B21B6</Color>
@@ -61,6 +67,33 @@
     <SolidColorBrush x:Key="Warning" Color="{StaticResource WarningColor}"/>
     <SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}"/>
 
+    <!-- ============================ GLASS ============================
+         Films, not fills. Each is white at a low alpha, so a panel takes its colour from the
+         backdrop behind it and layers read as depth rather than as a palette of greys. The
+         highlight is the thin bright line along a panel's top edge that sells the material:
+         glass catches light on the edge facing it. -->
+    <SolidColorBrush x:Key="GlassSurface" Color="#FFFFFF" Opacity="0.038"/>
+    <SolidColorBrush x:Key="GlassElevated" Color="#FFFFFF" Opacity="0.062"/>
+    <SolidColorBrush x:Key="GlassInput" Color="#000000" Opacity="0.22"/>
+    <SolidColorBrush x:Key="GlassBorder" Color="#FFFFFF" Opacity="0.075"/>
+    <SolidColorBrush x:Key="GlassBorderStrong" Color="#FFFFFF" Opacity="0.13"/>
+    <LinearGradientBrush x:Key="GlassHighlight" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#20FFFFFF"/>
+        <GradientStop Offset="0.45" Color="#06FFFFFF"/>
+        <GradientStop Offset="1" Color="#00FFFFFF"/>
+    </LinearGradientBrush>
+
+    <!-- The window backdrop. Translucent panels need something with variation behind them or
+         they have nothing to catch; a flat black would make every film the same flat grey. Two
+         faint blooms, one warm from the mark and one violet from the accent, well below the
+         level you would consciously notice. -->
+    <RadialGradientBrush x:Key="AppBackdrop" Center="18%,0%" GradientOrigin="18%,0%"
+                         RadiusX="95%" RadiusY="85%">
+        <GradientStop Offset="0" Color="#171326"/>
+        <GradientStop Offset="0.55" Color="#0C0B12"/>
+        <GradientStop Offset="1" Color="#08080B"/>
+    </RadialGradientBrush>
+
     <!-- The Bonfire wordmark: a soft violet sweep, the one place the brand gets to glow. -->
     <LinearGradientBrush x:Key="BrandGradient" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Offset="0" Color="#A78BFA"/>
@@ -68,9 +101,10 @@
     </LinearGradientBrush>
 
     <!-- Radii: roomier corners, closer to a modern web card than a desktop widget. -->
-    <CornerRadius x:Key="RadiusSm">6</CornerRadius>
-    <CornerRadius x:Key="RadiusMd">10</CornerRadius>
-    <CornerRadius x:Key="RadiusLg">14</CornerRadius>
+    <CornerRadius x:Key="RadiusSm">8</CornerRadius>
+    <CornerRadius x:Key="RadiusMd">12</CornerRadius>
+    <CornerRadius x:Key="RadiusLg">18</CornerRadius>
+    <CornerRadius x:Key="RadiusXl">24</CornerRadius>
     <CornerRadius x:Key="RadiusPill">999</CornerRadius>
 
     <!-- Spacing scale (base 4) -->
@@ -89,12 +123,12 @@
          in the window, and a single flat tone over that height reads as a slab; the
          gradient is small enough that you would not name it, which is the point. -->
     <LinearGradientBrush x:Key="NavigationViewDefaultPaneBackground" StartPoint="0%,0%" EndPoint="0%,100%">
-        <GradientStop Offset="0" Color="#16131F"/>
-        <GradientStop Offset="1" Color="#0B0A11"/>
+        <GradientStop Offset="0" Color="#14FFFFFF"/>
+        <GradientStop Offset="1" Color="#06FFFFFF"/>
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="NavigationViewExpandedPaneBackground" StartPoint="0%,0%" EndPoint="0%,100%">
-        <GradientStop Offset="0" Color="#16131F"/>
-        <GradientStop Offset="1" Color="#0B0A11"/>
+        <GradientStop Offset="0" Color="#14FFFFFF"/>
+        <GradientStop Offset="1" Color="#06FFFFFF"/>
     </LinearGradientBrush>
     <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent"/>
     <sys:Double x:Key="ScrollBarSize">10</sys:Double>
