@@ -1,29 +1,21 @@
 <p align="center">
-  <img src=".github/BonfireLOGOLOGOLOGO.png" alt="Bonfire Launcher logo" width="150">
+  <img src=".github/Bonfire_No_BG.png" alt="Bonfire Launcher logo" width="140">
 </p>
 
 # Bonfire Launcher
 
 Bonfire Launcher is a Minecraft launcher for Windows. It manages isolated instances, handles mods, and supports both Microsoft and offline accounts.
 
-[![Release](https://img.shields.io/github/v/release/AsuraDoenstKnowHowToScript/Bonfire-Launcher?include_prereleases&label=release&color=brightgreen)](../../releases)
-[![Downloads](https://img.shields.io/github/downloads/AsuraDoenstKnowHowToScript/Bonfire-Launcher/total?color=blue)](../../releases)
+[![Release](https://img.shields.io/github/v/release/AsuraDoenstKnowHowToScript/FURY-Launcher?include_prereleases&label=release&color=brightgreen)](../../releases)
+[![Downloads](https://img.shields.io/github/downloads/AsuraDoenstKnowHowToScript/FURY-Launcher/total?color=blue)](../../releases)
 [![Status](https://img.shields.io/badge/status-stable-brightgreen)](../../releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6)](#supported-systems)
-[![Languages](https://img.shields.io/badge/languages-5-purple)](#languages)
+[![Languages](https://img.shields.io/badge/languages-5-lightgrey)](#languages)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
-
-## Screenshots
-
-<!-- Screenshots live in branding/screenshots/. Drop the images there, then uncomment:
-![Home](branding/screenshots/home.png)
-![Content](branding/screenshots/content.png)
-![Accounts](branding/screenshots/accounts.png)
--->
 
 ## Current version
 
-The latest stable build is `v0.5.0`. Download it from the [Releases](../../releases) page — the release badge above always tracks the newest published build.
+The latest stable build is `v1.5.2`. Download it from the [Releases](../../releases) page — the release badge above always tracks the newest published build.
 
 ## Download
 
@@ -47,7 +39,9 @@ Manage mods per instance: add, remove, and toggle jars, or search Modrinth and C
 
 Install Forge and NeoForge straight from Maven, with no ad links or extra browser steps.
 
-Import Modrinth `.mrpack` packs (the mods are downloaded and verified), or share a self-contained `.bfpack` that bundles the manifest together with the mod jars.
+Browse Modrinth modpacks from the Modpacks tab and install one either as a fresh instance or into an instance you already have — a pack is a Minecraft version, a loader and a mod list together, so taking over an existing instance switches it to what the pack needs, and asks first. You can also import a `.mrpack` from disk, or share a self-contained `.bfpack` that bundles the manifest together with the mod jars.
+
+The Servers tab reads the multiplayer list the game itself keeps, so servers you joined in game show up without being added twice. Everything it displays — MOTD in the server's own colours, player counts, version, icon and latency — is asked of the server over Minecraft's own Server List Ping rather than taken from a third-party index, including the SRV lookup the game does, which is what most public servers actually answer on. A short directory of public servers grouped by region ships with it, live-pinged like the rest.
 
 Each offline account carries its own skin, cape and body model (Steve or Alex), shown in game through CustomSkinLoader. A Microsoft account instead shows the skin from your Mojang profile as a read-only preview — local skin and cape editing is disabled for it, since Mojang manages that.
 
@@ -55,7 +49,7 @@ The launcher checks GitHub for updates at startup and can update itself in place
 
 ## Languages
 
-The interface is available in English (default), Português, Nederlands, 繁體中文, and Русский. You can change the language at any time from the About tab.
+The interface is available in English (default), Português, Nederlands, 繁體中文, and Русский. You can change the language at any time from the Settings tab.
 
 ## Reporting problems
 
@@ -78,7 +72,7 @@ dotnet run --project Launcher.App
 
 The logic lives in `Launcher.Core`, a library with no UI dependency. `Launcher.App` is an Avalonia front end that subscribes to Core events and displays the result. Everything the launcher does can run without the interface through the `LauncherCore` class.
 
-Data is stored in `%APPDATA%\Bonfire Launcher\`: the instance index (`instances.json`), the account list (`bonfire-accounts.json`), the cached Microsoft sign-in tokens (`accounts.json`), settings (`settings.json`), and one isolated `.minecraft` per instance. No credentials are kept in the source.
+Data is stored in `%APPDATA%\Bonfire Launcher\`: the instance index (`instances.json`), the account list (`fury-accounts.json`, kept under its pre-rename name so existing installs do not lose their accounts), the cached Microsoft sign-in tokens (`accounts.json`), settings (`settings.json`), and one isolated `.minecraft` per instance. No credentials are kept in the source.
 
 ## Trademark and affiliation
 

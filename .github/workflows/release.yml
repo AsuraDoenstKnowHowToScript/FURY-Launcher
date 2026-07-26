@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version without the leading v (e.g. 0.5.2)"
+        description: "Version without the leading v (e.g. 1.5.2)"
         required: true
-        default: "0.5.2"
+        default: "1.5.2"
       prerelease:
         description: "Mark as a pre-release (beta)?"
         type: boolean
@@ -70,19 +70,43 @@ jobs:
         shell: bash
         run: |
           cat > release-notes.md <<'EOF'
-          A small patch on top of 0.5.0.
+          FURY Launcher is now **Bonfire Launcher**. New name, new mark, and the
+          interface rebuilt around it.
 
-          ## Branding
-          Bonfire now ships with its own app icon: the compact "FL" mark shows on the
-          window, the taskbar and the `.exe`, so the launcher is recognisable at a
-          glance instead of the default icon.
+          ## Your data comes with you
+          Nothing is lost in the rename. On first run the launcher adopts your existing
+          data folder rather than starting an empty one beside it, so instances,
+          accounts and hours played are exactly where you left them. Packs export as
+          `.bfpack` now and still import the older `.frpack`.
 
-          Everything from 0.5.0 (unified accounts, the redesigned interface, smooth
-          scrolling, Content auto-search, the Java installer and Logs) is included.
+          ## Servers
+          A multiplayer tab that reads the server list the game itself keeps, so servers
+          you joined in game are already there. MOTD in the server's own colours, player
+          counts, version, icon and latency all come from the server over Minecraft's own
+          Server List Ping — including the SRV lookup the game does, which is what most
+          public servers actually answer on. A short directory of public servers by
+          region ships with it, pinged live like everything else.
+
+          ## Modpacks
+          Browse Modrinth modpacks and install one as a fresh instance, or into an
+          instance you already have. A pack is a Minecraft version, a loader and a mod
+          list together, so taking over an existing instance switches it to what the pack
+          needs — and tells you exactly what it will become before it does.
+
+          ## The look
+          Iron and titanium on black. No colour anywhere except the three states that
+          mean something, so anything coloured on screen is information. Surfaces are
+          translucent films over a backdrop rather than flat panels, edges are a titanium
+          sweep, and hovering answers with a rim and a tonal step that hold while the
+          pointer is there. Typeface is Inter, which keeps its shape at the small sizes
+          this interface is full of.
+
+          Also: real settings that do something (hardware acceleration, JVM presets,
+          reset to defaults), a reworked sidebar, and scrolling that no longer steps.
 
           ## How to run
           Download the zip below, unzip, run `Bonfire Launcher.exe`. Windows 10/11
-          (64-bit), self-contained: no .NET install required.
+          (64-bit), self-contained: no .NET or Java install required.
           EOF
 
       - name: Create release
