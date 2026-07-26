@@ -1,10 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
-title FURY Launcher
+title Bonfire Launcher
 
 echo ==================================================
-echo   FURY Launcher  -  build ^& execucao
+echo   Bonfire Launcher  -  build ^& execucao
 echo ==================================================
 echo.
 
@@ -19,23 +19,23 @@ if errorlevel 1 goto :end
 
 rem ---------- 2) Restaurar pacotes (NuGet: Avalonia, CmlLib, ...) ----------
 echo [1/3] Restaurando dependencias (NuGet)...
-dotnet restore "FURY.sln" --nologo
+dotnet restore "Bonfire.sln" --nologo
 if errorlevel 1 goto :build_fail
 
 if /i "%MODE%"=="publish" goto :publish
 
 rem ---------- 3) Compilar ----------
 echo [2/3] Compilando (Release)...
-dotnet build "FURY.sln" -c Release --nologo
+dotnet build "Bonfire.sln" -c Release --nologo
 if errorlevel 1 goto :build_fail
 
 rem ---------- 4) Rodar ----------
-echo [3/3] Iniciando FURY Launcher...
+echo [3/3] Iniciando Bonfire Launcher...
 echo.
 rem WinExe nao anexa console: redireciona stderr p/ log, senao um crash some sem mensagem.
 rem O projeto tem como alvo net8.0-windows; o fallback cobre um TFM antigo.
-set "EXE=Launcher.App\bin\Release\net8.0-windows\FURY Launcher.exe"
-if not exist "%EXE%" set "EXE=Launcher.App\bin\Release\net8.0\FURY Launcher.exe"
+set "EXE=Launcher.App\bin\Release\net8.0-windows\Bonfire Launcher.exe"
+if not exist "%EXE%" set "EXE=Launcher.App\bin\Release\net8.0\Bonfire Launcher.exe"
 "%EXE%" 2>"%~dp0crash.log"
 if errorlevel 1 (
   echo.
@@ -54,7 +54,7 @@ dotnet publish "Launcher.App\Launcher.App.csproj" -c Release -r win-x64 --self-c
 if errorlevel 1 goto :build_fail
 echo.
 echo OK - build gerada em "%OUT%"
-echo Executavel: "%OUT%\FURY Launcher.exe"
+echo Executavel: "%OUT%\Bonfire Launcher.exe"
 echo ^(self-contained: roda sem precisar do .NET instalado^)
 pause
 goto :end

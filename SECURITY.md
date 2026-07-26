@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-FURY Launcher is in beta and updates frequently. Only the latest release receives security fixes.
+Bonfire Launcher is in beta and updates frequently. Only the latest release receives security fixes.
 
 | Version | Supported |
 | --- | --- |
@@ -17,7 +17,7 @@ Do not open a public issue for security problems. Public issues are for ordinary
 
 Report privately in one of these ways:
 
-- Email `furylauncher@gmail.com` with "SECURITY" in the subject.
+- Email `bonfirelauncher@gmail.com` with "SECURITY" in the subject.
 - Open a private report through the repository's Security tab, using "Report a vulnerability".
 
 Where possible, include the following:
@@ -33,6 +33,6 @@ We aim to acknowledge a report within a few days and will keep you informed whil
 
 ## Scope
 
-In scope: the FURY Launcher application and its official release builds.
+In scope: the Bonfire Launcher application and its official release builds.
 
 Out of scope: Minecraft itself, Mojang and Microsoft services, third-party mods, Modrinth, and other external services the launcher connects to. Please report those to their respective owners.

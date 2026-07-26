@@ -1,13 +1,13 @@
 <p align="center">
-  <img src=".github/FURYLOGOLOGOLOGO.png" alt="FURY Launcher logo" width="150">
+  <img src=".github/BonfireLOGOLOGOLOGO.png" alt="Bonfire Launcher logo" width="150">
 </p>
 
-# FURY Launcher
+# Bonfire Launcher
 
-FURY Launcher is a Minecraft launcher for Windows. It manages isolated instances, handles mods, and supports both Microsoft and offline accounts.
+Bonfire Launcher is a Minecraft launcher for Windows. It manages isolated instances, handles mods, and supports both Microsoft and offline accounts.
 
-[![Release](https://img.shields.io/github/v/release/AsuraDoenstKnowHowToScript/FURY-Launcher?include_prereleases&label=release&color=brightgreen)](../../releases)
-[![Downloads](https://img.shields.io/github/downloads/AsuraDoenstKnowHowToScript/FURY-Launcher/total?color=blue)](../../releases)
+[![Release](https://img.shields.io/github/v/release/AsuraDoenstKnowHowToScript/Bonfire-Launcher?include_prereleases&label=release&color=brightgreen)](../../releases)
+[![Downloads](https://img.shields.io/github/downloads/AsuraDoenstKnowHowToScript/Bonfire-Launcher/total?color=blue)](../../releases)
 [![Status](https://img.shields.io/badge/status-stable-brightgreen)](../../releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6)](#supported-systems)
 [![Languages](https://img.shields.io/badge/languages-5-purple)](#languages)
@@ -29,7 +29,7 @@ The latest stable build is `v0.5.0`. Download it from the [Releases](../../relea
 
 1. Open the [Releases](../../releases) page and download the latest build.
 2. Extract the archive wherever you prefer.
-3. Run `FURY Launcher.exe`.
+3. Run `Bonfire Launcher.exe`.
 
 The build is self-contained, so you do not need to install .NET or Java beforehand. When a Minecraft version requires a specific Java runtime, the launcher downloads it on first launch.
 
@@ -47,7 +47,7 @@ Manage mods per instance: add, remove, and toggle jars, or search Modrinth and C
 
 Install Forge and NeoForge straight from Maven, with no ad links or extra browser steps.
 
-Import Modrinth `.mrpack` packs (the mods are downloaded and verified), or share a self-contained `.frpack` that bundles the manifest together with the mod jars.
+Import Modrinth `.mrpack` packs (the mods are downloaded and verified), or share a self-contained `.bfpack` that bundles the manifest together with the mod jars.
 
 Each offline account carries its own skin, cape and body model (Steve or Alex), shown in game through CustomSkinLoader. A Microsoft account instead shows the skin from your Mojang profile as a read-only preview — local skin and cape editing is disabled for it, since Mojang manages that.
 
@@ -61,7 +61,7 @@ The interface is available in English (default), Português, Nederlands, 繁體�
 
 To report a bug, open an [issue](../../issues) using the bug report template. Clear steps to reproduce make a fix much faster. If the launcher crashed, attach the `crash.log` file located next to the executable.
 
-For security issues, do not open a public issue. Use GitHub's "Report a vulnerability" button, or email `furylauncher@gmail.com` with "SECURITY" in the subject. See [SECURITY.md](SECURITY.md) for the full policy.
+For security issues, do not open a public issue. Use GitHub's "Report a vulnerability" button, or email `bonfirelauncher@gmail.com` with "SECURITY" in the subject. See [SECURITY.md](SECURITY.md) for the full policy.
 
 ## Building from source
 
@@ -72,20 +72,20 @@ On Windows, run `run.bat`. It checks for the .NET SDK and offers to install it t
 With the SDK directly:
 
 ```
-dotnet build FURY.sln -c Release
+dotnet build Bonfire.sln -c Release
 dotnet run --project Launcher.App
 ```
 
 The logic lives in `Launcher.Core`, a library with no UI dependency. `Launcher.App` is an Avalonia front end that subscribes to Core events and displays the result. Everything the launcher does can run without the interface through the `LauncherCore` class.
 
-Data is stored in `%APPDATA%\FURY Launcher\`: the instance index (`instances.json`), the account list (`fury-accounts.json`), the cached Microsoft sign-in tokens (`accounts.json`), settings (`settings.json`), and one isolated `.minecraft` per instance. No credentials are kept in the source.
+Data is stored in `%APPDATA%\Bonfire Launcher\`: the instance index (`instances.json`), the account list (`bonfire-accounts.json`), the cached Microsoft sign-in tokens (`accounts.json`), settings (`settings.json`), and one isolated `.minecraft` per instance. No credentials are kept in the source.
 
 ## Trademark and affiliation
 
-FURY Launcher is an independent project. It is not affiliated with, associated with, authorized by, or endorsed by Mojang AB or Microsoft. "Minecraft" is a trademark of Mojang AB. This software does not include or distribute any proprietary Minecraft code or assets.
+Bonfire Launcher is an independent project. It is not affiliated with, associated with, authorized by, or endorsed by Mojang AB or Microsoft. "Minecraft" is a trademark of Mojang AB. This software does not include or distribute any proprietary Minecraft code or assets.
 
 ## License
 
-FURY Launcher is proprietary software and all rights are reserved. You may not use, copy, modify, or distribute it without prior written permission from the copyright holder. See the [LICENSE](LICENSE) file for the full terms. "FURY" is a trademark of the holder.
+Bonfire Launcher is proprietary software and all rights are reserved. You may not use, copy, modify, or distribute it without prior written permission from the copyright holder. See the [LICENSE](LICENSE) file for the full terms. "Bonfire" is a trademark of the holder.
 
-Contact: furylauncher@gmail.com
+Contact: bonfirelauncher@gmail.com

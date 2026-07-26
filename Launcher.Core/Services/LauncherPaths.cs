@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using Launcher.Core.Models;
 
@@ -10,7 +10,7 @@ namespace Launcher.Core.Services;
 
 /// <summary>
 /// Resolves all on-disk locations. Root defaults to
-/// <c>%APPDATA%/FURY Launcher</c> (cross-platform: the user's application-data
+/// <c>%APPDATA%/Bonfire Launcher</c> (cross-platform: the user's application-data
 /// folder).
 /// </summary>
 public sealed class LauncherPaths
@@ -19,10 +19,37 @@ public sealed class LauncherPaths
 
     public LauncherPaths(string? root = null)
     {
-        Root = root ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            AppInfo.DataFolderName);
+        Root = root ?? ResolveDefaultRoot();
         Directory.CreateDirectory(InstancesDir);
+    }
+
+    /// <summary>
+    /// The data folder, adopting the pre-rename one if that is what exists. Every instance,
+    /// account and hour played lives under this path, so renaming the app must not quietly start
+    /// an empty folder next to a full one and look to the user like their data was deleted.
+    ///
+    /// The old folder is renamed rather than copied: one atomic move, no duplicate on disk, and
+    /// no window where half the data is in each place. If the move fails — a file still open, a
+    /// permission problem — the old path is used as-is, which keeps the launcher working under
+    /// the old name instead of failing to start.
+    /// </summary>
+    private static string ResolveDefaultRoot()
+    {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var current = Path.Combine(appData, AppInfo.DataFolderName);
+        var legacy = Path.Combine(appData, AppInfo.LegacyDataFolderName);
+
+        if (Directory.Exists(current) || !Directory.Exists(legacy)) return current;
+
+        try
+        {
+            Directory.Move(legacy, current);
+            return current;
+        }
+        catch
+        {
+            return legacy;
+        }
     }
 
     public string InstancesDir => Path.Combine(Root, "instances");
@@ -35,9 +62,11 @@ public sealed class LauncherPaths
     /// the one-time account migration can read and then retire it (renamed to <c>.bak</c>).</summary>
     public string ProfilesFile => Path.Combine(Root, "profiles.json");
 
-    /// <summary>Unified FURY account list (offline + Microsoft), keyed by our own account id.
-    /// Distinct from <see cref="AccountsFile"/>, which stays the CmlLib token vault.</summary>
-    public string FuryAccountsFile => Path.Combine(Root, "fury-accounts.json");
+    /// <summary>Unified Bonfire account list (offline + Microsoft), keyed by our own account id.
+    /// Distinct from <see cref="AccountsFile"/>, which stays the CmlLib token vault.
+    /// The file keeps its pre-rename name on purpose: renaming it would leave every existing
+    /// user looking at an empty account list.</summary>
+    public string BonfireAccountsFile => Path.Combine(Root, "fury-accounts.json");
 
     /// <summary>On-disk cache of Microsoft (Mojang) skin PNGs + metadata, keyed by uuid.</summary>
     public string MsSkinCacheDir => Path.Combine(Root, "msskins");

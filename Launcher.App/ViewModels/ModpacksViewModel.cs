@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System;
 using System.Collections.Generic;
@@ -161,7 +161,7 @@ public sealed class ModpacksViewModel : ViewModelBase
         await _dialogs.RunGuardedAsync(async () =>
         {
             card.Installing = true;
-            var download = Path.Combine(Path.GetTempPath(), $"fury-{Guid.NewGuid():N}.mrpack");
+            var download = Path.Combine(Path.GetTempPath(), $"bonfire-{Guid.NewGuid():N}.mrpack");
             try
             {
                 card.Progress = Loc.T("modpacks.resolving");

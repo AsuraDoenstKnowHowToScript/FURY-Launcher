@@ -25,7 +25,7 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Restore
-        run: dotnet restore FURY.sln
+        run: dotnet restore Bonfire.sln
 
       - name: Build
-        run: dotnet build FURY.sln -c Release --no-restore
+        run: dotnet build Bonfire.sln -c Release --no-restore

@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System.Diagnostics;
 using System.IO.Compression;
@@ -158,7 +158,7 @@ public sealed class ForgeDirectInstaller
         EnsureLauncherProfiles(minecraftDir);
 
         // 1) Download the installer jar directly from Maven.
-        var jarPath = Path.Combine(Path.GetTempPath(), $"fury-{loaderKeyword}-{Guid.NewGuid():N}.jar");
+        var jarPath = Path.Combine(Path.GetTempPath(), $"bonfire-{loaderKeyword}-{Guid.NewGuid():N}.jar");
         log?.Report($"[loader] Baixando instalador: {installerUrl}");
         await DownloadFileAsync(installerUrl, jarPath, ct).ConfigureAwait(false);
 

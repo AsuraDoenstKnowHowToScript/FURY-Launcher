@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System.IO.Compression;
 using System.Security.Cryptography;
@@ -17,7 +17,7 @@ namespace Launcher.Core.Services;
 /// (which lists mod download URLs + hashes and the required Minecraft/loader versions)
 /// plus <c>overrides/</c> (configs and extra files). Creates an isolated instance,
 /// downloads the mods (verifying SHA-1), and applies the overrides. The loader itself
-/// is reinstalled on first launch, like our own <c>.frpack</c>.
+/// is reinstalled on first launch, like our own <c>.bfpack</c>.
 /// </summary>
 public sealed class MrpackService
 {

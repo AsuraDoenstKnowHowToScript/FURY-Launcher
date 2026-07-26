@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 namespace Launcher.Core.Models;
 
@@ -16,7 +16,7 @@ namespace Launcher.Core.Models;
 /// </summary>
 public sealed class Account
 {
-    /// <summary>Stable FURY-side id (used to name stored skin/cape files).</summary>
+    /// <summary>Stable Bonfire-side id (used to name stored skin/cape files).</summary>
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
     /// <summary>In-game nick. For offline it IS the identity; for Microsoft it mirrors the Mojang name.</summary>

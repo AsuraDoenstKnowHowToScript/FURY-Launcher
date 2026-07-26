@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System;
 using System.Collections.Generic;
@@ -249,7 +249,7 @@ public partial class MainWindow : AppWindow, IDialogService
         NavVersion.Text = "v" + AppInfo.Version;
         NavView.SelectedItem = NavDashboard;   // the dashboard is the landing screen
 
-        // --- modpack (.frpack) ---
+        // --- modpack (.bfpack) ---
         // Import/Export/Delete Click handlers are wired in XAML (they live inside
         // flyouts, a separate namescope, so no code-behind field is generated).
         ActiveAccountChip.Click += OnActiveChipClick;
@@ -687,7 +687,7 @@ public partial class MainWindow : AppWindow, IDialogService
                 () => UpdateBannerText.Text = Loc.T("update.downloading", (int)(p * 100))));
             var staging = await _core.Updates.DownloadAndExtractAsync(info, progress);
 
-            const string exeName = "FURY Launcher.exe";
+            const string exeName = "Bonfire Launcher.exe";
             if (!File.Exists(Path.Combine(staging, exeName)))
                 throw new InvalidOperationException($"The downloaded update is missing {exeName}.");
 
@@ -711,7 +711,7 @@ public partial class MainWindow : AppWindow, IDialogService
         var appDir = AppContext.BaseDirectory.TrimEnd('\\', '/');
         var exePath = Path.Combine(appDir, exeName);
         var pid = Environment.ProcessId;
-        var bat = Path.Combine(Path.GetTempPath(), "fury-update.bat");
+        var bat = Path.Combine(Path.GetTempPath(), "bonfire-update.bat");
 
         var script =
             "@echo off\r\n" +
@@ -1867,7 +1867,7 @@ public partial class MainWindow : AppWindow, IDialogService
         ModrinthStatus.Text = Loc.T("mods.installedcount", installed.Count);
     });
 
-    // ============================ MODPACK (.frpack) ============================
+    // ============================ MODPACK (.bfpack) ============================
 
     private async void OnExportPack(object? sender, RoutedEventArgs e) => await SafeAsync(async () =>
     {
@@ -1878,9 +1878,9 @@ public partial class MainWindow : AppWindow, IDialogService
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = Loc.T("pack.exporttitle"),
-            SuggestedFileName = inst.Name + ".frpack",
-            DefaultExtension = "frpack",
-            FileTypeChoices = new[] { new FilePickerFileType(Loc.T("filetype.frpack")) { Patterns = new[] { "*.frpack" } } }
+            SuggestedFileName = inst.Name + ".bfpack",
+            DefaultExtension = "bfpack",
+            FileTypeChoices = new[] { new FilePickerFileType(Loc.T("filetype.bfpack")) { Patterns = new[] { "*.bfpack" } } }
         });
         var path = file?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
@@ -1896,7 +1896,12 @@ public partial class MainWindow : AppWindow, IDialogService
         {
             Title = Loc.T("pack.importtitle"),
             AllowMultiple = false,
-            FileTypeFilter = new[] { new FilePickerFileType(Loc.T("filetype.frpack")) { Patterns = new[] { "*.frpack" } } }
+            // .frpack is the pre-rename extension. The format never changed, so packs exported
+            // by the old name still import; only new exports get the new extension.
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType(Loc.T("filetype.bfpack")) { Patterns = new[] { "*.bfpack", "*.frpack" } }
+            }
         });
         var path = files.FirstOrDefault()?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;

@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using Launcher.Core.Models;
 
@@ -10,11 +10,11 @@ namespace Launcher.Core.Services;
 
 /// <summary>
 /// One-time, idempotent migration from the legacy <c>profiles.json</c> (offline profiles)
-/// to the unified <c>fury-accounts.json</c>. Each old profile becomes an offline
+/// to the unified <c>bonfire-accounts.json</c>. Each old profile becomes an offline
 /// <see cref="Account"/> (id/name/slim/skin/cape preserved); every Microsoft account already
 /// cached by CmlLib is imported as a Microsoft <see cref="Account"/> shell (nick/uuid filled
 /// on the first successful silent resume). The legacy file is renamed to <c>.bak</c>, never
-/// deleted. Guarded by the existence of <c>fury-accounts.json</c>, so it runs at most once.
+/// deleted. Guarded by the existence of <c>bonfire-accounts.json</c>, so it runs at most once.
 /// </summary>
 public sealed class AccountMigrator
 {
@@ -32,7 +32,7 @@ public sealed class AccountMigrator
     public async Task EnsureMigratedAsync(CancellationToken ct = default)
     {
         // Already migrated (or a fresh install that wrote the file): nothing to do.
-        if (File.Exists(_paths.FuryAccountsFile)) return;
+        if (File.Exists(_paths.BonfireAccountsFile)) return;
 
         var accounts = new List<Account>();
 
@@ -78,7 +78,7 @@ public sealed class AccountMigrator
         }
 
         // 3) Persist the unified list.
-        await JsonStore.WriteAsync(_paths.FuryAccountsFile, accounts, ct).ConfigureAwait(false);
+        await JsonStore.WriteAsync(_paths.BonfireAccountsFile, accounts, ct).ConfigureAwait(false);
 
         // 4) Pick the active account. The old OfflineProfileCombo selection was never persisted,
         //    so per the agreed fallback we take the first account (empty list → null).

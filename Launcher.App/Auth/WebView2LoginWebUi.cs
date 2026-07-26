@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. All rights reserved.
 // Proprietary software. Do not use, copy, modify or distribute without written
 // permission. See the LICENSE file.
-// "FURY" is a trademark of the holder. Not affiliated with Mojang/Microsoft.
+// "Bonfire" is a trademark of the holder. Not affiliated with Mojang/Microsoft.
 
 using System;
 using System.Threading;

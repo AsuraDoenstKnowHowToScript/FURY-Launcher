@@ -15,8 +15,8 @@
         Background="{DynamicResource BgBase}"
         Foreground="{DynamicResource TextPrimary}"
         FontWeight="SemiBold"
-        Icon="/Assets/fl-icon.png"
-        Title="FURY Launcher">
+        Icon="/Assets/bonfire-icon.png"
+        Title="Bonfire Launcher">
 
     <!-- Visible text is set from Launcher.Core.Localization at runtime (ApplyLanguage). -->
     <Grid>
@@ -57,10 +57,10 @@
                                 ClipToBounds="True" VerticalAlignment="Center"
                                 Background="{DynamicResource AccentSubtle}"
                                 BorderBrush="{DynamicResource AccentOutline}" BorderThickness="1">
-                            <Image Source="/Assets/fl-icon.png" Stretch="UniformToFill" Margin="1"/>
+                            <Image Source="/Assets/bonfire-icon.png" Stretch="UniformToFill" Margin="1"/>
                         </Border>
                         <StackPanel Grid.Column="2" VerticalAlignment="Center" ClipToBounds="True">
-                            <TextBlock Text="FURY" FontFamily="{DynamicResource FontUi}" FontSize="21"
+                            <TextBlock Text="Bonfire" FontFamily="{DynamicResource FontUi}" FontSize="21"
                                        FontWeight="Bold" Foreground="{DynamicResource BrandGradient}"/>
                             <TextBlock x:Name="NavVersion" Classes="Mono" Text="" FontSize="11"
                                        TextTrimming="CharacterEllipsis"
@@ -175,7 +175,7 @@
                                     </StackPanel>
                                     <Button.Flyout>
                                         <MenuFlyout>
-                                            <MenuItem Header="Import .frpack" Click="OnImportPack"/>
+                                            <MenuItem Header="Import .bfpack" Click="OnImportPack"/>
                                             <MenuItem Header="Import .mrpack" Click="OnImportMrpack"/>
                                         </MenuFlyout>
                                     </Button.Flyout>
@@ -903,7 +903,7 @@
                                        Icon="{icon:LucideImage Kind=Rocket, Brush={StaticResource TextSecondary}}">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                                    <TextBlock x:Name="AboutTitle" Classes="Display" Text="FURY Launcher"
+                                    <TextBlock x:Name="AboutTitle" Classes="Display" Text="Bonfire Launcher"
                                                VerticalAlignment="Center"/>
                                     <Border CornerRadius="999" Padding="11,4" VerticalAlignment="Center"
                                             Background="{DynamicResource AccentSubtle}"

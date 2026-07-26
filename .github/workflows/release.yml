@@ -42,7 +42,7 @@ jobs:
         run: printf '%s' "$CF_KEY" > Launcher.Core/curseforge.key
 
       - name: Restore
-        run: dotnet restore FURY.sln
+        run: dotnet restore Bonfire.sln
 
       - name: Publish (win-x64, self-contained, single file)
         run: >
@@ -62,7 +62,7 @@ jobs:
       - name: Package
         shell: pwsh
         run: |
-          $zip = "FURY-Launcher-v${{ github.event.inputs.version }}-win-x64.zip"
+          $zip = "Bonfire-Launcher-v${{ github.event.inputs.version }}-win-x64.zip"
           Compress-Archive -Path dist/win-x64/* -DestinationPath $zip -Force
           "ASSET=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
@@ -73,7 +73,7 @@ jobs:
           A small patch on top of 0.5.0.
 
           ## Branding
-          FURY now ships with its own app icon: the compact "FL" mark shows on the
+          Bonfire now ships with its own app icon: the compact "FL" mark shows on the
           window, the taskbar and the `.exe`, so the launcher is recognisable at a
           glance instead of the default icon.
 
@@ -81,7 +81,7 @@ jobs:
           scrolling, Content auto-search, the Java installer and Logs) is included.
 
           ## How to run
-          Download the zip below, unzip, run `FURY Launcher.exe`. Windows 10/11
+          Download the zip below, unzip, run `Bonfire Launcher.exe`. Windows 10/11
           (64-bit), self-contained: no .NET install required.
           EOF
 
@@ -95,7 +95,7 @@ jobs:
           # Idempotent: drop any existing release + tag for this version, then recreate.
           gh release delete "v${{ github.event.inputs.version }}" --yes --cleanup-tag 2>/dev/null || true
           gh release create "v${{ github.event.inputs.version }}" "$ASSET" \
-            --title "FURY Launcher v${{ github.event.inputs.version }}" \
+            --title "Bonfire Launcher v${{ github.event.inputs.version }}" \
             --notes-file release-notes.md \
             --target "${{ github.sha }}" \
             $FLAGS

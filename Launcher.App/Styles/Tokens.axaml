@@ -10,13 +10,13 @@
          ============================================================ -->
 
     <!-- Fonts (embedded; no system install needed) -->
-    <FontFamily x:Key="FontUi">avares://FURY Launcher/Assets/Fonts/Outfit.ttf#Outfit</FontFamily>
-    <FontFamily x:Key="FontMono">avares://FURY Launcher/Assets/Fonts/JetBrainsMono-Regular.ttf#JetBrains Mono</FontFamily>
+    <FontFamily x:Key="FontUi">avares://Bonfire Launcher/Assets/Fonts/Outfit.ttf#Outfit</FontFamily>
+    <FontFamily x:Key="FontMono">avares://Bonfire Launcher/Assets/Fonts/JetBrainsMono-Regular.ttf#JetBrains Mono</FontFamily>
     <!-- Monocraft: a pixel face in the shape of the one the game uses, under the SIL Open Font
          License so it can ship here. The game's own font is Mojang's and is not redistributable.
          Used only where the content belongs to Minecraft rather than to the launcher, which today
          means a server's MOTD and the numbers next to it. -->
-    <FontFamily x:Key="FontMinecraft">avares://FURY Launcher/Assets/Fonts/Monocraft.ttf#Monocraft</FontFamily>
+    <FontFamily x:Key="FontMinecraft">avares://Bonfire Launcher/Assets/Fonts/Monocraft.ttf#Monocraft</FontFamily>
 
     <!-- Colours (raw). Four background layers, each a clear step brighter, all with a
          faint violet cast so the purple accent feels native rather than pasted on. -->
@@ -61,7 +61,7 @@
     <SolidColorBrush x:Key="Warning" Color="{StaticResource WarningColor}"/>
     <SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}"/>
 
-    <!-- The FURY wordmark: a soft violet sweep, the one place the brand gets to glow. -->
+    <!-- The Bonfire wordmark: a soft violet sweep, the one place the brand gets to glow. -->
     <LinearGradientBrush x:Key="BrandGradient" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Offset="0" Color="#A78BFA"/>
         <GradientStop Offset="1" Color="#7C3AED"/>

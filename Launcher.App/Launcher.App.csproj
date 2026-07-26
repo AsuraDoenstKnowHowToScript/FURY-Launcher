@@ -10,13 +10,13 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- Windows .exe icon (title bar / taskbar / file): the compact FL mark reads at small sizes. -->
-    <ApplicationIcon>Assets\fl-icon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\bonfire-icon.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <AssemblyName>FURY Launcher</AssemblyName>
-    <AssemblyTitle>FURY Launcher</AssemblyTitle>
+    <AssemblyName>Bonfire Launcher</AssemblyName>
+    <AssemblyTitle>Bonfire Launcher</AssemblyTitle>
     <Copyright>Copyright © 2026 Suny. All rights reserved.</Copyright>
     <Authors>Suny</Authors>
-    <Product>FURY Launcher</Product>
+    <Product>Bonfire Launcher</Product>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <!-- The WebView2 package ships an unused WPF wrapper that trips a benign WindowsBase
          version-conflict warning; we only use the WinForms host, so downgrade it. -->
@@ -61,11 +61,9 @@
          the font. Shipping it as content keeps it readable next to the binary. -->
     <Content Include="Assets/Fonts/Monocraft-OFL-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- App icon: the compact FL mark (window + .exe). -->
-    <AvaloniaResource Include="Assets/fl-icon.png" />
-    <AvaloniaResource Include="Assets/fl-icon.ico" />
-    <!-- Full FURY wordmark, kept for branding use. -->
-    <AvaloniaResource Include="Assets/fury-logo.png" />
-    <AvaloniaResource Include="Assets/fury-logo.ico" />
+    <AvaloniaResource Include="Assets/bonfire-icon.png" />
+    <AvaloniaResource Include="Assets/bonfire-icon.ico" />
+    <!-- Full Bonfire wordmark, kept for branding use. -->
   </ItemGroup>
 
 </Project>

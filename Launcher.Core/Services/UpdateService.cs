@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System.IO.Compression;
 using System.Text.Json;
@@ -157,7 +157,7 @@ public sealed class UpdateService
         if (string.IsNullOrEmpty(info.ZipUrl))
             throw new InvalidOperationException("This release has no downloadable Windows build.");
 
-        var root = Path.Combine(Path.GetTempPath(), "FURYLauncherUpdate");
+        var root = Path.Combine(Path.GetTempPath(), "BonfireLauncherUpdate");
         Directory.CreateDirectory(root);
         var zipPath = Path.Combine(root, $"update-{Sanitize(info.Tag)}.zip");
 

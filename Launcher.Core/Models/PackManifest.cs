@@ -1,13 +1,13 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 namespace Launcher.Core.Models;
 
 /// <summary>
-/// The <c>fury.json</c> manifest inside a <c>.frpack</c> (FURY Package). Fully
+/// The <c>bonfire.json</c> manifest inside a <c>.bfpack</c> (Bonfire Package). Fully
 /// describes an instance so a friend can import and play without any external
 /// service: the <c>mods/</c> jars travel inside the package itself.
 /// </summary>
@@ -36,7 +36,7 @@ public sealed class PackManifest
     public DateTime ExportedUtc { get; set; } = DateTime.UtcNow;
 }
 
-/// <summary>A read-only look at a <c>.frpack</c> before importing it.</summary>
+/// <summary>A read-only look at a <c>.bfpack</c> before importing it.</summary>
 public sealed class PackPreview
 {
     public required PackManifest Manifest { get; init; }

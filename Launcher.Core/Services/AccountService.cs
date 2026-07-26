@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using Launcher.Core.Models;
 
@@ -10,7 +10,7 @@ namespace Launcher.Core.Services;
 
 /// <summary>
 /// Owns the unified account list (offline + Microsoft) persisted to
-/// <c>fury-accounts.json</c>, plus the "active account" pointer stored in settings.
+/// <c>bonfire-accounts.json</c>, plus the "active account" pointer stored in settings.
 /// The active account is the one and only source of truth for who launches and whose
 /// skin is applied — there is no parallel selection state anywhere else. On first use
 /// it transparently migrates the legacy <c>profiles.json</c> via <see cref="AccountMigrator"/>.
@@ -211,11 +211,11 @@ public sealed class AccountService
     }
 
     private async Task<List<Account>> ReadAsync(CancellationToken ct)
-        => await JsonStore.ReadAsync<List<Account>>(_paths.FuryAccountsFile, ct).ConfigureAwait(false)
+        => await JsonStore.ReadAsync<List<Account>>(_paths.BonfireAccountsFile, ct).ConfigureAwait(false)
            ?? new List<Account>();
 
     private Task WriteAsync(List<Account> list, CancellationToken ct)
-        => JsonStore.WriteAsync(_paths.FuryAccountsFile, list, ct);
+        => JsonStore.WriteAsync(_paths.BonfireAccountsFile, list, ct);
 
     /// <summary>True if the file starts with the 8-byte PNG signature.</summary>
     public static bool IsPng(string path)

@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System.Net;
 using Launcher.Core.Services;
@@ -37,7 +37,7 @@ public sealed class LauncherCore : IDisposable
     public ServerPingService ServerPing { get; }
     public ServerDirectory Servers { get; }
 
-    /// <param name="root">Data root; defaults to <c>%APPDATA%/FURY Launcher</c>.</param>
+    /// <param name="root">Data root; defaults to <c>%APPDATA%/Bonfire Launcher</c>.</param>
     public LauncherCore(string? root = null)
     {
         Paths = new LauncherPaths(root);

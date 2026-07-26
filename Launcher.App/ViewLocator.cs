@@ -1,6 +1,6 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. All rights reserved.
-// Proprietary software. See the LICENSE file. "FURY" is a trademark of the holder.
+// Proprietary software. See the LICENSE file. "Bonfire" is a trademark of the holder.
 
 using System;
 using Avalonia.Controls;

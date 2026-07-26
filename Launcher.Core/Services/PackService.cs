@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System.IO.Compression;
 using System.Text.Json;
@@ -11,14 +11,14 @@ using Launcher.Core.Models;
 namespace Launcher.Core.Services;
 
 /// <summary>
-/// Exports and imports <c>.frpack</c> (FURY Package) files: a self-contained ZIP
-/// holding <c>fury.json</c> (manifest), the real mod jars under <c>mods/</c> and
+/// Exports and imports <c>.bfpack</c> (Bonfire Package) files: a self-contained ZIP
+/// holding <c>bonfire.json</c> (manifest), the real mod jars under <c>mods/</c> and
 /// optional instance <c>config/</c>. No UI, no network; a friend imports a file
 /// and plays, even offline.
 /// </summary>
 public sealed class PackService
 {
-    private const string ManifestEntry = "fury.json";
+    private const string ManifestEntry = "bonfire.json";
     private readonly LauncherPaths _paths;
     private readonly InstanceService _instances;
 
@@ -30,7 +30,7 @@ public sealed class PackService
 
     // ------------------------------------------------------------------ Export
 
-    /// <summary>Writes a <c>.frpack</c> for the given instance to <paramref name="destPath"/>.</summary>
+    /// <summary>Writes a <c>.bfpack</c> for the given instance to <paramref name="destPath"/>.</summary>
     public async Task ExportAsync(Instance instance, string destPath, CancellationToken ct = default)
     {
         var modsDir = _paths.InstanceModsDir(instance);
@@ -104,21 +104,21 @@ public sealed class PackService
     // ------------------------------------------------------------------ Read
 
     /// <summary>Reads the manifest and validates a pack without importing it.</summary>
-    public async Task<PackPreview> ReadManifestAsync(string frpackPath, CancellationToken ct = default)
+    public async Task<PackPreview> ReadManifestAsync(string bfpackPath, CancellationToken ct = default)
     {
-        if (!File.Exists(frpackPath))
-            throw new FileNotFoundException("Arquivo .frpack nao encontrado.", frpackPath);
+        if (!File.Exists(bfpackPath))
+            throw new FileNotFoundException("Arquivo .bfpack nao encontrado.", bfpackPath);
 
-        await using var fs = File.OpenRead(frpackPath);
+        await using var fs = File.OpenRead(bfpackPath);
         using var zip = new ZipArchive(fs, ZipArchiveMode.Read);
 
         var manifestEntry = zip.GetEntry(ManifestEntry)
-            ?? throw new InvalidOperationException("Pacote invalido: fury.json ausente.");
+            ?? throw new InvalidOperationException("Pacote invalido: bonfire.json ausente.");
 
         PackManifest manifest;
         await using (var es = manifestEntry.Open())
             manifest = await JsonSerializer.DeserializeAsync<PackManifest>(es, JsonStore.Options, ct).ConfigureAwait(false)
-                       ?? throw new InvalidOperationException("Pacote invalido: fury.json ilegivel.");
+                       ?? throw new InvalidOperationException("Pacote invalido: bonfire.json ilegivel.");
 
         var warnings = new List<string>();
 
@@ -146,13 +146,13 @@ public sealed class PackService
     // ------------------------------------------------------------------ Import
 
     /// <summary>
-    /// Creates a new isolated instance from a <c>.frpack</c>, extracting its mods
+    /// Creates a new isolated instance from a <c>.bfpack</c>, extracting its mods
     /// and config. The loader is reinstalled on first launch (LoaderVersion is not
     /// carried over), so the instance is genuinely playable.
     /// </summary>
-    public async Task<Instance> ImportAsync(string frpackPath, CancellationToken ct = default)
+    public async Task<Instance> ImportAsync(string bfpackPath, CancellationToken ct = default)
     {
-        var preview = await ReadManifestAsync(frpackPath, ct).ConfigureAwait(false);
+        var preview = await ReadManifestAsync(bfpackPath, ct).ConfigureAwait(false);
         var m = preview.Manifest;
 
         var instance = await _instances.CreateAsync(
@@ -168,7 +168,7 @@ public sealed class PackService
         var configDir = _paths.InstanceConfigDir(instance);
         Directory.CreateDirectory(modsDir);
 
-        await using var fs = File.OpenRead(frpackPath);
+        await using var fs = File.OpenRead(bfpackPath);
         using var zip = new ZipArchive(fs, ZipArchiveMode.Read);
 
         foreach (var entry in zip.Entries)
@@ -182,7 +182,7 @@ public sealed class PackService
             else if (entry.FullName.StartsWith("config/", StringComparison.OrdinalIgnoreCase))
                 targetDir = configDir;
             else
-                continue; // ignore fury.json and anything else
+                continue; // ignore bonfire.json and anything else
 
             var rel = entry.FullName.Substring(entry.FullName.IndexOf('/') + 1);
             var dest = SafeCombine(targetDir!, rel);

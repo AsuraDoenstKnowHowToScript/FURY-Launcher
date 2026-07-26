@@ -1,8 +1,8 @@
-// FURY Launcher
+// Bonfire Launcher
 // Copyright © 2026 Suny. Todos os direitos reservados.
 // Software proprietário. Proibido usar, copiar, modificar ou distribuir sem
 // autorização por escrito. Consulte o arquivo LICENSE.
-// "FURY" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
+// "Bonfire" é marca do Titular. Projeto não afiliado à Mojang/Microsoft.
 
 using System.IO.Compression;
 using System.Text.Json;
@@ -14,14 +14,14 @@ namespace Launcher.Core.Services;
 /// <summary>
 /// Resolves a friendly name, version and icon for each installed mod instead of the
 /// raw jar file name. Metadata comes, in order of trust, from the sidecar index
-/// written at Modrinth install time (<c>mods/.fury-index.json</c>), then the jar's
+/// written at Modrinth install time (<c>mods/.bonfire-index.json</c>), then the jar's
 /// own manifest (Fabric/Quilt/Forge/NeoForge), then a cleaned-up file name. Icons
-/// are cached under <c>mods/.fury-cache/</c>. No UI dependency.
+/// are cached under <c>mods/.bonfire-cache/</c>. No UI dependency.
 /// </summary>
 public sealed class ModMetadataService
 {
-    private const string IndexFile = ".fury-index.json";
-    private const string CacheFolder = ".fury-cache";
+    private const string IndexFile = ".bonfire-index.json";
+    private const string CacheFolder = ".bonfire-cache";
 
     private readonly LauncherPaths _paths;
     private readonly ModrinthClient _modrinth;
