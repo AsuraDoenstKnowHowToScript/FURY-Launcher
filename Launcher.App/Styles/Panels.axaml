@@ -29,9 +29,9 @@
              give the surface weight, not read as a coloured panel. -->
         <RadialGradientBrush x:Key="PanelGlow" Center="88%,0%" GradientOrigin="88%,0%"
                              RadiusX="70%" RadiusY="70%">
-            <GradientStop Offset="0" Color="#382A63"/>
-            <GradientStop Offset="0.5" Color="#1B1630"/>
-            <GradientStop Offset="1" Color="#00181422"/>
+            <GradientStop Offset="0" Color="#2E3238"/>
+            <GradientStop Offset="0.5" Color="#191B1E"/>
+            <GradientStop Offset="1" Color="#00121314"/>
         </RadialGradientBrush>
 
         <ControlTheme x:Key="{x:Type ctl:PanelCard}" TargetType="ctl:PanelCard">

@@ -23,9 +23,9 @@
                                Icon="{icon:LucideImage Kind=Gamepad2, Brush={StaticResource TextSecondary}}">
                     <ctl:PanelCard.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                            <GradientStop Offset="0" Color="#2E2054"/>
-                            <GradientStop Offset="0.55" Color="#1C1728"/>
-                            <GradientStop Offset="1" Color="#16141E"/>
+                            <GradientStop Offset="0" Color="#2B2E33"/>
+                            <GradientStop Offset="0.55" Color="#191A1D"/>
+                            <GradientStop Offset="1" Color="#131416"/>
                         </LinearGradientBrush>
                     </ctl:PanelCard.Background>
                     <!-- The actions column is sized first (Auto); the greeting takes what is left and

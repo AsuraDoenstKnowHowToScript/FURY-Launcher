@@ -5,12 +5,16 @@
     <!-- ============================================================
          DESIGN TOKENS: the single source of truth for colour, radius,
          spacing and type. Views must reference these via {DynamicResource};
-         no hard-coded colours anywhere. Aesthetic: dark violet on deep black,
-         depth built from layer contrast rather than hard outlines.
+         no hard-coded colours anywhere. Aesthetic: iron and titanium on black.
+         No colour anywhere except the three status hues; everything else is
+         metal, and depth comes from layer contrast and lit edges.
          ============================================================ -->
 
     <!-- Fonts (embedded; no system install needed) -->
-    <FontFamily x:Key="FontUi">avares://Bonfire Launcher/Assets/Fonts/Outfit.ttf#Outfit</FontFamily>
+    <!-- Inter: a face drawn for interfaces, so it holds its shape at 11px where a display face
+         like Outfit goes spindly. Four weights ship, which is the whole hierarchy; the rest of
+         the family would be megabytes nothing references. SIL Open Font License. -->
+    <FontFamily x:Key="FontUi">avares://Bonfire Launcher/Assets/Fonts/Inter-Regular.ttf#Inter</FontFamily>
     <FontFamily x:Key="FontMono">avares://Bonfire Launcher/Assets/Fonts/JetBrainsMono-Regular.ttf#JetBrains Mono</FontFamily>
     <!-- Monocraft: a pixel face in the shape of the one the game uses, under the SIL Open Font
          License so it can ship here. The game's own font is Mojang's and is not redistributable.
@@ -18,28 +22,33 @@
          means a server's MOTD and the numbers next to it. -->
     <FontFamily x:Key="FontMinecraft">avares://Bonfire Launcher/Assets/Fonts/Monocraft.ttf#Monocraft</FontFamily>
 
-    <!-- Colours (raw). The base layers are close to neutral now, with only a whisper of violet
-         left in them. When every surface is tinted, the accent has nothing to stand out against
-         and the whole window reads as one purple wash; pulling the saturation out of the layers
-         is what lets a single accent do the work.
+    <!-- Colours (raw). Neutral iron greys, no hue at all. Colour in this window is reserved
+         for the three states that mean something — success, warning, danger — so anything
+         coloured is information rather than decoration.
 
          Surfaces above the base are translucent rather than solid: a light film over whatever is
          behind, which is what makes a panel read as glass instead of as a lighter grey rectangle.
          The base is the only opaque layer, and it carries a gradient for the films to pick up. -->
-    <Color x:Key="BgBaseColor">#08080B</Color>
-    <Color x:Key="BgSurfaceColor">#12121A</Color>
-    <Color x:Key="BgElevatedColor">#1B1B26</Color>
-    <Color x:Key="BgHoverColor">#22222F</Color>
-    <Color x:Key="BgInputColor">#0D0D13</Color>
-    <Color x:Key="BorderSubtleColor">#22222E</Color>
-    <Color x:Key="BorderStrongColor">#33333F</Color>
-    <Color x:Key="AccentColor">#6D28D9</Color>
-    <Color x:Key="AccentHoverColor">#7C3AED</Color>
-    <Color x:Key="AccentPressedColor">#5B21B6</Color>
-    <Color x:Key="OnAccentColor">#FFFFFF</Color>
-    <Color x:Key="TextPrimaryColor">#F2F1F6</Color>
-    <Color x:Key="TextSecondaryColor">#C6C2D4</Color>
-    <Color x:Key="TextMutedColor">#8F89A3</Color>
+    <Color x:Key="BgBaseColor">#08090A</Color>
+    <Color x:Key="BgSurfaceColor">#131416</Color>
+    <Color x:Key="BgElevatedColor">#1B1C1F</Color>
+    <Color x:Key="BgHoverColor">#232427</Color>
+    <Color x:Key="BgInputColor">#0D0E0F</Color>
+    <Color x:Key="BorderSubtleColor">#232427</Color>
+    <Color x:Key="BorderStrongColor">#34363A</Color>
+
+    <!-- Titanium, not violet. The accent is a cool metal light enough to sit on black and be
+         read as a highlight rather than a colour, which is what keeps the window monochrome
+         while still having something that leads. Text on it is near-black, because a pale
+         accent carries dark type the way a dark accent carries pale type. -->
+    <Color x:Key="AccentColor">#C4C9D2</Color>
+    <Color x:Key="AccentHoverColor">#DDE1E8</Color>
+    <Color x:Key="AccentPressedColor">#9DA3AE</Color>
+    <Color x:Key="OnAccentColor">#0B0C0D</Color>
+
+    <Color x:Key="TextPrimaryColor">#F4F5F7</Color>
+    <Color x:Key="TextSecondaryColor">#B9BCC2</Color>
+    <Color x:Key="TextMutedColor">#7E828A</Color>
     <Color x:Key="SuccessColor">#4ADE80</Color>
     <Color x:Key="WarningColor">#FBBF24</Color>
     <Color x:Key="DangerColor">#F87171</Color>
@@ -55,10 +64,13 @@
     <SolidColorBrush x:Key="Accent" Color="{StaticResource AccentColor}"/>
     <SolidColorBrush x:Key="AccentHover" Color="{StaticResource AccentHoverColor}"/>
     <SolidColorBrush x:Key="AccentPressed" Color="{StaticResource AccentPressedColor}"/>
-    <!-- Accent at ~15%, for a selected list item, not the full purple -->
-    <SolidColorBrush x:Key="AccentSubtle" Color="{StaticResource AccentColor}" Opacity="0.15"/>
-    <!-- Accent at ~55%: hover/focus outlines that glow without shouting -->
-    <SolidColorBrush x:Key="AccentOutline" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <!-- A pale accent needs far less alpha than a dark one to register as a selected row. -->
+    <SolidColorBrush x:Key="AccentSubtle" Color="{StaticResource AccentColor}" Opacity="0.10"/>
+    <SolidColorBrush x:Key="AccentOutline" Color="{StaticResource AccentColor}" Opacity="0.40"/>
+    <!-- The tonal step a control takes under the pointer. White at four percent: enough to
+         register as "this one", not enough to read as a block appearing. -->
+    <SolidColorBrush x:Key="HoverTint" Color="#FFFFFF" Opacity="0.04"/>
+    <SolidColorBrush x:Key="PressTint" Color="#000000" Opacity="0.18"/>
     <SolidColorBrush x:Key="OnAccent" Color="{StaticResource OnAccentColor}"/>
     <SolidColorBrush x:Key="TextPrimary" Color="{StaticResource TextPrimaryColor}"/>
     <SolidColorBrush x:Key="TextSecondary" Color="{StaticResource TextSecondaryColor}"/>
@@ -84,20 +96,34 @@
     </LinearGradientBrush>
 
     <!-- The window backdrop. Translucent panels need something with variation behind them or
-         they have nothing to catch; a flat black would make every film the same flat grey. Two
-         faint blooms, one warm from the mark and one violet from the accent, well below the
-         level you would consciously notice. -->
+         they have nothing to catch; a flat black would make every film the same flat grey. One
+         cool bloom off the top-left, well below the level you would consciously notice. -->
     <RadialGradientBrush x:Key="AppBackdrop" Center="18%,0%" GradientOrigin="18%,0%"
                          RadiusX="95%" RadiusY="85%">
-        <GradientStop Offset="0" Color="#171326"/>
-        <GradientStop Offset="0.55" Color="#0C0B12"/>
-        <GradientStop Offset="1" Color="#08080B"/>
+        <GradientStop Offset="0" Color="#1A1C20"/>
+        <GradientStop Offset="0.55" Color="#0D0E10"/>
+        <GradientStop Offset="1" Color="#08090A"/>
     </RadialGradientBrush>
 
-    <!-- The Bonfire wordmark: a soft violet sweep, the one place the brand gets to glow. -->
+    <!-- The Bonfire wordmark, in brushed metal: bright where light would catch, dark where it
+         would fall away. Same sweep as the outline, so the mark and the edges are one material. -->
     <LinearGradientBrush x:Key="BrandGradient" StartPoint="0%,0%" EndPoint="100%,100%">
-        <GradientStop Offset="0" Color="#A78BFA"/>
-        <GradientStop Offset="1" Color="#7C3AED"/>
+        <GradientStop Offset="0" Color="#EDF0F4"/>
+        <GradientStop Offset="0.5" Color="#A8AEB9"/>
+        <GradientStop Offset="1" Color="#6E747E"/>
+    </LinearGradientBrush>
+
+    <!-- The outline that marks something as live: a titanium sweep rather than a flat line, so
+         an edge reads as a lit rim on metal instead of a coloured border drawn around a box. -->
+    <LinearGradientBrush x:Key="TitaniumEdge" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#D6DAE1"/>
+        <GradientStop Offset="0.45" Color="#8B919B"/>
+        <GradientStop Offset="1" Color="#585D66"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="TitaniumEdgeSoft" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#7FD6DAE1"/>
+        <GradientStop Offset="0.45" Color="#5A8B919B"/>
+        <GradientStop Offset="1" Color="#42585D66"/>
     </LinearGradientBrush>
 
     <!-- Radii: roomier corners, closer to a modern web card than a desktop widget. -->
@@ -140,7 +166,7 @@
          outline, which is enough to find at a glance without competing with the page. -->
     <SolidColorBrush x:Key="NavigationViewItemBackground" Color="Transparent"/>
     <SolidColorBrush x:Key="NavigationViewItemBackgroundDisabled" Color="Transparent"/>
-    <SolidColorBrush x:Key="NavigationViewItemBackgroundPointerOver" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewItemBackgroundPointerOver" Color="#FFFFFF" Opacity="0.04"/>
     <SolidColorBrush x:Key="NavigationViewItemBackgroundPressed" Color="{StaticResource AccentColor}" Opacity="0.16"/>
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelected" Color="{StaticResource AccentColor}" Opacity="0.16"/>
     <SolidColorBrush x:Key="NavigationViewItemBackgroundSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.22"/>
@@ -152,14 +178,34 @@
     <SolidColorBrush x:Key="NavigationViewItemBackgroundCheckedDisabled" Color="Transparent"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrush" Color="Transparent"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushDisabled" Color="Transparent"/>
-    <SolidColorBrush x:Key="NavigationViewItemBorderBrushPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <LinearGradientBrush x:Key="NavigationViewItemBorderBrushPointerOver" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#7FD6DAE1"/>
+        <GradientStop Offset="0.45" Color="#5A8B919B"/>
+        <GradientStop Offset="1" Color="#42585D66"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushPressed" Color="{StaticResource AccentColor}"/>
-    <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelected" Color="{StaticResource AccentColor}" Opacity="0.55"/>
-    <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelectedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <LinearGradientBrush x:Key="NavigationViewItemBorderBrushSelected" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#D6DAE1"/>
+        <GradientStop Offset="0.45" Color="#8B919B"/>
+        <GradientStop Offset="1" Color="#585D66"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="NavigationViewItemBorderBrushSelectedPointerOver" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#D6DAE1"/>
+        <GradientStop Offset="0.45" Color="#8B919B"/>
+        <GradientStop Offset="1" Color="#585D66"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelectedPressed" Color="{StaticResource AccentColor}" Opacity="0.55"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushSelectedDisabled" Color="Transparent"/>
-    <SolidColorBrush x:Key="NavigationViewItemBorderBrushChecked" Color="{StaticResource AccentColor}" Opacity="0.55"/>
-    <SolidColorBrush x:Key="NavigationViewItemBorderBrushCheckedPointerOver" Color="{StaticResource AccentColor}" Opacity="0.55"/>
+    <LinearGradientBrush x:Key="NavigationViewItemBorderBrushChecked" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#D6DAE1"/>
+        <GradientStop Offset="0.45" Color="#8B919B"/>
+        <GradientStop Offset="1" Color="#585D66"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="NavigationViewItemBorderBrushCheckedPointerOver" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#D6DAE1"/>
+        <GradientStop Offset="0.45" Color="#8B919B"/>
+        <GradientStop Offset="1" Color="#585D66"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushCheckedPressed" Color="{StaticResource AccentColor}" Opacity="0.55"/>
     <SolidColorBrush x:Key="NavigationViewItemBorderBrushCheckedDisabled" Color="Transparent"/>
     <SolidColorBrush x:Key="NavigationViewItemForeground" Color="{StaticResource TextSecondaryColor}"/>

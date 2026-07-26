@@ -20,7 +20,7 @@
          FluentAvaloniaTheme is a complete Fluent theme; the purple accent is
          injected via CustomAccentColor so its controls inherit it. -->
     <Application.Styles>
-        <sty:FluentAvaloniaTheme PreferSystemTheme="False" CustomAccentColor="#6D28D9"/>
+        <sty:FluentAvaloniaTheme PreferSystemTheme="False" CustomAccentColor="#C4C9D2"/>
         <StyleInclude Source="/Styles/Typography.axaml"/>
         <StyleInclude Source="/Styles/Controls.axaml"/>
         <StyleInclude Source="/Styles/Panels.axaml"/>

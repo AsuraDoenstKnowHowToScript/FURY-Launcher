@@ -60,6 +60,7 @@
     <!-- Monocraft is under the SIL Open Font License, which requires the notice to travel with
          the font. Shipping it as content keeps it readable next to the binary. -->
     <Content Include="Assets/Fonts/Monocraft-OFL-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets/Fonts/Inter-OFL-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- App icon: the compact FL mark (window + .exe). -->
     <AvaloniaResource Include="Assets/bonfire-icon.png" />
     <AvaloniaResource Include="Assets/bonfire-icon.ico" />
