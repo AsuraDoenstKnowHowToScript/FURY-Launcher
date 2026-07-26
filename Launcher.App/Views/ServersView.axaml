@@ -7,237 +7,180 @@
              x:Class="Launcher.App.Views.ServersView"
              x:DataType="vm:ServersViewModel">
 
-    <ScrollViewer behaviors:SmoothScroll.Enabled="True">
-        <StackPanel Margin="24" Spacing="16" MaxWidth="1180" HorizontalAlignment="Stretch">
+    <UserControl.Resources>
+        <!-- One row shared by both lists. They differ only in whether the delete button applies,
+             and that is already decided per item by IsPinned, so a second copy would only be a
+             second place to forget to change. -->
+        <DataTemplate x:Key="ServerRow" DataType="vm:ServerCardVm">
+            <Border Classes="card flat" Margin="0,0,0,8" Padding="13,11">
+                <Grid ColumnDefinitions="Auto,12,*,14,Auto,8,Auto">
 
-            <!-- Page header, same rhythm as every other screen. -->
-            <Grid ColumnDefinitions="*,16,Auto" Margin="0,0,0,2">
-                <StackPanel Grid.Column="0" Spacing="3" ClipToBounds="True">
-                    <TextBlock Classes="Title" Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Classes="Caption" Text="{Binding Subtitle}"
-                               TextTrimming="CharacterEllipsis"
-                               Foreground="{DynamicResource TextMuted}"/>
-                </StackPanel>
-                <Button Grid.Column="2" Classes="secondary" VerticalAlignment="Center"
-                        Content="{Binding RefreshLabel}" Command="{Binding RefreshCommand}"/>
-            </Grid>
+                    <!-- Server icon: 64x64 pixel art, so no smoothing. -->
+                    <Border Grid.Column="0" Width="44" Height="44" CornerRadius="9"
+                            ClipToBounds="True" VerticalAlignment="Center"
+                            Background="{DynamicResource BgInput}">
+                        <Panel>
+                            <Image Width="18" Height="18"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   IsVisible="{Binding !HasIcon}"
+                                   Source="{icon:LucideImage Kind=Server, Brush={StaticResource TextMuted}}"/>
+                            <Image Source="{Binding Icon}" Stretch="Uniform"
+                                   RenderOptions.BitmapInterpolationMode="None"/>
+                        </Panel>
+                    </Border>
 
-            <!-- Your servers: read from the game's own multiplayer list, plus anything pinned. -->
-            <ctl:PanelCard Classes="feature" Header="{Binding MineHeader}" WatermarkSize="150"
-                           Icon="{icon:LucideImage Kind=Server, Brush={StaticResource TextSecondary}}">
-                <StackPanel Spacing="12">
+                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center"
+                                ClipToBounds="True">
+                        <Grid ColumnDefinitions="Auto,7,Auto,*">
+                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="13"
+                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <Border Grid.Column="2" CornerRadius="999" Padding="7,1"
+                                    VerticalAlignment="Center"
+                                    IsVisible="{Binding HasInstance}"
+                                    Background="{DynamicResource AccentSubtle}"
+                                    BorderBrush="{DynamicResource AccentOutline}"
+                                    BorderThickness="1">
+                                <TextBlock Text="{Binding InstanceName}" FontSize="10"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource TextSecondary}"/>
+                            </Border>
+                        </Grid>
 
-                    <Grid ColumnDefinitions="*,10,Auto">
-                        <TextBox Grid.Column="0" Text="{Binding NewAddress}"
-                                 Watermark="{Binding AddWatermark}"/>
-                        <Button Grid.Column="2" Classes="primary" VerticalAlignment="Stretch"
-                                Content="{Binding AddLabel}" Command="{Binding AddCommand}"/>
-                    </Grid>
+                        <!-- The MOTD in the server's own colours, as the game shows it. -->
+                        <ctl:MotdBlock Runs="{Binding Motd}" FontSize="11"
+                                       FontFamily="{DynamicResource FontMinecraft}"
+                                       TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                       IsVisible="{Binding Online}"/>
+                        <TextBlock Text="{Binding OfflineText}" FontSize="11"
+                                   FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
+                                   TextTrimming="CharacterEllipsis"
+                                   IsVisible="{Binding Offline}"
+                                   Foreground="{DynamicResource Danger}"/>
+                        <TextBlock Text="{Binding Address}" Classes="Mono" FontSize="10"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextMuted}"/>
+                    </StackPanel>
 
+                    <!-- Fixed width so the meters line up down the column instead of drifting
+                         with however long each server's player count happens to be. -->
+                    <StackPanel Grid.Column="4" Spacing="2" Width="96" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                            <ctl:PingBars Bars="{Binding Bars}" VerticalAlignment="Center"
+                                          LitBrush="{DynamicResource Success}"/>
+                            <TextBlock Text="{Binding Latency}" Classes="Mono" FontSize="10"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Players}" FontSize="11"
+                                   FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
+                                   HorizontalAlignment="Right"
+                                   Foreground="{DynamicResource TextSecondary}"/>
+                        <TextBlock Text="{Binding Version}" FontSize="10"
+                                   HorizontalAlignment="Right"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextMuted}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="4"
+                                VerticalAlignment="Center">
+                        <Button Classes="ghost" Padding="8,6"
+                                Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).CopyAddressCommand}"
+                                CommandParameter="{Binding}">
+                            <Image Width="14" Height="14"
+                                   Source="{icon:LucideImage Kind=Copy, Brush={StaticResource TextSecondary}}"/>
+                        </Button>
+                        <Button Classes="ghost" Padding="8,6" IsVisible="{Binding IsPinned}"
+                                Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).RemoveCommand}"
+                                CommandParameter="{Binding}">
+                            <Image Width="14" Height="14"
+                                   Source="{icon:LucideImage Kind=Trash2, Brush={StaticResource Danger}}"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!-- The page itself never scrolls. Both sections are always on screen, split down the middle,
+         and each list scrolls inside its own card. Stacking them in one scrolling column meant a
+         long server list pushed the directory off the bottom, which is the state that made this
+         unusable: two things to compare, only one ever visible. -->
+    <Grid Margin="24" MaxWidth="1180" HorizontalAlignment="Center"
+          RowDefinitions="Auto,16,*,14,*">
+
+        <Grid Grid.Row="0" ColumnDefinitions="*,16,Auto">
+            <StackPanel Grid.Column="0" Spacing="3" ClipToBounds="True" VerticalAlignment="Center">
+                <TextBlock Classes="Title" Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Classes="Caption" Text="{Binding Subtitle}"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource TextMuted}"/>
+            </StackPanel>
+            <Button Grid.Column="2" Classes="secondary" VerticalAlignment="Center"
+                    Content="{Binding RefreshLabel}" Command="{Binding RefreshCommand}"/>
+        </Grid>
+
+        <!-- Your servers: read from the game's own multiplayer list, plus anything pinned. -->
+        <ctl:PanelCard Grid.Row="2" Classes="feature" Header="{Binding MineHeader}" WatermarkSize="130"
+                       Icon="{icon:LucideImage Kind=Server, Brush={StaticResource TextSecondary}}">
+            <Grid RowDefinitions="Auto,12,*">
+                <Grid Grid.Row="0" ColumnDefinitions="*,10,Auto">
+                    <TextBox Grid.Column="0" Text="{Binding NewAddress}"
+                             Watermark="{Binding AddWatermark}"/>
+                    <Button Grid.Column="2" Classes="primary" VerticalAlignment="Stretch"
+                            Content="{Binding AddLabel}" Command="{Binding AddCommand}"/>
+                </Grid>
+
+                <Panel Grid.Row="2">
                     <TextBlock Classes="Caption" Text="{Binding EmptyText}" TextWrapping="Wrap"
-                               IsVisible="{Binding MineEmpty}"
+                               VerticalAlignment="Top" IsVisible="{Binding MineEmpty}"
                                Foreground="{DynamicResource TextMuted}"/>
+                    <ScrollViewer behaviors:SmoothScroll.Enabled="True"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Mine}"
+                                      ItemTemplate="{StaticResource ServerRow}"/>
+                    </ScrollViewer>
+                </Panel>
+            </Grid>
+        </ctl:PanelCard>
 
-                    <ItemsControl ItemsSource="{Binding Mine}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="vm:ServerCardVm">
-                                <Border Classes="card flat" Margin="0,0,0,8" Padding="14,12">
-                                    <Grid ColumnDefinitions="Auto,13,*,14,Auto,10,Auto">
+        <!-- Public servers by region. A starting point, live-pinged like everything else. -->
+        <ctl:PanelCard Grid.Row="4" Header="{Binding PopularHeader}"
+                       Icon="{icon:LucideImage Kind=Globe, Brush={StaticResource TextSecondary}}">
+            <Grid RowDefinitions="Auto,10,Auto,12,*">
+                <ItemsControl Grid.Row="0" ItemsSource="{Binding Regions}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:RegionTabVm">
+                            <RadioButton Classes="segment" GroupName="ServerRegions"
+                                         Margin="0,0,8,0"
+                                         IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                         Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).SelectRegionCommand}"
+                                         CommandParameter="{Binding}">
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <TextBlock Text="{Binding Code}" Classes="Mono" FontSize="11"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextMuted}"/>
+                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-                                        <!-- Server icon: 64x64 pixel art, so no smoothing. -->
-                                        <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10"
-                                                ClipToBounds="True" VerticalAlignment="Center"
-                                                Background="{DynamicResource BgInput}">
-                                            <Panel>
-                                                <Image Width="20" Height="20"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                       IsVisible="{Binding !HasIcon}"
-                                                       Source="{icon:LucideImage Kind=Server, Brush={StaticResource TextMuted}}"/>
-                                                <Image Source="{Binding Icon}" Stretch="Uniform"
-                                                       RenderOptions.BitmapInterpolationMode="None"/>
-                                            </Panel>
-                                        </Border>
+                <TextBlock Grid.Row="2" Classes="Caption" Text="{Binding DirectoryNote}"
+                           TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}"/>
 
-                                        <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center"
-                                                    ClipToBounds="True">
-                                            <Grid ColumnDefinitions="Auto,8,Auto,*">
-                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="14"
-                                                           FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
-                                                           TextTrimming="CharacterEllipsis"/>
-                                                <Border Grid.Column="2" CornerRadius="999" Padding="8,2"
-                                                        VerticalAlignment="Center"
-                                                        IsVisible="{Binding HasInstance}"
-                                                        Background="{DynamicResource AccentSubtle}"
-                                                        BorderBrush="{DynamicResource AccentOutline}"
-                                                        BorderThickness="1">
-                                                    <TextBlock Text="{Binding InstanceName}" FontSize="10"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               Foreground="{DynamicResource TextSecondary}"/>
-                                                </Border>
-                                            </Grid>
-
-                                            <!-- The MOTD in the server's own colours, as the game shows it. -->
-                                            <ctl:MotdBlock Runs="{Binding Motd}" FontSize="12"
-                                                           FontFamily="{DynamicResource FontMinecraft}"
-                                                           TextWrapping="NoWrap"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           IsVisible="{Binding Online}"/>
-                                            <TextBlock Text="{Binding OfflineText}" FontSize="12"
-                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       IsVisible="{Binding Offline}"
-                                                       Foreground="{DynamicResource Danger}"/>
-                                            <TextBlock Text="{Binding Address}" Classes="Mono" FontSize="11"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource TextMuted}"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Column="4" Spacing="3" VerticalAlignment="Center"
-                                                    HorizontalAlignment="Right">
-                                            <StackPanel Orientation="Horizontal" Spacing="7"
-                                                        HorizontalAlignment="Right">
-                                                <ctl:PingBars Bars="{Binding Bars}" VerticalAlignment="Center"
-                                                              LitBrush="{DynamicResource Success}"/>
-                                                <TextBlock Text="{Binding Latency}" Classes="Mono" FontSize="11"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{DynamicResource TextMuted}"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding Players}" FontSize="12"
-                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
-                                                       HorizontalAlignment="Right"
-                                                       Foreground="{DynamicResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding Version}" FontSize="10"
-                                                       HorizontalAlignment="Right" MaxWidth="160"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource TextMuted}"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="6"
-                                                    VerticalAlignment="Center">
-                                            <Button Classes="ghost" Padding="9,7"
-                                                    Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).CopyAddressCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <Image Width="15" Height="15"
-                                                       Source="{icon:LucideImage Kind=Copy, Brush={StaticResource TextSecondary}}"/>
-                                            </Button>
-                                            <Button Classes="ghost" Padding="9,7" IsVisible="{Binding IsPinned}"
-                                                    Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).RemoveCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <Image Width="15" Height="15"
-                                                       Source="{icon:LucideImage Kind=Trash2, Brush={StaticResource Danger}}"/>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </ctl:PanelCard>
-
-            <!-- Public servers by region. A starting point, live-pinged like everything else. -->
-            <ctl:PanelCard Header="{Binding PopularHeader}"
-                           Icon="{icon:LucideImage Kind=Globe, Brush={StaticResource TextSecondary}}">
-                <StackPanel Spacing="12">
-
-                    <ItemsControl ItemsSource="{Binding Regions}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="8"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="vm:RegionTabVm">
-                                <RadioButton Classes="segment" GroupName="ServerRegions"
-                                             IsChecked="{Binding IsSelected, Mode=OneWay}"
-                                             Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).SelectRegionCommand}"
-                                             CommandParameter="{Binding}">
-                                    <StackPanel Orientation="Horizontal" Spacing="7">
-                                        <TextBlock Text="{Binding Code}" Classes="Mono" FontSize="11"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextMuted}"/>
-                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </RadioButton>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <TextBlock Classes="Caption" Text="{Binding DirectoryNote}" TextWrapping="Wrap"
-                               Foreground="{DynamicResource TextMuted}"/>
-
-                    <ItemsControl ItemsSource="{Binding Popular}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="vm:ServerCardVm">
-                                <Border Classes="card flat" Margin="0,0,0,8" Padding="14,12">
-                                    <Grid ColumnDefinitions="Auto,13,*,14,Auto,10,Auto">
-                                        <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10"
-                                                ClipToBounds="True" VerticalAlignment="Center"
-                                                Background="{DynamicResource BgInput}">
-                                            <Panel>
-                                                <Image Width="20" Height="20"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                       IsVisible="{Binding !HasIcon}"
-                                                       Source="{icon:LucideImage Kind=Server, Brush={StaticResource TextMuted}}"/>
-                                                <Image Source="{Binding Icon}" Stretch="Uniform"
-                                                       RenderOptions.BitmapInterpolationMode="None"/>
-                                            </Panel>
-                                        </Border>
-
-                                        <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center"
-                                                    ClipToBounds="True">
-                                            <TextBlock Text="{Binding Name}" FontSize="14"
-                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                            <ctl:MotdBlock Runs="{Binding Motd}" FontSize="12"
-                                                           FontFamily="{DynamicResource FontMinecraft}"
-                                                           TextWrapping="NoWrap"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           IsVisible="{Binding Online}"/>
-                                            <TextBlock Text="{Binding OfflineText}" FontSize="12"
-                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       IsVisible="{Binding Offline}"
-                                                       Foreground="{DynamicResource Danger}"/>
-                                            <TextBlock Text="{Binding Address}" Classes="Mono" FontSize="11"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource TextMuted}"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Column="4" Spacing="3" VerticalAlignment="Center"
-                                                    HorizontalAlignment="Right">
-                                            <StackPanel Orientation="Horizontal" Spacing="7"
-                                                        HorizontalAlignment="Right">
-                                                <ctl:PingBars Bars="{Binding Bars}" VerticalAlignment="Center"
-                                                              LitBrush="{DynamicResource Success}"/>
-                                                <TextBlock Text="{Binding Latency}" Classes="Mono" FontSize="11"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{DynamicResource TextMuted}"/>
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding Players}" FontSize="12"
-                                                       FontFamily="{DynamicResource FontMinecraft}" FontWeight="Normal"
-                                                       HorizontalAlignment="Right"
-                                                       Foreground="{DynamicResource TextSecondary}"/>
-                                            <TextBlock Text="{Binding Version}" FontSize="10"
-                                                       HorizontalAlignment="Right" MaxWidth="160"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource TextMuted}"/>
-                                        </StackPanel>
-
-                                        <Button Grid.Column="6" Classes="ghost" Padding="9,7"
-                                                VerticalAlignment="Center"
-                                                Command="{Binding $parent[ItemsControl].((vm:ServersViewModel)DataContext).CopyAddressCommand}"
-                                                CommandParameter="{Binding}">
-                                            <Image Width="15" Height="15"
-                                                   Source="{icon:LucideImage Kind=Copy, Brush={StaticResource TextSecondary}}"/>
-                                        </Button>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </ctl:PanelCard>
-        </StackPanel>
-    </ScrollViewer>
+                <ScrollViewer Grid.Row="4" behaviors:SmoothScroll.Enabled="True"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Popular}"
+                                  ItemTemplate="{StaticResource ServerRow}"/>
+                </ScrollViewer>
+            </Grid>
+        </ctl:PanelCard>
+    </Grid>
 </UserControl>
